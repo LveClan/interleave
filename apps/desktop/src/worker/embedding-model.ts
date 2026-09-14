@@ -18,6 +18,8 @@ import {
   FALLBACK_EMBEDDING_MODEL_ID,
 } from "@interleave/core";
 import { asarUnpackedVariant } from "../shared/asar";
+// @ts-expect-error Shared with the executable JavaScript build script.
+import { preloadWindowsOnnx } from "../shared/windows-onnx.cjs";
 
 const nodeRequire = createRequire(__filename);
 
@@ -114,8 +116,20 @@ function loadTransformers(): TransformersModule {
     ),
   );
   try {
+    if (process.platform === "win32") {
+      preloadWindowsOnnx(
+        nodeRequire.resolve(staged),
+        nodeRequire.resolve(path.resolve(staged, "../../koffi")),
+      );
+    }
     return nodeRequire(staged) as TransformersModule;
   } catch {
+    if (process.platform === "win32") {
+      preloadWindowsOnnx(
+        nodeRequire.resolve("@huggingface/transformers"),
+        nodeRequire.resolve("koffi"),
+      );
+    }
     return nodeRequire("@huggingface/transformers") as TransformersModule;
   }
 }

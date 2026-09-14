@@ -1,200 +1,98 @@
 ---
 name: build-tasks
-description: >-
-  Build the next Interleave roadmap tasks one at a time, each via a dynamic
-  Workflow: builder → independent reviewer → fix → review → … (a blocking,
-  correct-by-construction gate) → one commit per task. The reviewer is STRICT —
-  it fixes small wins and small mistakes too, not just the big issues, unless a
-  fix needs a massive refactor (those are deferred and reported). Use when asked
-  to "build the next N todos / tasks", "continue the roadmap", "go through the
-  to-dos", or implement specific roadmap tasks (T0NN). Generates the milestone's
-  detailed spec first if one doesn't exist yet.
+description: Implement selected or next Interleave roadmap tasks with independent review and one commit per completed task. Use when asked to build roadmap tasks or continue the roadmap.
 ---
 
-# Build roadmap tasks (strict builder → reviewer → fix → commit)
+# Build Roadmap Tasks
 
-This skill encapsulates how Interleave is built: **one task at a time, in
-dependency order**, each driven by a fresh dynamic Workflow with a hard quality
-gate, committed individually so history stays bisectable and every commit is green.
+Complete the selected tasks in dependency order through implementation, independent review,
+fixes, verification, and one commit per completed task. Follow the root `AGENTS.md` for project
+invariants, user precedence, working-tree preservation, English commits, and verification scope.
 
-Always run it with the **Workflow tool** (this is multi-agent orchestration). Confirm
-scope first if it's ambiguous (which tasks, how far), then launch.
+## Scope And Context
 
-## The control plane (read first, every time)
+- Honor the user's selected task IDs, milestone, count, and exclusions. For an open-ended
+  "continue the roadmap" request, complete one eligible task by default and state that scope.
+- Within that scope, pick the lowest-numbered unchecked task whose dependencies are complete.
+  If a selected task has an unmet dependency outside the scope, report it before expanding work.
+- Read `docs/README.md`, the selected roadmap entries, their linked specs or plans, and applicable
+  scoped `AGENTS.md` files. Consult only relevant reference docs and prior solutions.
+- If the selected milestone lacks a detailed spec or plan, draft it using `docs/tasks/_TEMPLATE.md`
+  and current code, obtain independent review, and commit it with an English subject such as
+  `docs: add M29 task specs` before implementation. Existing linked plans satisfy this requirement.
+  If independent review is unavailable, keep the draft explicitly unreviewed and continue local
+  implementation against it; both spec and implementation retain the outstanding review gate.
 
-- `AGENTS.md` — the engineering charter: architecture invariants, layering, Definition of Done.
-- `docs/roadmap.md` — the task queue (`T001`–`T100`, each with deps + *Done when*). Pick the
-  lowest-numbered unchecked task whose deps are all `[x]`.
-- `docs/tasks/M*.md` — the detailed, buildable spec for a task. **If the next milestone has no
-  spec yet, generate it first** (see "Generate the milestone spec" below), review + commit it,
-  *then* build — specs written after the prior milestone cite real files/signatures.
+## Available Runtime
 
-## The per-task loop
+Use the current checkout root and available collaboration tools. No named orchestration product,
+personal filesystem path, model, signing provider, or resume API is required.
 
-For each task, strictly in order:
+The coordinating agent may implement directly or assign a builder. Use a separate reviewer that
+did not author the changes. Give agents the task contract, repository path, file ownership,
+relevant evidence, and outstanding findings. They share a workspace unless explicitly isolated:
+preserve others' changes and serialize overlapping edits, shared build outputs, and Electron runs.
+The coordinator owns roadmap updates and commits; builders and reviewers do not commit.
 
-1. **Implement** — a builder agent implements the task against its spec.
-2. **Review** — a *fresh, independent* reviewer re-runs the full verification itself
-   (`pnpm typecheck` / `lint` / `test`, plus the relevant `pnpm e2e` for UI tasks) and audits
-   the diff against the spec, the design kit, and the architecture invariants. It returns a
-   structured verdict.
-3. **Fix → review → fix → …** — loop until the reviewer signs off, up to **6 rounds**.
-4. **Commit** — one commit per task on the default branch.
+If independent review is unavailable, finish the implementation, applicable checks, and a clearly
+labeled self-review. Record independent review as outstanding; do not mark the task complete or
+make its completion commit. Missing orchestration tooling alone does not prevent local work.
 
-The gate is **correct-by-construction**: the workflow only commits when
-`verdict.passed === true && no fixable findings remain`. A skipped/null reviewer halts the task
-cleanly. If a task can't pass in 6 rounds, **commit what's there, flag it, and HALT the run**
-(downstream tasks depend on it — don't build on a broken base).
+## Implementation And Review
 
-## STRICT review (the important rule)
+1. Inspect the affected code and tests, then implement the acceptance criteria. Add tests for
+   changed behavior and meaningful risks, using the root verification policy for docs-only work.
+2. Obtain independent review of the actual diff, acceptance criteria, architecture invariants,
+   and verification evidence. For UI behavior, include the relevant design references and light
+   and dark states. For persistence, include restart, transaction, lineage, and operation-log proof.
+3. Fix all demonstrated problems in task scope, including minor defects and meaningful test gaps.
+   Findings need a file/location, evidence, impact, and actionable correction. Personal taste and
+   unrelated improvements are not blocking findings. Record unrelated discoveries separately.
+4. Re-review fixes and the behavior they can affect. Reuse the independent reviewer where possible;
+   avoid restarting the entire audit without a reason. Broaden review for newly exposed risks.
+5. After six review rounds, reassess recurring findings and the repair approach. Continue when
+   there is a concrete feasible correction; do not repeat unchanged attempts. If an actual blocker
+   prevents progress, record it and preserve the work. Every candidate for completion must have
+   been independently reviewed after its last fix.
 
-The reviewer's bar is **not** "only the biggest issues." It must surface — and the fixer must
-fix — **every genuine problem, including small wins and small mistakes**: minor bugs, rough
-edges, weak/missing tests, dead code, inconsistent naming, small UI/spec mismatches, unhandled
-small edge cases. The **only** escape hatch is a fix that requires a **massive refactor** — those
-go on a `deferred` list (with a reason) and are reported at the end, not forced in.
+The reviewer returns a clear passed/failed verdict, check evidence, unresolved findings, and
+deferred items with reasons. Defer a large refactor only when its omission does not violate the
+task's acceptance criteria or a project invariant. Effort alone cannot waive a correctness issue.
 
-So the gate passes only when **all fixable issues (large and small) are resolved**, minus
-explicitly-deferred massive-refactor items. Do not wave through minors. (This is stricter than a
-pure "critical/major only" gate.)
+If a reviewer fails to return a verdict, try recovering the review using available tools. If it
+remains unavailable, progress is blocked, or a required check cannot be completed, preserve the
+work and leave the task incomplete. Do not commit it as completed or start its dependent tasks.
 
-## Verification
+## Verification Evidence
 
-- **Native `pnpm`** (the app is an Electron desktop app on native SQLite — Docker is server-phase
-  only): `pnpm typecheck && pnpm lint && pnpm test`, plus targeted `pnpm e2e` (Playwright→Electron)
-  for UI tasks. Every feature must **survive an app restart**.
-- **Architecture invariants** (enforced by the reviewer; see `AGENTS.md`): the renderer never
-  touches SQLite/Node/fs — only `window.appApi`; mutations are transactional and append
-  `operation_log`; domain logic stays out of React; source lineage is sacred; FSRS schedules cards
-  only, the attention scheduler schedules sources/extracts (never the reverse).
+Establish baseline results when needed to distinguish existing failures from regressions. Record
+unrelated failures separately; they do not justify unrelated edits or six identical retry rounds.
+Unresolved failures in required checks still prevent a completion claim.
 
-## Commit conventions
+Follow the root Definition of Done. The coordinator owns evidence that all required checks cover
+the final code state. The reviewer independently inspects that evidence and runs focused checks
+where needed to substantiate findings or resolve uncertainty. Every role need not repeat a full
+suite on unchanged code. After fixes, rerun affected checks and refresh any required result that
+the changes invalidate. Bound heavy checks, preserve their results, and report unfinished checks.
 
-One commit per task on the default branch: subject `T0NN: <concise summary>`, a short body, and
-the trailer `Co-Authored-By: Codex Opus 4.8 (1M context) <noreply@anthropic.com>`. The committer
-also ticks the task's `[x]` in `docs/roadmap.md` and adds a newest-first Progress-log entry.
-(Manual commits are SSH-signed via 1Password; if it's locked the user must unlock it. Workflow
-subagent commits land unsigned — that's fine.)
+## Completion And Recovery
 
-## Operational guardrails (hard-won)
+Commit only when acceptance criteria, required verification, and independent review pass with
+no unresolved task-blocking findings. Then:
 
-- **Bound heavyweight reviewer verifications.** A schema-constrained reviewer that runs a huge
-  verification (electron-builder packaging, the *full* e2e) can exhaust its turn and never emit
-  its `StructuredOutput`, crashing the workflow. For such tasks, scope the reviewer to inspect +
-  confirm the artifact + run the fast checks, and explicitly require it to emit the verdict.
-- **Per-task commits + cached resume = cheap recovery.** If the run crashes, edit only the failing
-  task's branch in the persisted script (keep earlier agents' prompts byte-identical so they
-  cache-hit) and re-invoke `Workflow({scriptPath, resumeFromRunId})`.
-- **A whole-suite-green gate is poisoned by any pre-existing/flaky failing test.** Confirm the
-  suite is green before starting; an unrelated red test will force every task to the 6-round cap.
-- **The committer's tree-integrity check is load-bearing** — it must refuse to commit a broken
-  tree (e.g. a deleted root manifest) rather than push red.
+- Update the selected task to `[x]` and add a newest-first Progress-log entry with downstream
+  notes. Keep deferred items visible even when the task passes.
+- Include only task-owned changes in one commit on the current task branch, using an English
+  subject such as `T130: add source re-entry briefing`. Follow existing Git identity and signing
+  configuration; no model coauthor trailer is required. Do not push without authorization.
+- A roadmap entry included in that commit can reference its unique subject. Report the actual
+  hash after success; do not invent a self-referential hash or amend repeatedly to obtain one.
+- If the commit fails, leave the task explicitly incomplete and preserve the implementation and
+  check results. Report the real cause rather than assuming a particular signing application.
 
-## Generate the milestone spec (when missing)
+On interruption, recover from Git state, roadmap status, and recorded findings/checks. Verify
+which results still describe the current tree and resume only outstanding work. Do not replay
+completed tasks or assume a proprietary workflow cache exists.
 
-If the next milestone has no `docs/tasks/Mx-*.md`, run a small **docs-only** Workflow first:
-parallel agents (one per upcoming milestone) write the spec against the roadmap + reference docs +
-the design kit + the *real codebase* (so deliverables cite real files), a coherence reviewer
-verifies it's buildable + architecture-consistent, then **review the diff yourself and commit**
-the specs (`docs: add Mx task specs`). Then run the build workflow below.
-
-## Workflow template (adapt the task list, then launch)
-
-```js
-export const meta = {
-  name: 'interleave-build-<range>',
-  description: 'Build roadmap tasks <range> sequentially: builder → independent reviewer (strict, blocking gate, ≤6 rounds) → commit per task on the default branch. Halts if a task cannot pass.',
-  phases: [ /* one { title } per task */ ],
-}
-
-const REPO = '/Users/antoine/Code/interleave'
-const MAX_ROUNDS = 6
-const BASE = 'pnpm typecheck && pnpm lint && pnpm test'
-
-// passed=true ONLY when every fixable issue is resolved. severity 'deferred-massive-refactor'
-// does NOT block; everything else (including 'minor') does.
-const VERDICT = {
-  type: 'object', additionalProperties: false,
-  required: ['passed', 'summary', 'findings'],
-  properties: {
-    passed: { type: 'boolean', description: 'true ONLY if the task fully meets its spec, the verification you ran is green, and NO fixable issue remains — large OR small (minor bugs, rough edges, weak tests, dead code, naming, small UI/spec mismatches). Only items genuinely needing a massive refactor (severity deferred-massive-refactor) may remain.' },
-    summary: { type: 'string', description: 'name the checks you re-ran + their result' },
-    findings: { type: 'array', items: { type: 'object', additionalProperties: false,
-      required: ['severity', 'category', 'title', 'detail', 'where'],
-      properties: {
-        severity: { type: 'string', enum: ['critical', 'major', 'minor', 'deferred-massive-refactor'] },
-        category: { type: 'string', enum: ['bug', 'missing-feature', 'tests', 'ui', 'roadmap', 'architecture', 'quality'] },
-        title: { type: 'string' }, detail: { type: 'string' }, where: { type: 'string' },
-      } } },
-  },
-}
-const COMMIT = { type: 'object', additionalProperties: false,
-  required: ['committed', 'commit_hash', 'message'],
-  properties: { committed: { type: 'boolean' }, commit_hash: { type: 'string' }, message: { type: 'string' } } }
-
-const ARCH = [
-  'ARCHITECTURE INVARIANTS (Electron + native SQLite) — enforce:',
-  '- Renderer (apps/web) NEVER touches SQLite/Node/fs; all access via the typed, Zod-validated window.appApi preload bridge. No generic db.query.',
-  '- better-sqlite3 + Drizzle; foreign_keys=ON/WAL/busy_timeout; multi-step mutations in ONE transaction that appends an operation_log entry; soft-delete.',
-  '- Domain logic in packages/core / local-db / scheduler / editor — never React. Source lineage sacred. FSRS for cards only; attention scheduler for sources/extracts (never crossed).',
-  '- Verify with native pnpm (NOT Docker). Every feature must survive APP RESTART.',
-].join('\n')
-
-const TASKS = [ /* { id, phase, title, ui, specFile, extraDocs, emphasis, verify, fastVerify, commitMsg } per task */ ]
-
-function builderPrompt(t) { return [
-  'You are the BUILDER for Interleave task ' + t.id + ' — ' + t.title + '. cwd: ' + REPO + '. An independent reviewer will re-run your verification and may send fixes.',
-  'Read AGENTS.md, ' + REPO + '/' + t.specFile + ' (the ' + t.id + ' section is your AUTHORITATIVE spec), the ' + t.id + ' roadmap line, and: ' + t.extraDocs,
-  ARCH,
-  'Implement ' + t.id + ' per the spec. Emphasis: ' + t.emphasis,
-  'Verify (native pnpm): ' + t.verify + '  Paste the literal output. Do NOT commit; do NOT edit docs/roadmap.md.',
-  'Report: files changed, key decisions, verification output, deliverables checklist, downstream notes.',
-].join('\n\n') }
-
-function reviewerPrompt(t, report) { return [
-  'You are the INDEPENDENT, STRICT REVIEWER for ' + t.id + ' — ' + t.title + '. cwd: ' + REPO + '. Do NOT trust the builder; re-verify yourself.',
-  'Read the ' + t.id + ' section of ' + REPO + '/' + t.specFile + ', AGENTS.md, the roadmap line' + (t.ui ? ', and the design kit references in: ' + t.extraDocs : '') + '.',
-  ARCH,
-  'Builder report:\n<<<\n' + report + '\n>>>',
-  '1) Inspect the actual tree (git diff). 2) RE-RUN the verification yourself: ' + t.verify + '. 3) Audit against the spec + Definition of Done + the invariants + ' + (t.ui ? 'design-kit fidelity (tokens, light AND dark, lucide icons).' : 'data/domain correctness.'),
-  'STRICT: flag EVERY fixable problem — large AND small (minor bugs, rough edges, weak/missing tests, dead code, naming, small UI/spec mismatches). Only mark severity=deferred-massive-refactor for fixes that genuinely need a massive refactor; those do not block. passed=true ONLY if every other finding is resolved and the checks are green when YOU ran them.',
-].join('\n\n') }
-
-function fixerPrompt(t, v) { return [
-  'You are the BUILDER (fix round) for ' + t.id + ' — ' + t.title + '. cwd: ' + REPO + '. Fix EVERY finding that is not severity deferred-massive-refactor (small ones included).',
-  'Reviewer summary: ' + v.summary,
-  'Findings:\n' + JSON.stringify(v.findings, null, 2),
-  'Re-run GREEN: ' + t.verify + '. Do NOT commit; do NOT edit docs/roadmap.md. Report changes + fresh output.',
-].join('\n\n') }
-
-function committerPrompt(t, clean, rounds) { return [
-  'You are the COMMITTER for ' + t.id + ' — ' + t.title + '. cwd: ' + REPO + '. Default branch. Loop ran ' + rounds + ' round(s), ended ' + (clean ? 'CLEAN' : 'at the 6-round cap') + '.',
-  '1. Update docs/roadmap.md: tick the ' + t.id + ' checkbox to [x], append " · done", add a newest-first Progress-log entry.',
-  '2. Run the fast checks (' + t.fastVerify + '); if red do NOT commit (committed=false, explain).',
-  '3. If green: git add -A && ONE commit, subject "' + t.commitMsg + '", body, then trailer EXACTLY: Co-Authored-By: Codex Opus 4.8 (1M context) <noreply@anthropic.com>. Do NOT push.',
-  'Return committed, commit_hash (short), message.',
-].join('\n') }
-
-const results = []
-for (const t of TASKS) {
-  phase(t.phase)
-  let report = await agent(builderPrompt(t), { phase: t.phase, label: 'build:' + t.id, agentType: 'general-purpose' })
-  let round = 0, clean = false, verdict = null
-  while (round < MAX_ROUNDS) {
-    round++
-    verdict = await agent(reviewerPrompt(t, report), { phase: t.phase, label: 'review:' + t.id + '#' + round, agentType: 'general-purpose', schema: VERDICT })
-    if (!verdict) break
-    const blocking = (verdict.findings || []).filter(f => f.severity !== 'deferred-massive-refactor')
-    if (verdict.passed && blocking.length === 0) { clean = true; break }
-    if (round >= MAX_ROUNDS) break
-    report = await agent(fixerPrompt(t, verdict), { phase: t.phase, label: 'fix:' + t.id + '#' + (round + 1), agentType: 'general-purpose' })
-  }
-  const commit = await agent(committerPrompt(t, clean, round), { phase: t.phase, label: 'commit:' + t.id, agentType: 'general-purpose', schema: COMMIT })
-  if (!commit || !commit.committed) throw new Error(t.id + ' commit failed: ' + (commit ? commit.message : 'no result') + '. Halting.')
-  results.push({ id: t.id, rounds: round, clean, commit: commit.commit_hash, deferred: clean ? [] : (verdict?.findings || []).filter(f => f.severity === 'deferred-massive-refactor') })
-  if (!clean) throw new Error(t.id + ' did not reach a clean review in ' + MAX_ROUNDS + ' rounds (committed ' + commit.commit_hash + '). Halting — downstream tasks depend on it.')
-}
-return { completed: results, note: 'Built <range>: strict gate, commit per task. Any deferred massive-refactor items are listed per task.' }
-```
-
-After it completes (or halts), **independently verify green at HEAD** (`pnpm typecheck && lint && test`, plus e2e if UI) and report per-task commits + any deferred massive-refactor items.
+Report completed task IDs and commits, verification results, deferred items, and any incomplete
+task with its exact blocker. Summarize successful checks; include relevant output for failures.

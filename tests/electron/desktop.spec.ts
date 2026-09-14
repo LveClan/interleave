@@ -102,6 +102,7 @@ test("app.health() and db.getStatus() work through window.appApi", async () => {
 });
 
 test("Electron E2E launches keep the main window hidden but automation-usable", async () => {
+  test.skip(process.platform !== "darwin", "Quiet E2E activation is specific to macOS.");
   const app = await launchApp(dataDir);
   const page = await app.firstWindow();
   await page.waitForLoadState("domcontentloaded");

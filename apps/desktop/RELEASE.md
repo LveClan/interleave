@@ -1,11 +1,78 @@
-# Interleave — macOS desktop release & verification checklist (T050)
+# Interleave desktop packaging
 
-Interleave ships as a **local-first Electron desktop app for macOS** (arm64). This
-document is the "shippable" verification checklist: how to build the installable
-`.app`/`.dmg`, and the Definition-of-Done items demonstrated against the **packaged**
-app (not just `electron .`).
+Interleave is a local-first Electron desktop app. Packaging targets are macOS arm64
+(`.app`/`.dmg`) and Windows x64 (NSIS `.exe` installer and ZIP). Build on the target
+OS so SQLite, sqlite-vec, and ONNX Runtime match the application. The T050 verification
+record below is historical macOS evidence, not Windows acceptance evidence.
 
-## Build the installer
+## Windows x64
+
+Use a checkout on a Windows drive in native PowerShell or Command Prompt. Install
+Node `>=22.13.1 <23` and pnpm `9.12.1`. Keep its `node_modules`, `native`, and `dist`
+directories separate from any WSL/Linux checkout. A Windows Node installed outside
+the supported range also needs to be switched to Node 22 before installing.
+
+```powershell
+node --version
+corepack enable pnpm
+corepack pnpm --version
+corepack pnpm install --frozen-lockfile
+corepack pnpm --filter @interleave/desktop dist:win
+```
+
+The build downloads Electron and the pinned EmbeddingGemma model on first use;
+offline OCR resources come from the dependency installation. Network access to npm,
+GitHub releases, and Hugging Face is required for uncached assets. SQLite uses an
+upstream Electron prebuild when available; compiling it instead requires Python and
+Visual Studio Build Tools with the Desktop development with C++ workload.
+
+Enable the pnpm shim on PATH as shown above: electron-builder invokes `pnpm` itself
+to inspect dependencies. Windows model staging and the embedding worker preload the
+matching ONNX DLL by absolute path using Koffi, before loading the ONNX Node binding.
+This avoids Windows' older system copy. System DLLs are never changed; macOS does not
+load or stage this Windows helper dependency.
+
+Output in `apps/desktop/release/`:
+
+- `Interleave-<version>-win-x64-setup.exe`: per-user installer with a selectable path.
+- `Interleave-<version>-win-x64.zip`: extract the full directory, then run `Interleave.exe`.
+- `win-unpacked/`: the staged application directory.
+
+No Apple credentials or upstream 1Password configuration are needed. Without a Windows
+signing certificate, artifacts are unsigned and Windows may display an unknown-publisher
+warning. Packaging explicitly disables publishing. Uninstalling preserves application
+data under `%APPDATA%\Interleave`; the ZIP also uses this location and is not a separate
+portable data profile.
+
+Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, and relevant Electron tests before
+distribution. Check the actual packaged executable for startup, SQLite migrations,
+offline model/OCR assets, and restart persistence. Generating an installer alone does
+not establish that these flows work on Windows.
+
+The current application UI is English-only: there is no locale setting or Chinese
+translation catalog. The bundled OCR worker uses `eng`; Chinese OCR needs additional
+language data and worker configuration independently of UI translation.
+
+### Fork verification (2026-09-14)
+
+Built version 0.7.0 on native Windows x64 with Node 22.20.0, pnpm 9.12.1, and
+Electron 39.8.10. The NSIS installer and ZIP are unsigned. The final packaging run
+used `ELECTRON_BUILDER_COMPRESSION_LEVEL=1` after rebuilding the updated bundle.
+
+- Windows path/native-helper tests: 20 passed. Additional macOS target and signing
+  regression checks passed on Linux; no macOS machine was available for a DMG run.
+- Windows Electron desktop E2E: 7 passed, with the macOS-only quiet-window test skipped.
+  Command: `pnpm e2e --project=electron tests/electron/desktop.spec.ts --workers=1 --timeout=120000`.
+- Packaged executable: renderer startup, 43 SQLite migrations, foreign keys, restart
+  persistence, real EmbeddingGemma (`ready`, no fallback), sqlite-vec, and bundled
+  English OCR passed. OCR recognized `Source Notes` through the packaged utility worker.
+- Root `pnpm lint` and `pnpm typecheck` passed. The full `pnpm test` run had 4,890
+  passing and 24 failing tests under concurrent build load. Focused reruns passed the
+  Inbox, large concept-member query, OCR job, and PDF import failures. Nineteen property
+  tests timed out in that full run; the chronic-postpone test still fails because its
+  fixed July 2026 fallow date is in the past. Full-suite acceptance remains outstanding.
+
+## macOS arm64
 
 The packager is **additive** around the existing pipeline (`build.mjs` +
 `vendor-native.mjs` + the custom `app://` protocol). `electron-builder` is
@@ -22,10 +89,10 @@ INTERLEAVE_DIST_DIR_ONLY=1 pnpm --filter @interleave/desktop dist   # → releas
 INTERLEAVE_DIST_SKIP_BUILD=1 pnpm --filter @interleave/desktop dist
 ```
 
-`pnpm dist` runs, in order: (1) `@interleave/web build` (renderer), (2)
-`vendor-native.mjs` (Electron-ABI `better_sqlite3.node`, if missing), (3) `build.mjs`
-(bundles `main.cjs`/`preload.cjs`, stages `dist/drizzle` + `dist/renderer`), (4)
-`electron-builder` (`.app` + `.dmg`).
+`pnpm --filter @interleave/desktop dist` builds the renderer, refreshes the Electron-ABI
+`better_sqlite3.node`, vendors and verifies sqlite-vec, and bundles main/preload plus
+migrations, renderer, OCR, and embedding assets. It then invokes electron-builder for
+the host target. Missing required native extensions or embedding-model assets fail the build.
 
 ## Architecture notes that make packaging work (read before changing the config)
 
@@ -53,7 +120,11 @@ INTERLEAVE_DIST_SKIP_BUILD=1 pnpm --filter @interleave/desktop dist
   harness still build + run the same `main.cjs`; the packaged app **ignores**
   `INTERLEAVE_DATA_DIR` / `VITE_DEV_SERVER_URL` (`paths.ts` / `index.ts`).
 
-## Deferred (out of scope for the MVP — clearly stubbed)
+## Historical T050 Release Notes
+
+The remaining sections record the original macOS MVP verification. Their artifact sizes,
+test counts, and deferred features describe that release; consult the current build config
+and the platform instructions above for present packaging behavior.
 
 - **Developer ID signing + notarization.** The build IS ad-hoc signed (the
   `afterPack` hook `scripts/adhoc-sign.cjs` runs `codesign --force --deep --sign -`

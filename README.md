@@ -119,8 +119,16 @@ pnpm e2e          # Playwright E2E against the Electron app
 pnpm seed         # load a demo collection into the dev SQLite DB
 ```
 
-To package the desktop app: `pnpm --filter @interleave/desktop dist` → an installable `.dmg`
-in `apps/desktop/release/`.
+Package on the target OS with Node 22 and pnpm 9 (see `package.json` for exact ranges):
+
+- macOS arm64: `pnpm --filter @interleave/desktop dist` produces a `.dmg`.
+- Windows x64: `pnpm --filter @interleave/desktop dist:win` produces an NSIS `.exe`
+  installer and a ZIP in `apps/desktop/release/`.
+
+Windows builds need a separate native Windows checkout and dependencies; do not reuse WSL
+`node_modules` or native binaries. See [desktop packaging](apps/desktop/RELEASE.md) for setup,
+model downloads, and verification. The interface is currently English-only; language switching
+and Chinese UI translations are not implemented. Offline OCR currently includes English only.
 
 ---
 

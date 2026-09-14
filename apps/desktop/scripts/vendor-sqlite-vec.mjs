@@ -33,7 +33,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const desktopDir = path.resolve(here, "..");
 const repoRoot = path.resolve(desktopDir, "..", "..");
 const nativeDir = path.join(desktopDir, "native");
-const require = createRequire(import.meta.url);
+const require = createRequire(path.join(repoRoot, "packages", "db", "package.json"));
 const EMBEDDING_DIM = readEmbeddingDim();
 
 function readEmbeddingDim() {

@@ -12,19 +12,40 @@ It is not a read-it-later app, a generic notes app, or only a flashcard app. Eve
 help users process too much source material without losing provenance, priority, scheduling, or
 review quality.
 
-## Read First
+## Context By Task
 
-- `docs/README.md` explains the documentation control plane and task loop.
-- `docs/roadmap.md` is the task queue. For roadmap work, pick the lowest-numbered unchecked task
-  whose dependencies are complete.
-- `CONCEPTS.md` defines project vocabulary.
-- `docs/solutions/` contains prior implementation learnings. Search it before repeating work in a
-  documented area.
+- For roadmap work, use `docs/README.md`, the selected `docs/roadmap.md` entries, and their linked
+  specs or plans. Follow the user's requested task scope; otherwise choose the lowest-numbered
+  unchecked task whose dependencies are complete.
+- Consult `CONCEPTS.md` for domain vocabulary and `docs/solutions/` for prior lessons in the area
+  being changed. Search for relevant sections instead of loading the entire documentation tree.
+- Read applicable scoped instructions before editing their files. Reuse context already read
+  during this task unless it changes.
+
+## Working Agreements
+
+- Reply in Chinese unless the user requests another language. Use English commit subjects and
+  bodies, following the repository's existing task IDs and commit style.
+- Carry authorized implementation through review, verification, and fixes. Make routine local
+  decisions from the code and task scope; ask only when missing information materially changes
+  the result or an action needs authorization that has not already been given.
+- Explicit user instructions take precedence over repository workflow defaults and skills.
+  Historical plans and solution notes provide context; check them against current code and the
+  selected task before treating their examples as requirements.
+- Use the current checkout and available tools. Discover the repository root, branch, working
+  tree, and relevant tool versions; do not assume the upstream author's paths, agent runtime,
+  signing provider, credentials, or hosted services exist in this fork.
+- Preserve unrelated working-tree and staged changes. Include only task-owned changes in commits
+  on the current task branch. Respect configured Git identity and signing; do not invent model
+  coauthor trailers or change signing configuration to bypass a failure. Push or publish only
+  within the user's authorization.
+- When a required capability is unavailable, use an equivalent local workflow where possible.
+  Complete independent work and report the exact remaining check or action. Missing tools or
+  verification are never evidence that a task passed.
 
 ## Scoped Instructions
 
-Root instructions are intentionally short. Read the closest scoped instruction file before editing
-inside these areas:
+Read the applicable parent and closest scoped instruction files for the areas being changed:
 
 - `docs/AGENTS.md` - roadmap, plans, task specs, solution docs, and documentation hygiene.
 - `design/AGENTS.md` - design tokens, icon map, and immutable prototype references.
@@ -67,6 +88,8 @@ Older task specs may cite former root `CLAUDE.md` sections. Use this crosswalk:
 The canonical product is the native Electron desktop app with native SQLite via
 `better-sqlite3` and a filesystem asset vault. Use native `pnpm`; Docker is only for the later
 encrypted-backup server support and is not the desktop development or test loop.
+Read `package.json` for the supported Node and pnpm versions. Check the current OS and installed
+tools before selecting setup commands; upstream machine-specific examples are not prerequisites.
 
 Common commands:
 
@@ -102,7 +125,8 @@ Common commands:
 
 ## Definition Of Done
 
-Development is not complete until the change is confirmed with:
+For changes to application code, dependencies, or build/test configuration, confirm the final
+implementation from the repository root with:
 
 1. `pnpm lint`
 2. `pnpm typecheck`
@@ -110,9 +134,20 @@ Development is not complete until the change is confirmed with:
 4. Relevant `pnpm e2e` / Electron Playwright coverage for user-facing, persistence, import,
    review, search, backup, or IPC behavior
 
+During implementation and review, run focused checks for changed behavior. Required checks must
+cover the final code state, but need not be rerun by every agent on unchanged code. Expand or
+repeat verification when changes, failures, or unresolved concerns justify it. Record commands,
+results, and any environment blockers; a blocked check is not a pass.
+
+For documentation-only changes, check accuracy, links, examples, and `git diff --check`; validate
+skill frontmatter and walk through changed workflow decisions when applicable. Run code checks
+if the change also affects tooling or file discovery. A prose-only edit does not require booting
+Electron or rerunning the application suite.
+
 For persistence features, also prove data survives app restart, multi-table mutations are
 transactional, foreign keys are enforced, source lineage is preserved, and `operation_log` entries
 are written.
 
-When finishing roadmap work, update `docs/roadmap.md` with the completed task, commit reference,
-and any downstream notes.
+Mark roadmap work complete only after its acceptance criteria, required review, and verification
+pass. Update `docs/roadmap.md` with the completed task, commit reference, and downstream notes;
+keep blocked or partially verified work explicitly incomplete.

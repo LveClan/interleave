@@ -6,9 +6,12 @@ and the reference docs as product constraints, not optional background.
 ## Before Starting Roadmap Work
 
 1. Read `docs/README.md`.
-2. Pick the lowest-numbered unchecked roadmap task whose dependencies are all `[x]`.
-3. Read the matching `docs/tasks/M*.md` spec when it exists. If it does not, use the roadmap
-   entry's `Goal`, `Depends on`, and `Done when` as the spec.
+2. Use the user's selected tasks or milestone. Otherwise pick the lowest-numbered unchecked
+   roadmap task whose dependencies are all `[x]`.
+3. Read the selected entry's linked spec or plan. If neither exists, use its `Goal`, `Depends on`,
+   and `Done when` to draft and review the selected milestone's spec before implementation.
+   If independent review is unavailable, follow the build skill's unreviewed-draft fallback;
+   neither the spec nor implementation can be marked complete pending that review.
 4. Load only the reference docs relevant to the task: `concept.md`, `architecture.md`,
    `domain-model.md`, `scheduling-and-priority.md`, and `design-system.md` for UI work.
 5. Search `docs/solutions/` for prior lessons before changing related architecture, tests, UI
@@ -20,7 +23,8 @@ and the reference docs as product constraints, not optional background.
 - Preserve task IDs (`T001` etc.) in commits, specs, and summaries.
 - Status markers are `[ ]`, `[~]`, `[x]`, and `[!]`.
 - When finishing a roadmap task, mark it `[x]`, record the commit or PR, and note downstream
-  changes.
+  changes only after acceptance, required review, and verification pass. Failed or missing review
+  and blocked verification leave the task incomplete.
 - Use `docs/tasks/_TEMPLATE.md` for new milestone specs.
 - Do not reorder, rename, or broaden roadmap tasks casually; the app is built one coherent feature
   at a time.
@@ -33,7 +37,6 @@ observed problem, why it mattered, the fix, and prevention.
 
 ## Verification Language
 
-Native `pnpm` is canonical. Completed implementation work must be confirmed from the repo root
-with `pnpm lint`, `pnpm typecheck`, `pnpm test`, and relevant `pnpm e2e` coverage. Do not describe
-Docker or `make` as the desktop app verification path; Docker is reserved for future
-encrypted-backup server infrastructure.
+Follow the root `AGENTS.md` Definition of Done for verification scope, including documentation-only
+changes and reuse of checks on unchanged code. Native `pnpm` is canonical for implementation
+checks. Docker is reserved for encrypted-backup infrastructure, not desktop verification.

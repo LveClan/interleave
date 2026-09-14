@@ -8,8 +8,8 @@ cards, tasks, concepts, media fragments, or synthesis notes.
 
 Keep these concepts distinct:
 
-- lifecycle status: inbox, pending, active, scheduled, done, dismissed, suspended, deleted
-- distillation stage: raw_source through synthesis
+- lifecycle status: the canonical values in `ELEMENT_STATUSES` in `src/enums.ts`
+- distillation stage: the separate `DISTILLATION_STAGES` values in `src/enums.ts`
 - numeric priority, surfaced as A/B/C/D labels elsewhere
 - source lineage: parent element, source element, source location, selected text snapshot
 

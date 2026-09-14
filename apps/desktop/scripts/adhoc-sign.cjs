@@ -36,7 +36,7 @@ const path = require("node:path");
 
 /** @param {{ electronPlatformName: string, appOutDir: string, packager: { appInfo: { productFilename: string } } }} context */
 exports.default = async function adhocSign(context) {
-  // macOS only — no signing concept for the other platforms we don't ship anyway.
+  // This hook only handles macOS ad-hoc signing.
   if (context.electronPlatformName !== "darwin") return;
 
   // RELEASE BUILDS: skip the ad-hoc re-seal entirely. When INTERLEAVE_RELEASE_SIGN=1

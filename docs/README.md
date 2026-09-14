@@ -2,10 +2,10 @@
 
 This `docs/` tree is the control plane for building **Interleave**, a local-first
 incremental reading application. It exists so that we can build the product
-**one feature at a time, each by a dedicated agent**, while keeping the whole
+**one feature at a time**, while keeping the whole
 plan coherent across hundreds of small steps.
 
-Read this file first if you are an agent picking up work.
+Use this file when picking up roadmap work.
 
 ## How the docs fit together
 
@@ -15,7 +15,7 @@ Read this file first if you are an agent picking up work.
 | [`architecture.md`](./architecture.md) | Stack, rationale, monorepo layout, Docker. | Occasionally |
 | [`domain-model.md`](./domain-model.md) | The universal `Element` model, types/statuses/stages, schema. | When the data model evolves |
 | [`scheduling-and-priority.md`](./scheduling-and-priority.md) | FSRS card scheduling vs. the topic/extract scheduler, priority model. | When scheduling rules evolve |
-| [`roadmap.md`](./roadmap.md) | **The task queue.** All 100 steps as a checklist with dependencies and done-criteria. | After every completed task |
+| [`roadmap.md`](./roadmap.md) | **The task queue.** Task IDs, dependencies, status, and done-criteria. | After every completed task |
 | [`tasks/_TEMPLATE.md`](./tasks/_TEMPLATE.md) | The contract every detailed task spec follows. | Rarely |
 | [`tasks/M*.md`](./tasks/) | Expanded, ready-to-build specs for one milestone at a time. | Per milestone |
 | [`../AGENTS.md`](../AGENTS.md) | The engineering charter: invariants, scoped instruction map, native pnpm commands, definition of done. | Rarely |
@@ -26,27 +26,31 @@ in the roadmap.
 
 ## The orchestration loop
 
-Each unit of work is one roadmap task (`T001`…`T100`). To build one:
+Each unit of work is one roadmap task. The `build-tasks` skill under
+`.agents/skills/` provides the independent review and commit workflow using the current agent
+runtime. The `.claude/skills/` entries point to the same instructions; no particular orchestration
+tool or upstream author's local configuration is required. To build a task:
 
-1. **Pick a task.** Choose the lowest-numbered unchecked task in `roadmap.md`
-   whose `Depends on` tasks are all checked `[x]`. (Independent tasks may be run
-   in parallel by separate agents — see "Parallelism" below.)
+1. **Pick a task.** Follow the user's selected tasks or milestone. Otherwise choose the
+   lowest-numbered unchecked task in `roadmap.md` whose dependencies are all `[x]`.
+   For an open-ended "continue the roadmap" request, complete one eligible task by default.
 2. **Load context.** Read `AGENTS.md`, the relevant scoped instruction files, the relevant
    reference docs, and the task's
-   detailed spec in `tasks/M*.md` if one exists. If no detailed spec exists yet,
-   the roadmap entry (`Goal` + `Done when` + `Depends on`) is the spec.
+   linked spec or plan. If neither exists, draft and review the selected milestone's spec from
+   the roadmap entry (`Goal` + `Done when` + `Depends on`) and current code before implementation.
 3. **Inspect first.** Look at the existing schema, repositories, services, and
    tests touched by the task before writing anything. Do not rewrite unrelated code.
 4. **Build the feature + its tests** in one coherent change.
-5. **Verify with native pnpm.** Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, and
-   relevant `pnpm e2e` checks from the repo root. Docker is reserved for the future
-   encrypted-backup server, not desktop app development.
-6. **Confirm the Definition of Done** (see `AGENTS.md`). A persistence-sensitive task is not done
-   unless it survives app restart and preserves source lineage.
-7. **Update the roadmap.** Check the box `[x]`, add the PR/commit reference, and
-   note anything that changes downstream tasks.
-8. **Commit** as a single coherent change referencing the task ID
-   (e.g. `T021: extraction into scheduled child extract`).
+5. **Verify and independently review.** Follow the root `AGENTS.md` Definition of Done and the
+   skill's review gate. Reuse check results for unchanged code and rerun affected checks after
+   fixes. Docker is reserved for the future encrypted-backup server.
+6. **Confirm acceptance.** A persistence-sensitive task is not done unless it survives app
+   restart and preserves source lineage. Missing review or blocked checks leave it incomplete.
+7. **Update the roadmap and commit.** After the gate passes, check `[x]`, note downstream changes,
+   and include only task-owned changes in one commit on the current task branch. Use an English
+   subject such as `T021: extraction into scheduled child extract`. A same-commit roadmap entry
+   can reference that unique subject; report the actual hash after the commit succeeds. If commit
+   fails, leave the task explicitly incomplete and preserve its implementation for recovery.
 
 ## Just-in-time task specs
 
@@ -55,15 +59,18 @@ once. The roadmap already records every step's intent and done-criteria, so noth
 is lost — but expanding a spec *after* the prior milestone is built lets it reference
 real files, real repository signatures, and real test helpers instead of guesses.
 
-When a milestone's tasks are all checked, generate the next milestone's spec file
-from the roadmap before starting it.
+Generate a missing spec only for the milestone selected next. An existing linked plan can already
+provide the detailed task contract; do not duplicate it just to satisfy a filename convention.
+If independent review is unavailable, the build skill permits local work against an explicitly
+unreviewed draft while keeping both the spec and implementation incomplete pending review.
 
 ## Parallelism
 
-Tasks with disjoint `Depends on` chains and disjoint file footprints can be built
-concurrently by separate agents (e.g. "concepts/tags" and "search" late in the MVP).
-The roadmap's `Depends on` column is the contract. When in doubt, serialize — this
-product values data-integrity and lineage over throughput.
+Independent inspection and review can use available subagents. Assign explicit scopes and file
+ownership, and keep a reviewer independent from the changes it evaluates. Build roadmap tasks
+sequentially by default; parallel builds need disjoint dependencies and file ownership. Serialize
+shared build outputs and Electron verification. If independent agents are unavailable, complete
+local work and record the outstanding review instead of claiming that self-review is independent.
 
 ## Status legend (used in `roadmap.md`)
 

@@ -33,8 +33,9 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import * as esbuild from "esbuild";
+import { preloadWindowsOnnx } from "./src/shared/windows-onnx.cjs";
 
 const require = createRequire(import.meta.url);
 
@@ -210,6 +211,9 @@ async function stageTransformers() {
   // the requiring package (so conflicting versions stay isolated, exactly like a real
   // install). This produces a self-contained tree a plain `require` resolves offline.
   collectPnpmGraph(transformersDir, stagedNodeModules);
+  if (process.platform === "win32") {
+    collectPnpmGraph(path.dirname(require.resolve("koffi")), stagedNodeModules);
+  }
   await stageEmbeddingModel(stageDir);
 }
 
@@ -233,6 +237,9 @@ export async function stageEmbeddingModel(stageDir, options = {}) {
     return;
   }
   try {
+    if (process.platform === "win32" && !options.transformers) {
+      preloadWindowsOnnx(require.resolve("@huggingface/transformers"), require.resolve("koffi"));
+    }
     const mod = options.transformers ?? (await import("@huggingface/transformers"));
     if (mod.env) {
       mod.env.cacheDir = modelDir;
@@ -451,7 +458,7 @@ async function run() {
   );
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   run().catch((error) => {
     console.error(error);
     process.exit(1);

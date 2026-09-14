@@ -1,6 +1,6 @@
 /**
  * electron-builder configuration — package the Interleave desktop shell into an
- * installable macOS .app + .dmg.
+ * installable macOS .app/.dmg or Windows x64 NSIS installer and ZIP.
  *
  * Ported from the former `electron-builder.yml` to a `.cjs` config so the macOS
  * SIGNING posture can be CONDITIONAL on one env flag (`INTERLEAVE_RELEASE_SIGN`).
@@ -36,7 +36,7 @@
 // Release signing is OFF unless explicitly requested. `pnpm dist:release` (which
 // runs under `op run`) sets this to "1"; plain `pnpm dist` leaves it unset and
 // gets the ad-hoc dev build exactly as before.
-const signRelease = process.env.INTERLEAVE_RELEASE_SIGN === "1";
+const signRelease = process.platform === "darwin" && process.env.INTERLEAVE_RELEASE_SIGN === "1";
 
 // Fail fast — BEFORE electron-builder does any work — if a release build is requested
 // without the Apple notarization credentials. Without this guard the failure is silent
@@ -204,6 +204,24 @@ module.exports = {
   ],
 
   mac,
+
+  win: {
+    target: [
+      { target: "nsis", arch: ["x64"] },
+      { target: "zip", arch: ["x64"] },
+    ],
+    icon: "../../brand/icon.png",
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: electron-builder filename macros.
+    artifactName: "${productName}-${version}-win-${arch}.${ext}",
+  },
+  nsis: {
+    oneClick: false,
+    perMachine: false,
+    allowToChangeInstallationDirectory: true,
+    deleteAppDataOnUninstall: false,
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: electron-builder filename macros.
+    artifactName: "${productName}-${version}-win-${arch}-setup.${ext}",
+  },
 
   // Re-seal the packed .app with a VALID ad-hoc signature (dev builds only; the hook
   // no-ops when INTERLEAVE_RELEASE_SIGN=1, letting electron-builder's real Developer

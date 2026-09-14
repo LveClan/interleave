@@ -10,7 +10,7 @@ applies_when:
   - "Root agent instructions have grown into a long mixed charter that makes agents load too much context."
   - "Directory-specific rules need to be discoverable without duplicating the full project contract."
   - "Claude-compatible tooling still expects CLAUDE.md instruction files."
-  - "Documentation-only instruction changes must still pass the repo's full verification gates."
+  - "Adding instruction files can affect test or tool discovery."
 related_components:
   - development_workflow
   - tooling
@@ -67,7 +67,11 @@ Scoped instructions improve precision. Renderer work sees renderer rules, databa
 
 The `CLAUDE.md` symlink pattern matters because it preserves compatibility without introducing parallel instruction sources.
 
-Full verification matters even for documentation-heavy instruction work because the instructions define the development contract. Running `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm e2e` proved both the docs and the existing gates still agree.
+The original split also changed Vitest project discovery, so application verification was relevant.
+For later prose-only edits, follow the current root `AGENTS.md` verification policy: check the
+instructions, references, and workflow decisions. Adding or moving files that affect discovery
+still calls for the relevant tooling checks; the original incident is not a requirement to run
+the entire application suite for every documentation edit.
 
 ## When to Apply
 

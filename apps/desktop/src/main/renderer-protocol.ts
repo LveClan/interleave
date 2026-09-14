@@ -15,6 +15,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { net, protocol } from "electron";
 
 /** The scheme + host used to load the renderer, e.g. `app://bundle/`. */
@@ -63,6 +64,6 @@ export function registerRendererProtocol(rendererDir: string): void {
         ? normalizedTarget
         : path.join(rendererDir, "index.html");
 
-    return net.fetch(`file://${target}`);
+    return net.fetch(pathToFileURL(target).href);
   });
 }

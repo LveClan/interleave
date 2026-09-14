@@ -188,11 +188,7 @@ function releaseBuildLock(lock: BuildLock): void {
 function runBuildsIfStale(): void {
   // The renderer bundles apps/web/src + the shared packages it imports.
   if (isStale(webDist, [path.join(webDir, "src"), packagesDir])) {
-    execFileSync("pnpm", ["--filter", "@interleave/web", "build"], {
-      cwd: repoRoot,
-      stdio: "inherit",
-      timeout: buildStepTimeoutMs,
-    });
+    runPnpmBuild(["--filter", "@interleave/web", "build"]);
   }
   // The main bundle compiles apps/desktop/src + the shared packages (db/core/
   // local-db/scheduler) it bundles into a self-contained main.cjs.
@@ -200,12 +196,21 @@ function runBuildsIfStale(): void {
     isStale(mainBundle, [path.join(desktopDir, "src"), packagesDir]) ||
     isStale(preloadBundle, [path.join(desktopDir, "src"), packagesDir]);
   if (desktopStale) {
-    execFileSync("pnpm", ["--filter", "@interleave/desktop", "build:bundle"], {
-      cwd: repoRoot,
-      stdio: "inherit",
-      timeout: buildStepTimeoutMs,
-    });
+    runPnpmBuild(["--filter", "@interleave/desktop", "build:bundle"]);
   }
+}
+
+function runPnpmBuild(args: string[]): void {
+  const cli = process.env.npm_execpath;
+  if (!cli && process.platform === "win32") {
+    throw new Error("Run Electron tests through pnpm e2e so the pnpm CLI can be resolved.");
+  }
+  // Execute the CLI through Node to support Windows pnpm.cmd and paths with spaces.
+  execFileSync(cli ? process.execPath : "pnpm", cli ? [cli, ...args] : args, {
+    cwd: repoRoot,
+    stdio: "inherit",
+    timeout: buildStepTimeoutMs,
+  });
 }
 
 /**

@@ -12,8 +12,8 @@
  * path to `better-sqlite3`'s `nativeBinding` option, so it loads the Electron-ABI
  * binary while the shared package keeps its Node-ABI binary for everything else.
  *
- * Steps: copy the better-sqlite3 package sources to a temp dir, `node-gyp
- * rebuild` against the installed Electron's headers, copy the resulting `.node`
+ * Steps: copy better-sqlite3 to a temp dir, use its upstream Electron prebuild
+ * (falling back to node-gyp with Electron headers), copy the resulting `.node`
  * into `native/`, then clean up. Idempotent. Run via
  * `pnpm --filter @interleave/desktop rebuild:native`.
  */
@@ -81,21 +81,42 @@ function main() {
       filter: (src) => !src.includes(`${path.sep}build${path.sep}`),
     });
 
-    // Rebuild the native addon against Electron's headers/ABI with node-gyp.
-    execFileSync(
-      "npx",
-      [
-        "--yes",
-        "node-gyp",
-        "rebuild",
-        `--target=${electronVersion}`,
-        `--arch=${process.arch}`,
-        "--dist-url=https://electronjs.org/headers",
-        "--runtime=electron",
-        "--build-from-source",
-      ],
-      { cwd: buildDir, stdio: "inherit", env: { ...process.env, npm_config_runtime: "electron" } },
-    );
+    const packageRequire = createRequire(path.join(storeDir, "package.json"));
+    const options = {
+      cwd: buildDir,
+      stdio: "inherit",
+      env: { ...process.env, npm_config_runtime: "electron" },
+    };
+    try {
+      execFileSync(
+        process.execPath,
+        [
+          packageRequire.resolve("prebuild-install/bin.js"),
+          "--runtime=electron",
+          `--target=${electronVersion}`,
+          `--arch=${process.arch}`,
+        ],
+        options,
+      );
+    } catch {
+      console.warn(
+        "[desktop] Electron prebuild unavailable; compiling with the local C++ toolchain.",
+      );
+      const rebuildRequire = createRequire(require.resolve("@electron/rebuild"));
+      execFileSync(
+        process.execPath,
+        [
+          rebuildRequire.resolve("node-gyp/bin/node-gyp.js"),
+          "rebuild",
+          `--target=${electronVersion}`,
+          `--arch=${process.arch}`,
+          "--dist-url=https://electronjs.org/headers",
+          "--runtime=electron",
+          "--build-from-source",
+        ],
+        options,
+      );
+    }
 
     const built = path.join(buildDir, "build", "Release", "better_sqlite3.node");
     if (!existsSync(built)) {
