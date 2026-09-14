@@ -25,6 +25,7 @@ vi.mock("electron", () => ({
   },
 }));
 
+import { createI18n } from "@interleave/i18n";
 import { IPC_CHANNELS } from "../shared/channels";
 import { installApplicationMenu } from "./menu";
 
@@ -50,6 +51,37 @@ beforeEach(() => {
 });
 
 describe("installApplicationMenu", () => {
+  it.each([
+    "win32",
+    "darwin",
+  ])("preserves %s roles and accelerators under translated custom labels", (platform) => {
+    const previous = Object.getOwnPropertyDescriptor(process, "platform");
+    Object.defineProperty(process, "platform", { value: platform });
+    try {
+      const instance = createI18n();
+      instance.addResource("en", "translation", "menu.file", "Long translated File label");
+      installApplicationMenu(instance.t);
+      const sections = installedTemplate();
+      const file = sections.find((section) => section.label === "Long translated File label");
+      expect(file?.submenu).toContainEqual({ role: platform === "darwin" ? "close" : "quit" });
+      expect(sections.some((section) => section.label === "Interleave")).toBe(
+        platform === "darwin",
+      );
+      expect(sections.find((section) => section.label === "Edit")?.submenu).toEqual([
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "selectAll" },
+      ]);
+      expect(menuItem("Back up…").accelerator).toBe("CmdOrCtrl+B");
+      expect(menuItem("Keyboard shortcuts").accelerator).toBe("CmdOrCtrl+/");
+    } finally {
+      if (previous) Object.defineProperty(process, "platform", previous);
+    }
+  });
   it("installs native menu sections and wires backup/shortcut commands to the focused renderer", () => {
     electron.getFocusedWindow.mockReturnValue(electron.focusedWindow);
     electron.getAllWindows.mockReturnValue([electron.fallbackWindow]);

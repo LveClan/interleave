@@ -19,6 +19,9 @@ import { defineConfig } from "vite";
 const repoRoot = resolve(import.meta.dirname, "../..");
 
 export default defineConfig({
+  define: {
+    __INTERLEAVE_I18N_TEST__: JSON.stringify(process.env.INTERLEAVE_I18N_TEST === "1"),
+  },
   plugins: [react(), tailwindcss()],
   server: {
     host: "0.0.0.0",

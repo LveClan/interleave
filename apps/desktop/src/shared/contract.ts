@@ -229,6 +229,12 @@ export interface SettingsUpdateResult {
 /** `settings.getAll()` takes no arguments. */
 export const SettingsGetAllRequestSchema = z.void();
 
+export interface LocaleState {
+  readonly preference: string;
+  readonly locale: string;
+  readonly systemLocale: string;
+}
+
 export interface SettingsGetAllResult {
   /**
    * The complete, validated settings (unset keys resolved to defaults), PROJECTED for
@@ -317,6 +323,10 @@ export const SettingsPatchSchema = z
     importBalanceFactor: z.number().min(IMPORT_BALANCE_FACTOR_MIN).max(IMPORT_BALANCE_FACTOR_MAX),
     keyboardLayout: z.enum(KEYBOARD_LAYOUTS),
     theme: z.enum(THEMES),
+    language: z
+      .string()
+      .max(64)
+      .regex(/^(system|[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*)$/),
     /** The local vault owner's display name (trimmed + capped main-side). */
     displayName: z.string().max(DISPLAY_NAME_MAX),
     // Semantic search (T087): always-on local search. Legacy off/model-id patches
@@ -7588,6 +7598,10 @@ export interface BackupsResetLocalDataResult {
  * means adding a channel + schema here first.
  */
 export interface AppApi {
+  readonly locale: {
+    get(): Promise<LocaleState>;
+    onChanged(callback: (state: LocaleState) => void): () => void;
+  };
   readonly app: {
     /** Liveness/readiness probe. */
     health(): Promise<HealthResult>;

@@ -13,6 +13,7 @@ Use this file when picking up roadmap work.
 |------|------|-------------------|
 | [`concept.md`](./concept.md) | What incremental reading is and why it works. The product "why". | Rarely |
 | [`architecture.md`](./architecture.md) | Stack, rationale, monorepo layout, Docker. | Occasionally |
+| [`internationalization.md`](./internationalization.md) | Desktop language resources, contribution workflow, verification and migration inventory. | When languages or migrated surfaces change |
 | [`domain-model.md`](./domain-model.md) | The universal `Element` model, types/statuses/stages, schema. | When the data model evolves |
 | [`scheduling-and-priority.md`](./scheduling-and-priority.md) | FSRS card scheduling vs. the topic/extract scheduler, priority model. | When scheduling rules evolve |
 | [`roadmap.md`](./roadmap.md) | **The task queue.** Task IDs, dependencies, status, and done-criteria. | After every completed task |

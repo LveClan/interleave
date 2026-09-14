@@ -1,3 +1,4 @@
+import { format, t, useLocale } from "../i18n";
 /**
  * WorkloadSimulator (T081) — the workload-simulation affordance.
  *
@@ -34,13 +35,11 @@ function WorkloadChart({ projection }: { projection: WorkloadSimulateResult }) {
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label="Projected daily due load, before and after the change, with the daily budget line"
+      aria-label={t("workload.projectedDailyDueLoadBeforeAndAfter")}
       data-testid="workload-chart"
       className="overflow-visible"
     >
-      <title>
-        Projected daily due load, before and after the change, with the daily budget line
-      </title>
+      <title>{t("workload.projectedDailyDueLoadBeforeAndAfter")}</title>
       {days.map((d, i) => {
         const bh = (d.before / peak) * (height - 4);
         const ah = (d.after / peak) * (height - 4);
@@ -83,12 +82,11 @@ function WorkloadChart({ projection }: { projection: WorkloadSimulateResult }) {
 
 /** A formatted signed delta ("+12" / "−4" / "0"). */
 function signed(n: number): string {
-  if (n > 0) return `+${n}`;
-  if (n < 0) return `−${Math.abs(n)}`;
-  return "0";
+  return format.number(n, { signDisplay: "exceptZero" });
 }
 
 export function WorkloadSimulator() {
+  useLocale();
   const [lever, setLever] = useState<LeverKind>("retention");
   const [retentionPct, setRetentionPct] = useState(90);
   const [addCount, setAddCount] = useState(20);
@@ -115,7 +113,8 @@ export function WorkloadSimulator() {
       const projection = await appApi.simulateWorkload({ change: buildChange(), windowDays: 30 });
       setResult(projection);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Simulation failed");
+      console.error("[workload] simulation failed", err);
+      setError(t("workload.simulationFailed"));
     } finally {
       setRunning(false);
     }
@@ -127,20 +126,37 @@ export function WorkloadSimulator() {
         id="workload-sim-title"
         className="mb-1.5 font-medium text-text-2 text-xs uppercase tracking-wide"
       >
-        Workload simulation
+        {t("workload.workloadSimulation")}
       </div>
       <div className="rounded-lg border border-border bg-surface-2 px-4 py-4">
         <div className="text-sm text-text-3">
-          Preview how your daily review load would shift before you change anything — an estimate
-          from your current schedule. Previewing changes nothing.
+          {t("workload.previewHowYourDailyReviewLoadWould")}
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {(
             [
-              { kind: "retention", label: "Alter retention", icon: "gauge" },
-              { kind: "addCards", label: "Add cards", icon: "layers" },
-              { kind: "postponeLowPriority", label: "Postpone low-priority", icon: "clock" },
+              {
+                kind: "retention",
+                get label() {
+                  return t("workload.alterRetention");
+                },
+                icon: "gauge",
+              },
+              {
+                kind: "addCards",
+                get label() {
+                  return t("workload.addCards");
+                },
+                icon: "layers",
+              },
+              {
+                kind: "postponeLowPriority",
+                get label() {
+                  return t("workload.postponeLowPriority");
+                },
+                icon: "clock",
+              },
             ] as const
           ).map((opt) => (
             <button
@@ -168,7 +184,7 @@ export function WorkloadSimulator() {
         <div className="mt-3 flex items-center gap-3">
           {lever === "retention" ? (
             <label className="flex items-center gap-2 text-sm text-text-2">
-              <span>Global retention target</span>
+              <span>{t("workload.globalRetentionTarget")}</span>
               <input
                 type="range"
                 min={80}
@@ -178,12 +194,14 @@ export function WorkloadSimulator() {
                 onChange={(e) => setRetentionPct(Number(e.target.value))}
                 className="accent-accent"
               />
-              <span className="w-10 font-mono font-semibold text-text">{retentionPct}%</span>
+              <span className="min-w-10 font-mono font-semibold text-text">
+                {format.number(retentionPct / 100, { style: "percent" })}
+              </span>
             </label>
           ) : null}
           {lever === "addCards" ? (
             <label className="flex items-center gap-2 text-sm text-text-2">
-              <span>New cards</span>
+              <span>{t("workload.newCards")}</span>
               <input
                 type="number"
                 min={0}
@@ -198,7 +216,7 @@ export function WorkloadSimulator() {
           {lever === "postponeLowPriority" ? (
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2 text-sm text-text-2">
-                <span>Postpone by (days)</span>
+                <span>{t("workload.postponeByDays")}</span>
                 <input
                   type="number"
                   min={1}
@@ -217,7 +235,7 @@ export function WorkloadSimulator() {
                   onChange={(e) => setIncludeMatureCards(e.target.checked)}
                   className="accent-accent"
                 />
-                <span>Include low-priority mature cards (fragile cards are always protected)</span>
+                <span>{t("workload.includeLowPriorityMatureCardsFragileCards")}</span>
               </label>
             </div>
           ) : null}
@@ -230,7 +248,7 @@ export function WorkloadSimulator() {
             className="ml-auto inline-flex flex-none items-center gap-1.5 rounded-md border border-accent-soft-bd bg-accent-soft px-3 py-1.5 font-medium text-accent-text text-sm hover:brightness-105 disabled:opacity-50"
           >
             <Icon name={running ? "review" : "sparkle"} size={14} />
-            {running ? "Projecting…" : "Preview"}
+            {running ? t("workload.projecting") : t("workload.preview")}
           </button>
         </div>
 
@@ -252,38 +270,25 @@ export function WorkloadSimulator() {
               <WorkloadChart projection={result} />
               <div className="space-y-1 text-sm text-text-2">
                 <div data-testid="workload-peak">
-                  Peak:{" "}
-                  <span className="font-mono font-semibold text-text">{result.peakBefore}</span>
-                  {" → "}
-                  <span className="font-mono font-semibold text-accent-text">
-                    {result.peakAfter}
-                  </span>{" "}
-                  /day
+                  {t("workload.peakSummary", {
+                    before: result.peakBefore,
+                    after: result.peakAfter,
+                  })}
                 </div>
                 <div data-testid="workload-over-budget">
-                  Over-budget days:{" "}
-                  <span className="font-mono font-semibold text-text">
-                    {result.overBudgetDaysBefore}
-                  </span>
-                  {" → "}
-                  <span className="font-mono font-semibold text-accent-text">
-                    {result.overBudgetDaysAfter}
-                  </span>
+                  {t("workload.budgetSummary", {
+                    before: result.overBudgetDaysBefore,
+                    after: result.overBudgetDaysAfter,
+                  })}
                 </div>
                 <div data-testid="workload-delta">
-                  Next 7 / 30 days:{" "}
-                  <span className="font-mono font-semibold text-text">
-                    {signed(result.deltaNext7)}
-                  </span>{" "}
-                  /{" "}
-                  <span className="font-mono font-semibold text-text">
-                    {signed(result.deltaNext30)}
-                  </span>{" "}
-                  cards
+                  {t("workload.deltaSummary", {
+                    week: signed(result.deltaNext7),
+                    month: signed(result.deltaNext30),
+                  })}
                 </div>
                 <div className="text-text-3 text-xs">
-                  Budget: {result.budget}/day (dashed line). Previewing changed nothing — adjust the
-                  real setting, import, or postpone to commit.
+                  {t("workload.budgetNote", { count: result.budget })}
                 </div>
               </div>
             </div>

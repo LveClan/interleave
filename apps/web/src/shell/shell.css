@@ -771,3 +771,32 @@
 .shell-cheat__row:last-child {
   border-bottom: none;
 }
+
+/* Translations may wrap while keyboard glyphs and icons retain their dimensions. */
+.shell-nav__item {
+  min-width: 0;
+  height: auto;
+  min-height: 34px;
+  overflow-wrap: anywhere;
+}
+.shell-nav__item > svg,
+.shell-usermenu__item > svg,
+.shell-cheat__row > .shell-kbd {
+  flex-shrink: 0;
+}
+.shell-nav {
+  min-height: 0;
+  overflow-y: auto;
+}
+.shell-usermenu__theme-option,
+.shell-cheat__row > span,
+.shell-grow {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.shell-cheat__row {
+  gap: var(--s-3);
+}
+.shell-statusbar__hint {
+  min-width: 0;
+}

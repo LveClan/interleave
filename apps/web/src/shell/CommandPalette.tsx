@@ -9,9 +9,10 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
+import { t, useLocale } from "../i18n";
 import { appApi, isDesktop, type SearchResult } from "../lib/appApi";
 import { Kbd } from "./Kbd";
-import { COMMAND_ITEMS, type CommandContext, type CommandItem } from "./nav";
+import { COMMAND_ITEMS, type CommandContext, type CommandItem, groupLabel } from "./nav";
 import type { PaletteActionId } from "./shortcuts";
 
 const SOURCE_SEARCH_LIMIT = 8;
@@ -70,6 +71,7 @@ export function CommandPalette({
   onAction,
   hasSelection,
 }: CommandPaletteProps) {
+  useLocale();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selected, setSelected] = useState(0);
@@ -83,9 +85,8 @@ export function CommandPalette({
   const ctx = useMemo<CommandContext>(() => ({ hasSelection }), [hasSelection]);
   const trimmedQuery = query.trim();
 
-  const filtered = useMemo(
-    () => COMMAND_ITEMS.filter((i) => (i.when ? i.when(ctx) : true) && matchesCommand(i, query)),
-    [query, ctx],
+  const filtered = COMMAND_ITEMS.filter(
+    (i) => (i.when ? i.when(ctx) : true) && matchesCommand(i, query),
   );
 
   const showSourceSection = trimmedQuery.length > 0;
@@ -273,11 +274,16 @@ export function CommandPalette({
       <button
         type="button"
         className="shell-overlay-backdrop"
-        aria-label="Close command palette"
+        aria-label={t("shell.closeCommandPalette")}
         tabIndex={-1}
         onClick={onClose}
       />
-      <div className="shell-cmdk" role="dialog" aria-modal="true" aria-label="Command palette">
+      <div
+        className="shell-cmdk"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("shell.commandPalette")}
+      >
         <div className="shell-cmdk__input">
           <Icon name="search" size={18} />
           <input
@@ -287,21 +293,21 @@ export function CommandPalette({
               setQuery(e.target.value);
               setSelected(0);
             }}
-            placeholder="Search, import, or run command…"
-            aria-label="Command palette search"
+            placeholder={t("shell.searchImportOrRunCommand")}
+            aria-label={t("shell.commandPaletteSearch")}
           />
           <Kbd keys="Esc" />
         </div>
         <div className="shell-cmdk__list">
           {filtered.length === 0 && (
-            <div className="shell-cmdk__group">No commands match “{query}”</div>
+            <div className="shell-cmdk__group">{t("shell.noCommands", { query })}</div>
           )}
           {filtered.map((item, i) => {
             const showHead = item.group !== lastGroup;
             lastGroup = item.group;
             return (
               <div key={item.label}>
-                {showHead && <div className="shell-cmdk__group">{item.group}</div>}
+                {showHead && <div className="shell-cmdk__group">{groupLabel(item.group)}</div>}
                 <button
                   type="button"
                   className={
@@ -319,35 +325,35 @@ export function CommandPalette({
           })}
           {showSourceSection && (
             <div>
-              <div className="shell-cmdk__group">Sources</div>
+              <div className="shell-cmdk__group">{t("shell.sources")}</div>
               {sourceStatus === "too-short" && (
                 <div className="shell-cmdk__state" role="status">
                   <Icon name="source" size={15} />
-                  <span>Type at least 2 characters to search sources.</span>
+                  <span>{t("shell.typeAtLeast2CharactersToSearch")}</span>
                 </div>
               )}
               {sourceStatus === "loading" && (
                 <div className="shell-cmdk__state" role="status">
                   <Icon name="source" size={15} />
-                  <span>Searching sources...</span>
+                  <span>{t("shell.searchingSources")}</span>
                 </div>
               )}
               {sourceStatus === "unavailable" && (
                 <div className="shell-cmdk__state" role="status">
                   <Icon name="source" size={15} />
-                  <span>Source search is available in the desktop app.</span>
+                  <span>{t("shell.sourceSearchIsAvailableInTheDesktop")}</span>
                 </div>
               )}
               {sourceStatus === "error" && (
                 <div className="shell-cmdk__state" role="alert">
                   <Icon name="warning" size={15} />
-                  <span>Could not search sources.</span>
+                  <span>{t("shell.couldNotSearchSources")}</span>
                 </div>
               )}
               {sourceStatus === "ready" && sourceResults.length === 0 && (
                 <div className="shell-cmdk__state" role="status">
                   <Icon name="source" size={15} />
-                  <span>No sources match “{trimmedQuery}”.</span>
+                  <span>{t("shell.noSources", { query: trimmedQuery })}.</span>
                 </div>
               )}
               {sourceResults.map((source, i) => {

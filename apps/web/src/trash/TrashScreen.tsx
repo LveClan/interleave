@@ -1,3 +1,4 @@
+import { format, t, useLocale } from "../i18n";
 /**
  * Trash view (T044, extended for T135 / U8) — recover or permanently delete
  * soft-deleted elements.
@@ -48,17 +49,40 @@ function typeIcon(type: string): IconName {
   }
 }
 
+function typeLabel(type: string): string {
+  switch (type) {
+    case "source":
+      return t("trash.sourceType");
+    case "topic":
+      return t("trash.topicType");
+    case "extract":
+      return t("trash.extractType");
+    case "card":
+      return t("trash.cardType");
+    case "task":
+      return t("trash.taskType");
+    case "concept":
+      return t("trash.conceptType");
+    case "media_fragment":
+      return t("trash.mediaType");
+    case "synthesis_note":
+      return t("trash.synthesisType");
+    default:
+      return type;
+  }
+}
+
 /** A short "deleted {relative}" label from an ISO timestamp. */
 function deletedAgo(iso: string, now = Date.now()): string {
   const then = Date.parse(iso);
-  if (Number.isNaN(then)) return "recently";
+  if (Number.isNaN(then)) return t("trash.recently");
   const mins = Math.max(0, Math.round((now - then) / 60_000));
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return format.relative(0, "second");
+  if (mins < 60) return format.relative(-mins, "minute");
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return format.relative(-hours, "hour");
   const days = Math.round(hours / 24);
-  return `${days}d ago`;
+  return format.relative(-days, "day");
 }
 
 /** One displayed entry: a single trashed row, or a grouped branch delete. */
@@ -104,6 +128,7 @@ export function groupTrashRows(items: readonly TrashItemSummary[]): readonly Tra
 }
 
 export function TrashScreen() {
+  useLocale();
   const desktop = isDesktop();
   const [items, setItems] = useState<readonly TrashItemSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,7 +151,8 @@ export function TrashScreen() {
       setItems(res.items);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      console.error("[trash] load failed", e);
+      setError(t("trash.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -149,15 +175,21 @@ export function TrashScreen() {
         // The restore is itself undoable via the general command-level undo
         // (re-trashes the element); offer it on the toast.
         setToast({
-          message: `Restored · ${item.title.slice(0, 40)}`,
+          message: t("trash.restored", { title: item.title.slice(0, 40) }),
           onUndo: async () => {
-            await appApi.undoLast();
-            await load();
-            setToast(null);
+            try {
+              await appApi.undoLast();
+              await load();
+              setToast(null);
+            } catch (error) {
+              console.error("[trash] undo failed", error);
+              setError(t("shell.undoFailed"));
+            }
           },
         });
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
+        console.error("[trash] restore failed", e);
+        setError(t("trash.restoreFailed"));
       } finally {
         setBusyId(null);
       }
@@ -178,24 +210,31 @@ export function TrashScreen() {
         // rather than hiding it.
         if (res.skipped.length > 0) {
           setError(
-            `Restored ${res.restored.length} item${res.restored.length === 1 ? "" : "s"} · ${
-              res.skipped.length
-            } kept in Trash (changed since delete).`,
+            t("trash.partialRestore", { count: res.restored.length, skipped: res.skipped.length }),
           );
         }
         setToast({
-          message: `Restored ${res.restored.length} item${res.restored.length === 1 ? "" : "s"} · ${label.slice(0, 32)}`,
+          message: t("trash.restoredBatch", {
+            count: res.restored.length,
+            title: label.slice(0, 32),
+          }),
           // The batch restore threads ONE fresh `restore_element` batchId through every
           // restored node (T135 / A1), so `undoLast` (which reverses the whole most-recent
           // batch) re-trashes the WHOLE group atomically — never a partial single-node undo.
           onUndo: async () => {
-            await appApi.undoLast();
-            await load();
-            setToast(null);
+            try {
+              await appApi.undoLast();
+              await load();
+              setToast(null);
+            } catch (error) {
+              console.error("[trash] undo failed", error);
+              setError(t("shell.undoFailed"));
+            }
           },
         });
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
+        console.error("[trash] restore batch failed", e);
+        setError(t("trash.restoreFailed"));
       } finally {
         setBusyId(null);
       }
@@ -220,7 +259,8 @@ export function TrashScreen() {
         }
         await load();
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
+        console.error("[trash] purge failed", e);
+        setError(t("trash.deleteFailed"));
       } finally {
         setBusyId(null);
       }
@@ -238,7 +278,8 @@ export function TrashScreen() {
         setBlockedPurgeId(null);
         await load();
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
+        console.error("[trash] delete branch failed", e);
+        setError(t("trash.deleteFailed"));
       } finally {
         setBusyId(null);
       }
@@ -256,12 +297,11 @@ export function TrashScreen() {
       // Surface the skipped count (rows that still anchor live items) so Empty Trash is
       // honest about what it could NOT remove (T135 / U8 / AE7).
       if (res.skipped > 0) {
-        setError(
-          `Emptied ${res.purged} · ${res.skipped} kept (still anchor live items). Restore or delete those branches first.`,
-        );
+        setError(t("trash.emptySkipped", { purged: res.purged, skipped: res.skipped }));
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      console.error("[trash] empty failed", e);
+      setError(t("trash.deleteFailed"));
     }
   }, [load]);
 
@@ -271,7 +311,7 @@ export function TrashScreen() {
       <div className="trash-guard" data-testid="trash-purge-guard" data-id={item.id}>
         <span className="trash-guard__msg">
           <Icon name="warning" size={13} />
-          This item still has live descendants — restore it or delete the full branch first.
+          {t("trash.thisItemStillHasLiveDescendantsRestore")}
         </span>
         <div className="trash-guard__actions">
           <button
@@ -282,7 +322,7 @@ export function TrashScreen() {
             onClick={() => void restore(item)}
           >
             <Icon name="restore" size={14} />
-            Restore
+            {t("trash.restore")}
           </button>
           <button
             type="button"
@@ -292,7 +332,7 @@ export function TrashScreen() {
             onClick={() => void deleteBranchFromGuard(item.id)}
           >
             <Icon name="trash" size={14} />
-            Delete branch
+            {t("trash.deleteBranch")}
           </button>
         </div>
       </div>
@@ -312,15 +352,17 @@ export function TrashScreen() {
             {item.title}
           </div>
           <div className="trash-row__meta">
-            <span className="trash-row__type">{item.type}</span>
+            <span className="trash-row__type">{typeLabel(item.type)}</span>
             {item.sourceTitle ? (
               <>
                 <span className="trash-row__dot">·</span>
-                <span>from {item.sourceTitle}</span>
+                <span>{t("trash.source", { title: item.sourceTitle })}</span>
               </>
             ) : null}
             <span className="trash-row__dot">·</span>
-            <span>deleted {deletedAgo(item.deletedAt)}</span>
+            <span title={format.date(item.deletedAt, { dateStyle: "medium", timeStyle: "short" })}>
+              {t("trash.deletedAt", { when: deletedAgo(item.deletedAt) })}
+            </span>
           </div>
           {blockedPurgeId === item.id ? renderPurgeGuard(item) : null}
         </div>
@@ -333,7 +375,7 @@ export function TrashScreen() {
             onClick={() => void restore(item)}
           >
             <Icon name="restore" size={14} />
-            Restore
+            {t("trash.restore")}
           </button>
           {confirmPurgeId === item.id ? (
             <>
@@ -344,7 +386,7 @@ export function TrashScreen() {
                 disabled={busyId === item.id}
                 onClick={() => void purge(item.id)}
               >
-                Delete forever
+                {t("trash.deleteForever")}
               </button>
               <button
                 type="button"
@@ -352,7 +394,7 @@ export function TrashScreen() {
                 data-testid="trash-purge-cancel"
                 onClick={() => setConfirmPurgeId(null)}
               >
-                Cancel
+                {t("trash.cancel")}
               </button>
             </>
           ) : (
@@ -360,8 +402,8 @@ export function TrashScreen() {
               type="button"
               className="trash-btn trash-btn--icon trash-btn--danger"
               data-testid="trash-purge"
-              title="Delete permanently"
-              aria-label="Delete permanently"
+              title={t("trash.deletePermanently")}
+              aria-label={t("trash.deletePermanently")}
               disabled={busyId === item.id}
               onClick={() => {
                 setBlockedPurgeId(null);
@@ -398,16 +440,20 @@ export function TrashScreen() {
             </div>
             <div className="trash-row__meta">
               <span className="trash-group__count" data-testid="trash-group-count">
-                Branch · {members.length} items
+                {t("trash.branchCount", { count: members.length })}
               </span>
               {header.sourceTitle ? (
                 <>
                   <span className="trash-row__dot">·</span>
-                  <span>from {header.sourceTitle}</span>
+                  <span>{t("trash.source", { title: header.sourceTitle })}</span>
                 </>
               ) : null}
               <span className="trash-row__dot">·</span>
-              <span>deleted {deletedAgo(header.deletedAt)}</span>
+              <span
+                title={format.date(header.deletedAt, { dateStyle: "medium", timeStyle: "short" })}
+              >
+                {t("trash.deletedAt", { when: deletedAgo(header.deletedAt) })}
+              </span>
             </div>
           </div>
           <div className="trash-row__actions">
@@ -419,7 +465,7 @@ export function TrashScreen() {
               onClick={() => void restoreBatch(batchId, header.title)}
             >
               <Icon name="restore" size={14} />
-              Restore branch
+              {t("trash.restoreBranch")}
             </button>
           </div>
         </div>
@@ -440,11 +486,8 @@ export function TrashScreen() {
           <div className="trash-empty__icon">
             <Icon name="trash" size={26} />
           </div>
-          <h1 className="trash-empty__title">Trash</h1>
-          <p className="trash-empty__body">
-            Deleted sources, extracts, and cards land here first and can be restored — open the
-            Electron app to recover them.
-          </p>
+          <h1 className="trash-empty__title">{t("trash.trash")}</h1>
+          <p className="trash-empty__body">{t("trash.deletedSourcesExtractsAndCardsLandHere")}</p>
         </div>
       </div>
     );
@@ -454,20 +497,20 @@ export function TrashScreen() {
     <div className="trash-shell" data-testid="route-trash">
       <div className="trash-head">
         <div>
-          <h1 className="trash-title">Trash</h1>
-          <p className="trash-sub">Local-first · deleted items are recoverable for 30 days</p>
+          <h1 className="trash-title">{t("trash.trash")}</h1>
+          <p className="trash-sub">{t("trash.localFirstDeletedItemsAreRecoverableFor")}</p>
         </div>
         {items.length > 0 ? (
           confirmEmpty ? (
             <div className="trash-confirm" data-testid="trash-empty-confirm">
-              <span>Permanently delete all {items.length}?</span>
+              <span>{t("trash.confirmEmpty", { count: items.length })}</span>
               <button
                 type="button"
                 className="trash-btn trash-btn--danger"
                 data-testid="trash-empty-yes"
                 onClick={() => void empty()}
               >
-                Empty trash
+                {t("trash.emptyTrash")}
               </button>
               <button
                 type="button"
@@ -475,7 +518,7 @@ export function TrashScreen() {
                 data-testid="trash-empty-cancel"
                 onClick={() => setConfirmEmpty(false)}
               >
-                Cancel
+                {t("trash.cancel")}
               </button>
             </div>
           ) : (
@@ -486,7 +529,7 @@ export function TrashScreen() {
               onClick={() => setConfirmEmpty(true)}
             >
               <Icon name="trash" size={14} />
-              Empty trash
+              {t("trash.emptyTrash")}
             </button>
           )
         ) : null}
@@ -500,17 +543,16 @@ export function TrashScreen() {
 
       {loading ? (
         <p className="trash-loading" data-testid="trash-loading">
-          Loading…
+          {t("trash.loading")}
         </p>
       ) : items.length === 0 ? (
         <div className="trash-empty" data-testid="trash-empty-state">
           <div className="trash-empty__icon">
             <Icon name="trash" size={26} />
           </div>
-          <h2 className="trash-empty__title">Trash is empty</h2>
+          <h2 className="trash-empty__title">{t("trash.trashIsEmpty")}</h2>
           <p className="trash-empty__body">
-            Nothing to recover. Deleted sources, extracts, and cards land here first and can be
-            restored.
+            {t("trash.nothingToRecoverDeletedSourcesExtractsAnd")}
           </p>
         </div>
       ) : (

@@ -118,6 +118,7 @@ const settings: RendererSettings = {
   importBalanceFactor: 1.5,
   keyboardLayout: "qwerty",
   theme: "dark",
+  language: "system",
   displayName: "",
   retentionByBand: {},
   retentionByBandEnabled: false,
@@ -346,7 +347,7 @@ describe("Settings", () => {
     fireEvent.click(getByTestId("settings-backup-now"));
 
     await waitFor(() => expect(h.createBackup).toHaveBeenCalled());
-    expect(await findByTestId("settings-backup-result")).toHaveTextContent("2.0 KB");
+    expect(await findByTestId("settings-backup-result")).toHaveTextContent("2.0 kB");
     expect(getByTestId("settings-backup-result")).toHaveTextContent("3 files");
   });
 
@@ -397,7 +398,7 @@ describe("Settings", () => {
 
     fireEvent.click(getByTestId("settings-backup-now"));
     await waitFor(() => expect(h.createBackup).toHaveBeenCalledTimes(1));
-    expect(await findByTestId("settings-backup-result")).toHaveTextContent("2.0 KB");
+    expect(await findByTestId("settings-backup-result")).toHaveTextContent("2.0 kB");
   });
 
   it("keeps the backup explanation aligned inside the data section rhythm", async () => {
@@ -443,7 +444,7 @@ describe("Settings", () => {
       "4 files",
     );
     expect(getByTestId("settings-backup-artifact-2026-06-06T09-00-00-000Z")).toHaveTextContent(
-      "2.0 KB",
+      "2.0 kB",
     );
     expect(getByTestId("settings-backup-artifact-2026-06-06T09-00-00-000Z")).toHaveTextContent(
       "Automatic",
@@ -789,7 +790,7 @@ describe("System section", () => {
     expect(getByTestId("db-migrated")).toHaveTextContent("Up to date");
     expect(getByTestId("db-journal-mode")).toHaveTextContent("wal");
     expect(getByTestId("db-foreign-keys")).toHaveTextContent("FK on");
-    expect(getByTestId("db-busy-timeout")).toHaveTextContent("5000 ms");
+    expect(getByTestId("db-busy-timeout")).toHaveTextContent("5,000 ms");
     expect(await findByTestId("persisted-value")).toHaveTextContent("checked-before");
     expect(h.getSettings).toHaveBeenCalledWith({ key: "desktop.lastCheck" });
   });

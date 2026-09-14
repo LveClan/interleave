@@ -201,6 +201,8 @@ describe("IPC channels", () => {
         "settings:update",
         "settings:getAll",
         "settings:updateMany",
+        "locale:get",
+        "locale:changed",
         "sourceYield:list",
         "extractStagnation:list",
         "inspector:list",
@@ -2324,6 +2326,10 @@ describe("SettingsPatchSchema (T011)", () => {
     expect(() => SettingsPatchSchema.parse({ defaultDesiredRetention: 0.5 })).toThrow();
     expect(() => SettingsPatchSchema.parse({ keyboardLayout: "azerty" })).toThrow();
     expect(() => SettingsPatchSchema.parse({ theme: "sepia" })).toThrow();
+    expect(SettingsPatchSchema.parse({ language: "en" })).toEqual({ language: "en" });
+    expect(SettingsPatchSchema.parse({ language: "system" })).toEqual({ language: "system" });
+    expect(() => SettingsPatchSchema.parse({ language: "../../en" })).toThrow();
+    expect(() => SettingsPatchSchema.parse({ language: 42 })).toThrow();
   });
 
   it("rejects a non-integer budget / topic interval", () => {

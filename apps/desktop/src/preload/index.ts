@@ -92,6 +92,7 @@ import type {
   LibraryBrowseRequest,
   LibraryParkedActionRequest,
   LineageGetRequest,
+  LocaleState,
   MaintenanceBulkArchiveRequest,
   MaintenanceBulkPostponeRequest,
   MaintenanceBulkTrashRequest,
@@ -201,6 +202,14 @@ import type {
 } from "../shared/contract";
 
 const appApi: AppApi = {
+  locale: {
+    get: () => ipcRenderer.invoke(IPC_CHANNELS.localeGet),
+    onChanged: (callback: (state: LocaleState) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, state: LocaleState) => callback(state);
+      ipcRenderer.on(IPC_CHANNELS.localeChanged, listener);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.localeChanged, listener);
+    },
+  },
   app: {
     health: () => ipcRenderer.invoke(IPC_CHANNELS.appHealth),
   },

@@ -36,6 +36,7 @@ import { Inspector } from "../components/inspector/Inspector";
 import { Snackbar } from "../components/Snackbar";
 import { HelpCenter } from "../help/HelpCenter";
 import { type HelpContextValue, HelpProvider } from "../help/HelpContext";
+import { format, t, useLocale } from "../i18n";
 import { appApi, isDesktop } from "../lib/appApi";
 import { getTourSteps, TourLayer } from "../onboarding/Tour";
 import { WelcomeModal } from "../onboarding/WelcomeModal";
@@ -76,9 +77,24 @@ function runBackup() {
 }
 
 const THEME_MENU_ITEMS = [
-  { theme: "system", label: "System" },
-  { theme: "light", label: "Light" },
-  { theme: "dark", label: "Dark" },
+  {
+    theme: "system",
+    get label() {
+      return t("shell.system");
+    },
+  },
+  {
+    theme: "light",
+    get label() {
+      return t("shell.light");
+    },
+  },
+  {
+    theme: "dark",
+    get label() {
+      return t("shell.dark");
+    },
+  },
 ] as const satisfies ReadonlyArray<{ theme: Theme; label: string }>;
 
 function NavButton({
@@ -128,7 +144,7 @@ function NavButton({
       {item.label}
       {typeof count === "number" && count > 0 && (
         <span className="shell-nav__badge" data-testid={`nav-${item.id}-badge`}>
-          {count}
+          {format.number(count)}
         </span>
       )}
     </a>
@@ -194,11 +210,11 @@ function Sidebar({
         </div>
       </div>
 
-      <nav className="shell-nav" aria-label="Primary">
+      <nav className="shell-nav" aria-label={t("shell.primary")}>
         {PRIMARY_NAV.map((item) => (
           <NavButton key={item.id} item={item} active={item.id === activeId} badges={badges} />
         ))}
-        <div className="shell-nav__label">Organize</div>
+        <div className="shell-nav__label">{t("shell.organize")}</div>
         {SECONDARY_NAV.map((item) => (
           <NavButton key={item.id} item={item} active={item.id === activeId} badges={badges} />
         ))}
@@ -208,10 +224,12 @@ function Sidebar({
         {streak && streak.dayStreak > 0 ? (
           <div className="shell-streak" data-testid="shell-streak">
             <Icon name="flame" size={13} />
-            <span className="shell-streak__n">{streak.dayStreak}-day streak</span>
+            <span className="shell-streak__n">
+              {t("shell.streak", { count: streak.dayStreak })}
+            </span>
             {streak.retentionPct !== null ? (
               <span className="shell-streak__l" data-testid="shell-streak-retention">
-                {streak.retentionPct}%
+                {format.number(streak.retentionPct / 100, { style: "percent" })}
               </span>
             ) : null}
           </div>
@@ -230,9 +248,9 @@ function Sidebar({
             </span>
             <div className="flex flex-col">
               <span className="shell-userchip__name" data-testid="user-chip-name">
-                {identity.name}
+                {identity.hasName ? identity.name : t("shell.localVault")}
               </span>
-              <span className="shell-userchip__sub">{identity.sub}</span>
+              <span className="shell-userchip__sub">{t("shell.localVault")}</span>
             </div>
             <Icon name="chevronDown" size={14} className="ml-auto text-text-3" />
           </button>
@@ -240,7 +258,7 @@ function Sidebar({
             <div className="shell-usermenu" role="menu">
               <fieldset
                 className="shell-usermenu__theme"
-                aria-label="Theme"
+                aria-label={t("shell.theme")}
                 data-testid="shell-theme-segmented"
               >
                 {THEME_MENU_ITEMS.map((item) => {
@@ -271,7 +289,7 @@ function Sidebar({
                 onClick={() => setMenuOpen(false)}
               >
                 <Icon name="settings" size={14} />
-                <span className="shell-grow">Settings</span>
+                <span className="shell-grow">{t("shell.settings")}</span>
               </Link>
               <button
                 type="button"
@@ -283,7 +301,7 @@ function Sidebar({
                 }}
               >
                 <Icon name="keyboard" size={14} />
-                <span className="shell-grow">Keyboard shortcuts</span>
+                <span className="shell-grow">{t("shell.keyboardShortcuts")}</span>
                 <Kbd keys="?" />
               </button>
               <button
@@ -297,7 +315,7 @@ function Sidebar({
                 }}
               >
                 <Icon name="info" size={14} />
-                <span className="shell-grow">Help &amp; docs</span>
+                <span className="shell-grow">{t("shell.helpAndDocs")}</span>
               </button>
             </div>
           )}
@@ -315,10 +333,10 @@ function Topbar({ onOpenCommand }: { onOpenCommand: () => void }) {
         className="shell-cmdbar"
         data-testid="command-bar"
         onClick={onOpenCommand}
-        aria-label="Open command palette"
+        aria-label={t("shell.openCommandPalette")}
       >
         <Icon name="search" size={15} />
-        <span className="shell-cmdbar__ph">Search, import, or run command…</span>
+        <span className="shell-cmdbar__ph">{t("shell.searchImportOrRunCommand")}</span>
         <Kbd keys={["⌘", "K"]} />
       </button>
     </header>
@@ -334,15 +352,15 @@ function StatusBar() {
     <footer className="shell-statusbar" data-testid="status-bar">
       <span className="shell-statusbar__hint">
         <Kbd keys={["⌘", "K"]} />
-        Command
+        {t("shell.command")}
       </span>
       <span className="shell-statusbar__hint">
         <Kbd keys={["G"]} />
-        then a key to navigate
+        {t("shell.thenAKeyToNavigate")}
       </span>
       <span className="shell-statusbar__hint">
         <Kbd keys={["?"]} />
-        Shortcuts
+        {t("shell.shortcuts")}
       </span>
       <span className="shell-statusbar__spacer" />
       {hint ? (
@@ -361,6 +379,7 @@ function StatusBar() {
  * `useGlobalActions`, calling the SAME typed commands as the inspector buttons).
  */
 function ShellInner() {
+  useLocale();
   const navigate = useNavigate();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -440,12 +459,13 @@ function ShellInner() {
    */
   const onCreateBackup = () => {
     if (!isDesktop()) return;
-    setBackupToast("Creating backup…");
+    setBackupToast(t("shell.creatingBackup"));
     void runBackup()
-      .then((res) => setBackupToast(`Backup created · ${res.fileCount} files`))
-      .catch((e: unknown) =>
-        setBackupToast(e instanceof Error ? `Backup failed: ${e.message}` : "Backup failed"),
-      );
+      .then((res) => setBackupToast(t("shell.backupCreated", { count: res.fileCount })))
+      .catch((e: unknown) => {
+        console.error("[shell] backup failed", e);
+        setBackupToast(t("shell.backupFailed"));
+      });
   };
   // Latest backup handler, so the native-menu subscription can mount once and still
   // call the current closure (matches the `handlers` ref pattern in useShellShortcuts).
@@ -501,14 +521,15 @@ function ShellInner() {
       .undoLast()
       .then((res) => {
         if (res.undone) {
-          setUndoToast(res.label || "Undid last change");
+          setUndoToast(t("shell.undid", { count: res.count || 1 }));
           window.dispatchEvent(new CustomEvent(UNDO_EVENT));
         } else {
-          setUndoToast(res.reason ?? "Nothing to undo");
+          setUndoToast(res.opType ? t("shell.cannotUndo") : t("shell.nothingToUndo"));
         }
       })
       .catch((e: unknown) => {
-        setUndoToast(e instanceof Error ? e.message : "Undo failed");
+        console.error("[shell] undo failed", e);
+        setUndoToast(t("shell.undoFailed"));
       });
   };
 

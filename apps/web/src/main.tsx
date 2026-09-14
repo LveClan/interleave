@@ -10,6 +10,7 @@
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { initializeLocale } from "./i18n";
 import { appApi, isDesktop } from "./lib/appApi";
 import { router } from "./router";
 import "./styles.css";
@@ -37,8 +38,14 @@ if (!rootElement) {
   throw new Error("Root element #root not found");
 }
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
-);
+void initializeLocale()
+  .catch((error: unknown) => {
+    console.error("[locale] initialization failed; using English", error);
+  })
+  .then(() =>
+    createRoot(rootElement).render(
+      <StrictMode>
+        <RouterProvider router={router} />
+      </StrictMode>,
+    ),
+  );

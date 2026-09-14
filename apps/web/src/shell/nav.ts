@@ -13,6 +13,7 @@
  * but it is not a sidebar entry.
  */
 import type { IconName } from "../components/Icon";
+import { t } from "../i18n";
 import { CHEAT_GROUP_ORDER, type PaletteActionId, paletteShortcuts, SHORTCUTS } from "./shortcuts";
 
 /** A primary or secondary sidebar entry. */
@@ -51,41 +52,140 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   // route highlights EXCLUSIVELY — `resolveActiveNavId` matches `to === "/"` only via
   // the exact `pathname === "/"` branch, and the longest-prefix rule guarantees it
   // never collides with any deeper route. The `layers` glyph is the shell brand mark.
-  { id: "home", label: "Home", icon: "layers", to: "/", canonical: true },
-  { id: "queue", label: "Queue", icon: "queue", to: "/queue", liveBadge: true },
-  { id: "inbox", label: "Inbox", icon: "inbox", to: "/inbox", liveBadge: true },
+  {
+    id: "home",
+    get label() {
+      return t("shell.home");
+    },
+    icon: "layers",
+    to: "/",
+    canonical: true,
+  },
+  {
+    id: "queue",
+    get label() {
+      return t("shell.queue");
+    },
+    icon: "queue",
+    to: "/queue",
+    liveBadge: true,
+  },
+  {
+    id: "inbox",
+    get label() {
+      return t("shell.inbox");
+    },
+    icon: "inbox",
+    to: "/inbox",
+    liveBadge: true,
+  },
   // Library has its OWN dedicated browse-everything route (`/library`) and is its
   // sole canonical owner, so it highlights exclusively there.
-  { id: "library", label: "Library", icon: "library", to: "/library", canonical: true },
-  { id: "review", label: "Review", icon: "review", to: "/review", liveBadge: true },
+  {
+    id: "library",
+    get label() {
+      return t("shell.library");
+    },
+    icon: "library",
+    to: "/library",
+    canonical: true,
+  },
+  {
+    id: "review",
+    get label() {
+      return t("shell.review");
+    },
+    icon: "review",
+    to: "/review",
+    liveBadge: true,
+  },
 ];
 
 /** Secondary "Organize" group — Concepts, Analytics, Settings in the kit. */
 export const SECONDARY_NAV: readonly NavItem[] = [
   // Concepts has its OWN dedicated `/concepts` knowledge-map route and is its
   // sole canonical owner, so it highlights exclusively there.
-  { id: "concepts", label: "Concepts", icon: "concepts", to: "/concepts", canonical: true },
-  { id: "analytics", label: "Analytics", icon: "analytics", to: "/analytics", canonical: true },
+  {
+    id: "concepts",
+    get label() {
+      return t("shell.concepts");
+    },
+    icon: "concepts",
+    to: "/concepts",
+    canonical: true,
+  },
+  {
+    id: "analytics",
+    get label() {
+      return t("shell.analytics");
+    },
+    icon: "analytics",
+    to: "/analytics",
+    canonical: true,
+  },
   // The per-source yield view (T083) — ranked, lowest-yield-first per-source rollup
   // (read %, extracts/cards/mature-cards, leeches, review time). Its own
   // `/analytics/sources` route so it highlights exclusively (a deeper route than
   // `/analytics`, which `resolveActiveNavId`'s longest-prefix rule already favours).
-  { id: "source-yield", label: "Source yield", icon: "library", to: "/analytics/sources" },
+  {
+    id: "source-yield",
+    get label() {
+      return t("shell.sourceYield");
+    },
+    icon: "library",
+    to: "/analytics/sources",
+  },
   // The Maintenance hub (T099) — the janitor's dashboard for a large collection
   // (duplicates, orphan media, broken sources, lineage gaps, DB+vault integrity).
   // Canonical owner of `/maintenance`; the leech/retired/stagnant views have longer
   // `to` paths so the longest-prefix rule keeps each highlighting exclusively.
-  { id: "maintenance", label: "Maintenance", icon: "shield", to: "/maintenance", canonical: true },
+  {
+    id: "maintenance",
+    get label() {
+      return t("shell.maintenance");
+    },
+    icon: "shield",
+    to: "/maintenance",
+    canonical: true,
+  },
   // The leech cleanup view (T040) — maintenance for repeatedly-failing cards. Lives
   // under the "Organize" group until the full M9 analytics/maintenance screen lands.
-  { id: "leeches", label: "Leeches", icon: "leech", to: "/maintenance/leeches" },
+  {
+    id: "leeches",
+    get label() {
+      return t("shell.leeches");
+    },
+    icon: "leech",
+    to: "/maintenance/leeches",
+  },
   // The stagnant-extracts view (T084) — the attention mirror of leech cleanup:
   // extracts that keep returning without progressing (stage never advanced, no
   // children, postponed repeatedly), with rewrite/convert/postpone/delete remedies.
-  { id: "stagnant", label: "Stagnant", icon: "hourglass", to: "/maintenance/stagnant" },
+  {
+    id: "stagnant",
+    get label() {
+      return t("shell.stagnant");
+    },
+    icon: "hourglass",
+    to: "/maintenance/stagnant",
+  },
   // The Trash view (T044) — soft-deleted elements, recoverable via Restore + undo.
-  { id: "trash", label: "Trash", icon: "trash", to: "/trash" },
-  { id: "settings", label: "Settings", icon: "settings", to: "/settings" },
+  {
+    id: "trash",
+    get label() {
+      return t("shell.trash");
+    },
+    icon: "trash",
+    to: "/trash",
+  },
+  {
+    id: "settings",
+    get label() {
+      return t("shell.settings");
+    },
+    icon: "settings",
+    to: "/settings",
+  },
 ];
 
 /** Every sidebar entry, primary then secondary, in render order. */
@@ -289,7 +389,9 @@ const ACTION_COMMAND_ITEMS: readonly CommandItem[] = paletteShortcuts()
     const item: CommandItem = {
       group: p?.group ?? "Actions",
       icon: (p?.icon ?? "play") as IconName,
-      label: s.label,
+      get label() {
+        return s.label;
+      },
       kbd: s.keys,
       ...(p?.to ? { to: p.to } : {}),
       ...(p?.actionId ? { actionId: p.actionId } : {}),
@@ -303,7 +405,9 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Go to",
     icon: "layers",
-    label: "Home command center",
+    get label() {
+      return t("shell.homeCommandCenter");
+    },
     to: "/",
     keywords: ["home", "dashboard", "command center", "/"],
     kbd: ["G", "H"],
@@ -311,7 +415,9 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Go to",
     icon: "queue",
-    label: "Daily Queue",
+    get label() {
+      return t("shell.dailyQueue");
+    },
     to: "/queue",
     keywords: ["queue", "daily", "due", "/queue"],
     kbd: ["G", "Q"],
@@ -319,21 +425,27 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Go to",
     icon: "play",
-    label: "Process queue",
+    get label() {
+      return t("shell.processQueue");
+    },
     to: "/process",
     keywords: ["process", "session", "focus", "/process"],
   },
   {
     group: "Go to",
     icon: "calendar",
-    label: "Weekly review",
+    get label() {
+      return t("shell.weeklyReview");
+    },
     to: "/weekly",
     keywords: ["weekly", "ledger", "integrity", "review", "/weekly"],
   },
   {
     group: "Go to",
     icon: "inbox",
-    label: "Inbox triage",
+    get label() {
+      return t("shell.inboxTriage");
+    },
     to: "/inbox",
     keywords: ["inbox", "triage", "imports", "/inbox"],
     kbd: ["G", "I"],
@@ -341,7 +453,9 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Go to",
     icon: "review",
-    label: "Review session",
+    get label() {
+      return t("shell.reviewSession");
+    },
     to: "/review",
     keywords: ["review", "cards", "active recall", "/review"],
     kbd: ["G", "R"],
@@ -349,7 +463,9 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Go to",
     icon: "library",
-    label: "Library",
+    get label() {
+      return t("shell.library");
+    },
     to: "/library",
     keywords: ["library", "browse", "/library"],
     kbd: ["G", "L"],
@@ -357,7 +473,9 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Go to",
     icon: "search",
-    label: "Search",
+    get label() {
+      return t("shell.search");
+    },
     to: "/search",
     actionId: "search",
     keywords: ["search", "find", "fts", "/search"],
@@ -366,7 +484,9 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Go to",
     icon: "concepts",
-    label: "Concepts",
+    get label() {
+      return t("shell.concepts");
+    },
     to: "/concepts",
     keywords: ["concept", "concept map", "knowledge map", "/concepts"],
     kbd: ["G", "C"],
@@ -374,7 +494,9 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Go to",
     icon: "analytics",
-    label: "Analytics",
+    get label() {
+      return t("shell.analytics");
+    },
     to: "/analytics",
     keywords: ["analytics", "learning health", "stats", "/analytics"],
     kbd: ["G", "A"],
@@ -382,49 +504,63 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Go to",
     icon: "library",
-    label: "Source yield",
+    get label() {
+      return t("shell.sourceYield");
+    },
     to: "/analytics/sources",
     keywords: ["sources", "yield", "low yield", "/analytics/sources"],
   },
   {
     group: "Go to",
     icon: "shield",
-    label: "Maintenance",
+    get label() {
+      return t("shell.maintenance");
+    },
     to: "/maintenance",
     keywords: ["maintenance", "cleanup", "health", "/maintenance"],
   },
   {
     group: "Go to",
     icon: "leech",
-    label: "Leeches",
+    get label() {
+      return t("shell.leeches");
+    },
     to: "/maintenance/leeches",
     keywords: ["leech", "leeches", "cleanup", "/maintenance/leeches"],
   },
   {
     group: "Go to",
     icon: "archive",
-    label: "Retired cards",
+    get label() {
+      return t("shell.retiredCards");
+    },
     to: "/maintenance/retired",
     keywords: ["retired", "retirement", "mature cards", "/maintenance/retired"],
   },
   {
     group: "Go to",
     icon: "hourglass",
-    label: "Stagnant extracts",
+    get label() {
+      return t("shell.stagnantExtracts");
+    },
     to: "/maintenance/stagnant",
     keywords: ["stagnant", "extracts", "stalled", "/maintenance/stagnant"],
   },
   {
     group: "Go to",
     icon: "trash",
-    label: "Trash",
+    get label() {
+      return t("shell.trash");
+    },
     to: "/trash",
     keywords: ["trash", "deleted", "restore", "bin", "/trash"],
   },
   {
     group: "Go to",
     icon: "settings",
-    label: "Settings",
+    get label() {
+      return t("shell.settings");
+    },
     to: "/settings",
     keywords: ["settings", "preferences", "/settings"],
     kbd: ["G", "S"],
@@ -438,19 +574,37 @@ const GO_TO_COMMAND_ITEMS: readonly CommandItem[] = [
  */
 export const COMMAND_ITEMS: readonly CommandItem[] = [
   ...GO_TO_COMMAND_ITEMS,
-  { group: "Create", icon: "link", label: "Import from URL…", to: "/inbox" },
+  {
+    group: "Create",
+    icon: "link",
+    get label() {
+      return t("shell.importFromURL");
+    },
+    to: "/inbox",
+  },
   {
     group: "Create",
     icon: "paste",
-    label: "Paste text as source…",
+    get label() {
+      return t("shell.pasteTextAsSource");
+    },
     to: "/inbox",
     event: NEW_SOURCE_EVENT,
   },
-  { group: "Create", icon: "upload", label: "Upload PDF / EPUB…", to: "/inbox" },
+  {
+    group: "Create",
+    icon: "upload",
+    get label() {
+      return t("shell.uploadPDFEPUB");
+    },
+    to: "/inbox",
+  },
   {
     group: "Create",
     icon: "text",
-    label: "New manual note…",
+    get label() {
+      return t("shell.newManualNote");
+    },
     to: "/inbox",
     event: NEW_SOURCE_EVENT,
   },
@@ -459,15 +613,31 @@ export const COMMAND_ITEMS: readonly CommandItem[] = [
   {
     group: "Create",
     icon: "synthesis",
-    label: "New synthesis note…",
+    get label() {
+      return t("shell.newSynthesisNote");
+    },
     to: "/synthesis/new",
   },
   // Help (design handoff) — the palette's discoverable entry into the in-app help
   // center + the guided tour. Prefixed "Help:" so typing "help" surfaces them; each
   // dispatches a window event the Shell handles (no `to`, so the palette just fires
   // the event). Trimmed to two commands so the dense palette stays scannable.
-  { group: "Help", icon: "info", label: "Help: Open help center", event: OPEN_HELP_EVENT },
-  { group: "Help", icon: "sparkle", label: "Help: Take the tour", event: START_TOUR_EVENT },
+  {
+    group: "Help",
+    icon: "info",
+    get label() {
+      return t("shell.helpOpenHelpCenter");
+    },
+    event: OPEN_HELP_EVENT,
+  },
+  {
+    group: "Help",
+    icon: "sparkle",
+    get label() {
+      return t("shell.helpTakeTheTour");
+    },
+    event: START_TOUR_EVENT,
+  },
   ...ACTION_COMMAND_ITEMS,
 ];
 
@@ -505,7 +675,36 @@ export type CheatGroup = {
  */
 export const CHEAT_SHEET: readonly CheatGroup[] = CHEAT_GROUP_ORDER.map((group) => ({
   group,
-  rows: SHORTCUTS.filter((s) => s.group === group).map(
-    (s) => [s.label, s.keys] as readonly [string, readonly string[]],
-  ),
+  get rows() {
+    return SHORTCUTS.filter((s) => s.group === group).map(
+      (s) => [s.label, s.keys] as readonly [string, readonly string[]],
+    );
+  },
 })).filter((g) => g.rows.length > 0);
+
+export function groupLabel(group: string): string {
+  switch (group) {
+    case "Navigation":
+      return t("shell.groupNavigation");
+    case "Actions":
+      return t("shell.groupActions");
+    case "Reading":
+      return t("shell.groupReading");
+    case "Review":
+      return t("shell.groupReview");
+    case "Triage":
+      return t("shell.groupTriage");
+    case "Inbox":
+      return t("shell.groupInbox");
+    case "Go to":
+      return t("shell.groupGoTo");
+    case "Create":
+      return t("shell.groupCreate");
+    case "Help":
+      return t("shell.groupHelp");
+    case "Session":
+      return t("shell.groupSession");
+    default:
+      return group;
+  }
+}

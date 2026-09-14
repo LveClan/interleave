@@ -111,6 +111,6 @@ describe("WorkloadSimulator (T081)", () => {
     render(<WorkloadSimulator />);
     fireEvent.click(screen.getByTestId("workload-preview"));
     const err = await screen.findByTestId("workload-error");
-    expect(err.textContent).toContain("boom");
+    expect(err.textContent).toContain("Simulation failed");
   });
 });

@@ -82,6 +82,7 @@ describe("@interleave/core surface", () => {
       "remove_relation",
       "add_tag",
       "remove_tag",
+      "set_language",
     ]);
   });
 

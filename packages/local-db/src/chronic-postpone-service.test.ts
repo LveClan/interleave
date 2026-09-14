@@ -2,7 +2,7 @@ import { type ElementId, type IsoTimestamp, priorityFromLabel } from "@interleav
 import type { DbHandle } from "@interleave/db";
 import { cards, reviewStates } from "@interleave/db";
 import { eq } from "drizzle-orm";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChronicPostponeService } from "./chronic-postpone-service";
 import { createRepositories, type Repositories } from "./index";
 import type { OperationLogRepository } from "./operation-log-repository";
@@ -16,6 +16,8 @@ let service: ChronicPostponeService;
 let undo: UndoService;
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-06-01T00:00:00.000Z"));
   handle = createInMemoryDb();
   repos = createRepositories(handle.db);
   log = repos.operationLog;
@@ -25,6 +27,7 @@ beforeEach(() => {
 
 afterEach(() => {
   handle.sqlite.close();
+  vi.useRealTimers();
 });
 
 function source(title: string, priority = priorityFromLabel("B")): ElementId {

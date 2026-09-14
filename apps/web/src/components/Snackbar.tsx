@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Snackbar (T044) — the shared undo toast.
  *
@@ -49,6 +50,7 @@ export function Snackbar({
   /** Override the auto-dismiss window (e.g. {@link SNACKBAR_TIMEOUT_LONG_MS} for a big batch). */
   timeoutMs?: number | undefined;
 }) {
+  useLocale();
   useEffect(() => {
     if (!message) return;
     const t = setTimeout(onClose, timeoutMs);
@@ -68,7 +70,7 @@ export function Snackbar({
           onClick={onUndo}
         >
           <Icon name="undo" size={13} />
-          Undo
+          {t("common.undo")}
         </button>
       ) : null}
     </div>

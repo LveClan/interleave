@@ -15,6 +15,8 @@ export const IPC_CHANNELS = {
   settingsUpdate: "settings:update",
   settingsGetAll: "settings:getAll",
   settingsUpdateMany: "settings:updateMany",
+  localeGet: "locale:get",
+  localeChanged: "locale:changed",
   inspectorList: "inspector:list",
   inspectorGet: "inspector:get",
   elementsSetPriority: "elements:setPriority",

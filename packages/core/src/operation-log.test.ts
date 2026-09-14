@@ -19,6 +19,7 @@ describe("operation log vocabulary", () => {
       "remove_relation",
       "add_tag",
       "remove_tag",
+      "set_language",
     ]);
     expect(new Set(OPERATION_TYPES).size).toBe(OPERATION_TYPES.length);
   });

@@ -291,6 +291,8 @@ describe("preload bridge", () => {
   it("normalizes optional request payloads to empty objects where the contract expects one", async () => {
     await api().settings.get();
     expect(electronMock.invoke).toHaveBeenLastCalledWith(IPC_CHANNELS.settingsGet, {});
+    await api().locale.get();
+    expect(electronMock.invoke).toHaveBeenLastCalledWith(IPC_CHANNELS.localeGet);
 
     await api().queue.list();
     expect(electronMock.invoke).toHaveBeenLastCalledWith(IPC_CHANNELS.queueList, {});
@@ -375,6 +377,20 @@ describe("preload bridge", () => {
   });
 
   it("returns unsubscribe functions for narrow native menu events", () => {
+    const onLocale = vi.fn();
+    const unsubscribeLocale = api().locale.onChanged(onLocale);
+    const localeListener = electronMock.on.mock.calls.at(-1)?.[1] as (
+      event: unknown,
+      state: unknown,
+    ) => void;
+    const localeState = { preference: "en", locale: "en", systemLocale: "zh-CN" };
+    localeListener({ sender: "raw-event" }, localeState);
+    expect(onLocale).toHaveBeenCalledWith(localeState);
+    unsubscribeLocale();
+    expect(electronMock.removeListener).toHaveBeenCalledWith(
+      IPC_CHANNELS.localeChanged,
+      localeListener,
+    );
     const showShortcuts = vi.fn();
     const unsubscribeShortcuts = api().menu.onShowShortcuts(showShortcuts);
     const shortcutsListener = electronMock.on.mock.calls.at(-1)?.[1] as () => void;

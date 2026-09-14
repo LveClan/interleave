@@ -1,0 +1,49 @@
+[data-testid="route-settings"] {
+  container-type: inline-size;
+}
+
+.setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.setting-row__control {
+  max-width: 100%;
+  min-width: 0;
+  justify-self: end;
+}
+
+.setting-row__control fieldset {
+  min-width: 0;
+  max-width: 100%;
+}
+.setting-row__control input {
+  max-width: 100%;
+}
+
+.setting-row__control > .flex {
+  flex-wrap: wrap;
+}
+
+.setting-row__control button,
+.setting-row__control span {
+  overflow-wrap: anywhere;
+}
+
+.setting-row__control [data-testid$="-value"] {
+  width: auto;
+  min-width: 3rem;
+}
+
+@container (max-width: 640px) {
+  .setting-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: var(--s-3);
+  }
+  .setting-row__control {
+    justify-self: start;
+  }
+}

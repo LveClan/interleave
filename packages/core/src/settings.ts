@@ -137,6 +137,8 @@ export interface AppSettings {
   readonly importBalanceFactor: number;
   readonly keyboardLayout: KeyboardLayout;
   readonly theme: ThemePreference;
+  /** BCP 47 UI language preference; `system` follows the OS. No translation state lives here. */
+  readonly language: string;
   readonly displayName: string;
   /**
    * Per-priority-band desired-retention targets (T079). When
@@ -313,6 +315,7 @@ export const SETTINGS_KEYS = {
   importBalanceFactor: "balance.importFactor",
   keyboardLayout: "ui.keyboardLayout",
   theme: "ui.theme",
+  language: "ui.language",
   displayName: "ui.displayName",
   retentionByBand: "review.retentionByBand",
   retentionByBandEnabled: "review.retentionByBand.enabled",
@@ -408,6 +411,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   importBalanceFactor: DEFAULT_IMPORT_BALANCE_FACTOR,
   keyboardLayout: "qwerty",
   theme: "dark",
+  language: "system",
   displayName: "",
   // Default to an EMPTY map (every band inherits `defaultDesiredRetention`) — a
   // filled `{ A:0.9, … }` literal would NOT track a user-changed global (the const
@@ -712,6 +716,14 @@ export function coerceSettingValue<K extends keyof AppSettings>(
       return (isKeyboardLayout(raw) ? raw : fallback) as AppSettings[K];
     case "theme":
       return (isThemePreference(raw) ? raw : fallback) as AppSettings[K];
+    case "language":
+      return (
+        typeof raw === "string" &&
+        /^(system|[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*)$/.test(raw) &&
+        raw.length <= 64
+          ? raw
+          : fallback
+      ) as AppSettings[K];
     case "displayName":
       // Trim + cap; a non-string (or whitespace-only) yields the empty default,
       // so a corrupt/legacy value can never reach the shell's user chip.
@@ -879,6 +891,7 @@ export function appSettingsFromStored(stored: Readonly<Record<string, unknown>>)
     ),
     keyboardLayout: coerceSettingValue("keyboardLayout", stored[SETTINGS_KEYS.keyboardLayout]),
     theme: coerceSettingValue("theme", stored[SETTINGS_KEYS.theme]),
+    language: coerceSettingValue("language", stored[SETTINGS_KEYS.language]),
     displayName: coerceSettingValue("displayName", stored[SETTINGS_KEYS.displayName]),
     retentionByBand: coerceSettingValue("retentionByBand", stored[SETTINGS_KEYS.retentionByBand]),
     retentionByBandEnabled: coerceSettingValue(

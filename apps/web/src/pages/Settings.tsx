@@ -1,3 +1,6 @@
+import { LanguageSetting } from "../components/LanguageSetting";
+import { format, t, useLocale } from "../i18n";
+import "./settings.css";
 /**
  * Settings screen (T011).
  *
@@ -15,7 +18,7 @@
  * Electron (browser/Vite-only) it shows a clear "desktop only" state.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
 import { Icon, type IconName } from "../components/Icon";
 import { OptimizationPanel } from "../components/OptimizationPanel";
 import { WorkloadSimulator } from "../components/WorkloadSimulator";
@@ -42,23 +45,22 @@ import {
 import { SETTINGS_CHANGED_EVENT } from "../shell/nav";
 import { applyTheme } from "../theme";
 
+function settingsError(error: unknown): string {
+  console.error("[settings] operation failed", error);
+  return error instanceof Error
+    ? t("settings.actionFailedDetails", { details: error.message })
+    : t("settings.actionFailed");
+}
+
 /** Human-readable byte size for the backup toast. */
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB"];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value.toFixed(1)} ${units[unit]}`;
+  return format.bytes(bytes);
 }
 
 function formatBackupArtifactLabel(artifact: BackupArtifact): string {
   return [
     artifact.schemaVersion,
-    `${artifact.fileCount} files`,
+    t("settings.fileCount", { count: artifact.fileCount }),
     formatBytes(artifact.sizeBytes),
   ].join(" · ");
 }
@@ -97,6 +99,7 @@ const FALLBACK_SETTINGS: RendererSettings = {
   importBalanceFactor: 1.5,
   keyboardLayout: "qwerty",
   theme: "dark",
+  language: "system",
   displayName: "",
   retentionByBand: {},
   retentionByBandEnabled: false,
@@ -137,17 +140,47 @@ const DAILY_BUDGET_MINUTES_MIN = 5;
 const DAILY_BUDGET_MINUTES_MAX = 300;
 const DAILY_BUDGET_MINUTE_PRESETS = [15, 30, 60, 120] as const;
 const OVERLOAD_POLICY_OPTIONS: { value: AppSettings["overloadPolicy"]; label: string }[] = [
-  { value: "off", label: "Off" },
-  { value: "suggest", label: "Suggest" },
-  { value: "automatic", label: "Automatic" },
+  {
+    value: "off",
+    get label() {
+      return t("settings.off");
+    },
+  },
+  {
+    value: "suggest",
+    get label() {
+      return t("settings.suggest");
+    },
+  },
+  {
+    value: "automatic",
+    get label() {
+      return t("settings.automatic");
+    },
+  },
 ];
 const EXTRACT_AGING_POLICY_OPTIONS: {
   value: AppSettings["extractAgingPolicy"];
   label: string;
 }[] = [
-  { value: "off", label: "Off" },
-  { value: "suggest", label: "Suggest" },
-  { value: "automatic", label: "Automatic" },
+  {
+    value: "off",
+    get label() {
+      return t("settings.off");
+    },
+  },
+  {
+    value: "suggest",
+    get label() {
+      return t("settings.suggest");
+    },
+  },
+  {
+    value: "automatic",
+    get label() {
+      return t("settings.automatic");
+    },
+  },
 ];
 const EXTRACT_AGING_RETURN_THRESHOLD_MIN = 1;
 const EXTRACT_AGING_RETURN_THRESHOLD_MAX = 50;
@@ -169,6 +202,8 @@ const KEYBOARD_LAYOUTS: { value: AppSettings["keyboardLayout"]; label: string }[
   { value: "vim", label: "Vim" },
 ];
 
+const SettingLabel = createContext<string | undefined>(undefined);
+
 function SettingRow({
   label,
   hint,
@@ -178,13 +213,20 @@ function SettingRow({
   hint?: string;
   children: React.ReactNode;
 }) {
+  const labelId = useId();
   return (
-    <div className="flex items-center justify-between gap-5 border-border-faint border-b py-3.5 last:border-b-0">
+    <div className="setting-row flex items-center justify-between gap-5 border-border-faint border-b py-3.5 last:border-b-0">
       <div className="min-w-0">
-        <div className="font-medium text-base text-text">{label}</div>
+        <div id={labelId} className="font-medium text-base text-text">
+          {label}
+        </div>
         {hint ? <div className="mt-0.5 text-sm text-text-3">{hint}</div> : null}
       </div>
-      <div className="flex-none">{children}</div>
+      <SettingLabel.Provider value={labelId}>
+        <fieldset className="setting-row__control flex-none" aria-labelledby={labelId}>
+          {children}
+        </fieldset>
+      </SettingLabel.Provider>
     </div>
   );
 }
@@ -210,8 +252,12 @@ function Segmented<T extends string | number>({
   onChange: (value: T) => void;
   name: string;
 }) {
+  const labelId = useContext(SettingLabel);
   return (
-    <fieldset className="inline-flex rounded-md border border-border bg-surface p-0.5">
+    <fieldset
+      aria-labelledby={labelId}
+      className="inline-flex flex-wrap rounded-md border border-border bg-surface p-0.5"
+    >
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -245,10 +291,12 @@ function Toggle({
   onChange: (checked: boolean) => void;
   name: string;
 }) {
+  const labelId = useContext(SettingLabel);
   return (
     <button
       type="button"
       role="switch"
+      aria-labelledby={labelId}
       aria-checked={checked}
       data-testid={name}
       onClick={() => onChange(!checked)}
@@ -295,14 +343,19 @@ function RetentionBandRow({
   const inherits = target === undefined;
   const delta = Math.round((effective - global) * 100);
   const hint =
-    delta === 0 ? "matches global" : delta > 0 ? "shorter intervals" : "longer intervals";
+    delta === 0
+      ? t("settings.globalMatch")
+      : delta > 0
+        ? t("settings.globalShorter")
+        : t("settings.globalLonger");
   return (
     <SettingRow
-      label={`Band ${band}`}
-      hint={inherits ? "Inherits the global default" : `${hint} than global`}
+      label={t("settings.band", { band })}
+      hint={inherits ? t("settings.inheritsTheGlobalDefault") : hint}
     >
       <div className="flex items-center gap-2.5">
         <input
+          aria-label={t("settings.band", { band })}
           type="range"
           min={Math.round(DESIRED_RETENTION_MIN * 100)}
           max={Math.round(DESIRED_RETENTION_MAX * 100)}
@@ -317,7 +370,7 @@ function RetentionBandRow({
           data-testid={`setting-retention-band-${band}-value`}
           className="w-12 text-right font-mono font-semibold text-accent-text text-sm"
         >
-          {pct}%
+          {format.number(pct / 100, { style: "percent" })}
         </span>
         <button
           type="button"
@@ -326,7 +379,7 @@ function RetentionBandRow({
           onClick={() => onSet(band, null)}
           className="text-text-3 text-xs hover:text-text disabled:opacity-30"
         >
-          Reset
+          {t("settings.reset")}
         </button>
       </div>
     </SettingRow>
@@ -357,6 +410,7 @@ function AiAssistancePanel({
   } | null>(null);
   const [keyInput, setKeyInput] = useState("");
   const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const refreshStatus = useCallback(async () => {
     if (!isDesktop()) return;
@@ -388,9 +442,12 @@ function AiAssistancePanel({
 
   const onDownloadModel = useCallback(async () => {
     setDownloading(true);
+    setDownloadError(null);
     try {
       await appApi.downloadAiModel();
       await refreshStatus();
+    } catch (error) {
+      setDownloadError(settingsError(error));
     } finally {
       setDownloading(false);
     }
@@ -400,10 +457,7 @@ function AiAssistancePanel({
     async (enabled: boolean) => {
       // Enabling the managed proxy DISCLOSES that content is sent off-device.
       if (enabled) {
-        const ok = window.confirm(
-          "Enabling the managed proxy routes your selected text to the first-party server " +
-            "to generate suggestions. Content is sent off-device. Continue?",
-        );
+        const ok = window.confirm(t("settings.proxyConfirm"));
         if (!ok) return;
       }
       await patch({ aiManagedProxyEnabled: enabled });
@@ -416,10 +470,15 @@ function AiAssistancePanel({
   const isOwnKey = settings.aiProviderKind === "anthropic" || settings.aiProviderKind === "openai";
 
   return (
-    <SectionPanel title="AI assistance">
+    <SectionPanel title={t("settings.aiAssistance")}>
+      {downloadError ? (
+        <p role="alert" className="py-2 text-danger text-sm">
+          {downloadError}
+        </p>
+      ) : null}
       <SettingRow
-        label="On-device AI assistance"
-        hint="Help formulate cards (explain / simplify / suggest Q&A / cloze / detect ambiguity / prerequisites / summarize) over a selected span. Every suggestion is a DRAFT — it never schedules a card. Runs with a local model or your OWN API key. Off by default."
+        label={t("settings.onDeviceAIAssistance")}
+        hint={t("settings.helpFormulateCardsExplainSimplifySuggestQ")}
       >
         <Toggle
           name="setting-ai-enabled"
@@ -429,8 +488,8 @@ function AiAssistancePanel({
       </SettingRow>
 
       <SettingRow
-        label="AI provider"
-        hint="Local runs an experimental on-device model (a one-time download). Anthropic / OpenAI use your OWN key — stored on this device only, never sent to us."
+        label={t("settings.aiProvider")}
+        hint={t("settings.localRunsAnExperimentalOnDeviceModel")}
       >
         <Segmented
           name="setting-ai-provider"
@@ -439,7 +498,12 @@ function AiAssistancePanel({
             void patch({ aiProviderKind: value as AppSettings["aiProviderKind"] })
           }
           options={[
-            { value: "local", label: "Local" },
+            {
+              value: "local",
+              get label() {
+                return t("settings.local");
+              },
+            },
             { value: "anthropic", label: "Anthropic" },
             { value: "openai", label: "OpenAI" },
           ]}
@@ -448,19 +512,20 @@ function AiAssistancePanel({
 
       {isOwnKey ? (
         <SettingRow
-          label="AI API key"
+          label={t("settings.aiAPIKey")}
           hint={
             status?.keyConfigured
-              ? "A key is configured (stored in this vault only; never shown). Enter a new value to replace it."
-              : "Your own provider key. Stored in this vault's settings only — never returned to the UI."
+              ? t("settings.aKeyIsConfiguredStoredInThis")
+              : t("settings.yourOwnProviderKeyStoredInThis")
           }
         >
           <div className="flex items-center gap-2">
             <input
+              aria-label={t("settings.aiAPIKey")}
               type="password"
               data-testid="setting-ai-api-key"
               value={keyInput}
-              placeholder={status?.keyConfigured ? "•••• configured" : "sk-…"}
+              placeholder={status?.keyConfigured ? t("settings.configured") : "sk-…"}
               onChange={(e) => setKeyInput(e.target.value)}
               className="w-40 rounded-md border border-border bg-surface px-2.5 py-1 text-sm text-text placeholder:text-text-3 focus:outline-none focus:ring-2 focus:ring-accent"
             />
@@ -470,7 +535,7 @@ function AiAssistancePanel({
               onClick={() => void onSaveKey()}
               className="rounded-md border border-border bg-surface px-3 py-1 text-sm text-text hover:bg-surface-2"
             >
-              Store key
+              {t("settings.storeKey")}
             </button>
           </div>
         </SettingRow>
@@ -478,11 +543,11 @@ function AiAssistancePanel({
 
       {isLocal ? (
         <SettingRow
-          label="Local model"
+          label={t("settings.localModel")}
           hint={
             status?.modelDownloaded
-              ? "The experimental on-device model is ready."
-              : "Download the experimental on-device instruction model (~2 GB). CPU-only quality is best-effort — an own-key provider is recommended."
+              ? t("settings.theExperimentalOnDeviceModelIsReady")
+              : t("settings.downloadTheExperimentalOnDeviceInstructionModel")
           }
         >
           <button
@@ -492,15 +557,16 @@ function AiAssistancePanel({
             onClick={() => void onDownloadModel()}
             className="rounded-md border border-border bg-surface px-3 py-1 text-sm text-text hover:bg-surface-2 disabled:opacity-40"
           >
-            {status?.modelDownloaded ? "Ready" : downloading ? "Downloading…" : "Download model"}
+            {status?.modelDownloaded
+              ? t("settings.ready")
+              : downloading
+                ? t("settings.downloading")
+                : t("settings.downloadModel")}
           </button>
         </SettingRow>
       ) : null}
 
-      <SettingRow
-        label="Managed proxy"
-        hint="Off by default. When on, AI calls route through the first-party server — content is sent off-device (you'll be asked to confirm)."
-      >
+      <SettingRow label={t("settings.managedProxy")} hint={t("settings.offByDefaultWhenOnAICalls")}>
         <Toggle
           name="setting-ai-managed-proxy"
           checked={settings.aiManagedProxyEnabled}
@@ -589,20 +655,31 @@ function modelStateChip(state: SemanticModelState): {
 } {
   switch (state) {
     case "ready":
-      return { testid: "semantic-model-ready", icon: "check", tone: "ok", text: "Model ready" };
+      return {
+        testid: "semantic-model-ready",
+        icon: "check",
+        tone: "ok",
+        get text() {
+          return t("settings.modelReady");
+        },
+      };
     case "loading":
       return {
         testid: "semantic-model-loading",
         icon: "hourglass",
         tone: "warn",
-        text: "Loading model…",
+        get text() {
+          return t("settings.loadingModel");
+        },
       };
     default:
       return {
         testid: "semantic-model-fallback",
         icon: "warning",
         tone: "warn",
-        text: "Using basic keyword fallback — quality reduced",
+        get text() {
+          return t("settings.usingBasicKeywordFallbackQualityReduced");
+        },
       };
   }
 }
@@ -611,13 +688,13 @@ function modelStateChip(state: SemanticModelState): {
 function indexHealthHeadline(health: SemanticIndexHealth): string {
   switch (health) {
     case "healthy":
-      return "Search index ready";
+      return t("settings.searchIndexReady");
     case "building":
-      return "Building search index…";
+      return t("settings.buildingSearchIndex");
     case "stale":
-      return "Search index incomplete";
+      return t("settings.searchIndexIncomplete");
     default:
-      return "Search running in reduced mode";
+      return t("settings.searchRunningInReducedMode");
   }
 }
 
@@ -625,19 +702,21 @@ function indexHealthHeadline(health: SemanticIndexHealth): string {
 function plainEmbedError(raw: string): string {
   const lower = raw.toLowerCase();
   if (lower.includes("too large") || lower.includes("oversiz"))
-    return "An item was too large to index.";
-  if (lower.includes("dim")) return "An item produced an unexpected result and was skipped.";
-  if (lower.includes("crash") || lower.includes("worker")) return "The background indexer crashed.";
-  if (lower.includes("timeout") || lower.includes("timed out")) return "Indexing timed out.";
-  if (lower.includes("model")) return "The search model failed to load.";
-  return "Some items couldn't be indexed.";
+    return t("settings.anItemWasTooLargeToIndex");
+  if (lower.includes("dim")) return t("settings.anItemProducedAnUnexpectedResultAnd");
+  if (lower.includes("crash") || lower.includes("worker"))
+    return t("settings.theBackgroundIndexerCrashed");
+  if (lower.includes("timeout") || lower.includes("timed out"))
+    return t("settings.indexingTimedOut");
+  if (lower.includes("model")) return t("settings.theSearchModelFailedToLoad");
+  return t("settings.someItemsCouldnTBeIndexed");
 }
 
 /** Friendly remaining-time copy from an ETA in seconds. */
 function formatEta(seconds: number): string {
-  if (seconds <= 0) return "almost done";
-  if (seconds < 60) return `about ${seconds}s remaining`;
-  return `about ${Math.round(seconds / 60)} min remaining`;
+  if (seconds <= 0) return t("settings.almostDone");
+  if (seconds < 60) return t("settings.etaSeconds", { count: seconds });
+  return t("settings.etaMinutes", { count: Math.round(seconds / 60) });
 }
 
 /**
@@ -652,6 +731,7 @@ function formatEta(seconds: number): string {
 function SearchIntelligencePanel() {
   const [status, setStatus] = useState<SemanticStatusResult | null>(null);
   const [busy, setBusy] = useState<"reindex" | "retry" | "model" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!isDesktop()) return;
@@ -679,10 +759,13 @@ function SearchIntelligencePanel() {
   const run = useCallback(
     (kind: "reindex" | "retry" | "model", action: () => Promise<unknown>) => () => {
       setBusy(kind);
+      setActionError(null);
       void (async () => {
         try {
           await action();
           await refresh();
+        } catch (error) {
+          setActionError(settingsError(error));
         } finally {
           setBusy(null);
         }
@@ -694,10 +777,10 @@ function SearchIntelligencePanel() {
   // Pre-load: a skeleton, never a flash of 0 / 0.
   if (!status) {
     return (
-      <SectionPanel title="Search intelligence">
-        <SettingRow label="Semantic search" hint="Checking status…">
+      <SectionPanel title={t("settings.searchIntelligence")}>
+        <SettingRow label={t("settings.semanticSearch")} hint={t("settings.checkingStatus")}>
           <span data-testid="semantic-loading" className="text-sm text-text-3">
-            Loading…
+            {t("settings.loading")}
           </span>
         </SettingRow>
       </SectionPanel>
@@ -707,13 +790,13 @@ function SearchIntelligencePanel() {
   // Vector engine unavailable on this install → one honest message, no controls.
   if (!status.vecAvailable) {
     return (
-      <SectionPanel title="Search intelligence">
+      <SectionPanel title={t("settings.searchIntelligence")}>
         <SettingRow
-          label="Semantic search"
-          hint="Semantic search isn't available on this install — search uses keywords only."
+          label={t("settings.semanticSearch")}
+          hint={t("settings.semanticSearchIsnTAvailableOnThis")}
         >
           <StatusChip testid="semantic-unavailable" icon="info" tone="warn">
-            Unavailable
+            {t("settings.unavailable")}
           </StatusChip>
         </SettingRow>
       </SectionPanel>
@@ -736,39 +819,47 @@ function SearchIntelligencePanel() {
   const pausedOnBattery = status.autoIndexPaused === "battery";
 
   return (
-    <SectionPanel title="Search intelligence">
-      <SettingRow label="Search index" hint="Find related material by meaning, not just keywords.">
+    <SectionPanel title={t("settings.searchIntelligence")}>
+      {actionError ? (
+        <p role="alert" className="py-2 text-danger text-sm">
+          {actionError}
+        </p>
+      ) : null}
+      <SettingRow
+        label={t("settings.searchIndex")}
+        hint={t("settings.findRelatedMaterialByMeaningNotJust")}
+      >
         <StatusChip
           testid="semantic-index-health"
           icon={pausedOnBattery ? "info" : healthIcon}
           tone={healthTone}
         >
-          {pausedOnBattery ? "Indexing paused" : indexHealthHeadline(status.indexHealth)}
+          {pausedOnBattery ? t("settings.indexingPaused") : indexHealthHeadline(status.indexHealth)}
         </StatusChip>
       </SettingRow>
 
       {status.total === 0 ? (
         <SettingRow
-          label="Indexed"
-          hint="Nothing to index yet — add sources to enable semantic search."
+          label={t("settings.indexed")}
+          hint={t("settings.nothingToIndexYetAddSourcesTo")}
         >
           <span data-testid="semantic-empty" className="text-sm text-text-3">
-            Nothing to index yet
+            {t("settings.nothingToIndexYet")}
           </span>
         </SettingRow>
       ) : (
         <SettingRow
-          label="Indexed"
+          label={t("settings.indexed")}
           hint={
             pausedOnBattery
-              ? "On battery — plug in to finish indexing, or rebuild now."
+              ? t("settings.onBatteryPlugInToFinishIndexing")
               : status.etaSeconds != null
                 ? formatEta(status.etaSeconds)
                 : status.indexHealth === "building"
-                  ? "estimating…"
+                  ? t("settings.estimating")
                   : pct < SEMANTIC_THRESHOLD_PCT
-                    ? "Partial — semantic search improves as more items are indexed."
-                    : "Fully indexed."
+                    ? t("settings.partialSemanticSearchImprovesAsMoreItems")
+                    : t("settings.fullyIndexed")
           }
         >
           <div className="flex items-center gap-2" data-testid="semantic-progress">
@@ -779,20 +870,20 @@ function SearchIntelligencePanel() {
               />
             </div>
             <span className="text-sm text-text-2">
-              {status.embedded} of {status.total}
+              {t("settings.progress", { embedded: status.embedded, total: status.total })}
             </span>
           </div>
         </SettingRow>
       )}
 
       <SettingRow
-        label="Search model"
+        label={t("settings.searchModel")}
         hint={
           isFallback
             ? status.modelLoadError
-              ? `The on-device model couldn't load, so search is using a basic keyword fallback. Reason: ${status.modelLoadError}`
-              : "The on-device model isn't loaded, so search is using a basic keyword fallback."
-            : "Runs entirely on-device — no content leaves your machine."
+              ? t("settings.modelLoadFailed")
+              : t("settings.theOnDeviceModelIsnTLoaded")
+            : t("settings.runsEntirelyOnDeviceNoContentLeaves")
         }
       >
         <div className="flex items-center gap-2">
@@ -807,30 +898,32 @@ function SearchIntelligencePanel() {
               onClick={run("model", () => appApi.semanticDownloadModel())}
               className="rounded-md border border-border bg-surface px-3 py-1 text-sm text-text hover:bg-surface-2 disabled:opacity-40"
             >
-              {busy === "model" ? "Checking…" : "Recheck"}
+              {busy === "model" ? t("settings.checking") : t("settings.recheck")}
             </button>
           ) : null}
         </div>
       </SettingRow>
 
-      <SettingRow label="Readiness" hint="What semantic search needs to run.">
+      <SettingRow label={t("settings.readiness")} hint={t("settings.whatSemanticSearchNeedsToRun")}>
         <div data-testid="semantic-checklist" className="flex flex-col items-end gap-1">
-          <ChecklistItem ok label="Search engine ready" />
-          <ChecklistItem ok={status.modelState === "ready"} label="Model verified" />
-          <ChecklistItem ok={!isFallback} label="Vectors compatible" />
+          <ChecklistItem ok label={t("settings.searchEngineReady")} />
+          <ChecklistItem ok={status.modelState === "ready"} label={t("settings.modelVerified")} />
+          <ChecklistItem ok={!isFallback} label={t("settings.vectorsCompatible")} />
         </div>
       </SettingRow>
 
       {status.failedCount > 0 ? (
         <SettingRow
-          label="Couldn't index"
+          label={t("settings.couldnTIndex")}
           hint={
-            status.lastError ? plainEmbedError(status.lastError) : "Some items couldn't be indexed."
+            status.lastError
+              ? plainEmbedError(status.lastError)
+              : t("settings.someItemsCouldnTBeIndexed")
           }
         >
           <div className="flex items-center gap-2">
             <StatusChip testid="semantic-failed" icon="warning" tone="danger">
-              {`${status.failedCount} failed`}
+              {t("settings.failedCount", { count: status.failedCount })}
             </StatusChip>
             <button
               type="button"
@@ -839,13 +932,16 @@ function SearchIntelligencePanel() {
               onClick={run("retry", () => appApi.semanticRetryFailed())}
               className="rounded-md border border-border bg-surface px-3 py-1 text-sm text-text hover:bg-surface-2 disabled:opacity-40"
             >
-              {busy === "retry" ? "Retrying…" : "Retry failed"}
+              {busy === "retry" ? t("settings.retrying") : t("settings.retryFailed")}
             </button>
           </div>
         </SettingRow>
       ) : null}
 
-      <SettingRow label="Rebuild index" hint="Re-embed anything missing or out of date.">
+      <SettingRow
+        label={t("settings.rebuildIndex")}
+        hint={t("settings.reEmbedAnythingMissingOrOutOf")}
+      >
         <button
           type="button"
           data-testid="semantic-reindex"
@@ -853,7 +949,7 @@ function SearchIntelligencePanel() {
           onClick={run("reindex", () => appApi.semanticReindex({ onlyMissing: false }))}
           className="rounded-md border border-border bg-surface px-3 py-1 text-sm text-text hover:bg-surface-2 disabled:opacity-40"
         >
-          {busy === "reindex" ? "Rebuilding…" : "Rebuild"}
+          {busy === "reindex" ? t("settings.rebuilding") : t("settings.rebuild")}
         </button>
       </SettingRow>
     </SectionPanel>
@@ -897,7 +993,7 @@ function SystemPanel() {
       setError(null);
     } catch (e) {
       if (!mounted.current) return;
-      setError(e instanceof Error ? e.message : String(e));
+      setError(settingsError(e));
     }
   }, []);
 
@@ -916,7 +1012,7 @@ function SystemPanel() {
       await refresh();
     } catch (e) {
       if (!mounted.current) return;
-      setError(e instanceof Error ? e.message : String(e));
+      setError(settingsError(e));
     }
   }, [refresh]);
 
@@ -927,54 +1023,64 @@ function SystemPanel() {
 
   return (
     <section className="mb-6" data-testid="desktop-status" data-desktop="true">
-      <div className="mb-1.5 font-medium text-text-2 text-xs uppercase tracking-wide">System</div>
+      <div className="mb-1.5 font-medium text-text-2 text-xs uppercase tracking-wide">
+        {t("settings.system")}
+      </div>
       <div className="rounded-lg border border-border bg-surface-2 px-4">
         <SettingRow
-          label="Local database"
-          hint="On-device SQLite store backing this vault — fully local."
+          label={t("settings.localDatabase")}
+          hint={t("settings.onDeviceSQLiteStoreBackingThisVault")}
         >
           {loading ? (
-            <Token testid="health-status">Checking…</Token>
+            <Token testid="health-status">{t("settings.checking")}</Token>
           ) : healthy ? (
             <OkChip testid="health-status" icon="checkCircle">
-              Healthy
+              {t("settings.healthy")}
             </OkChip>
           ) : (
             <span
               data-testid="health-status"
               className="inline-flex items-center gap-1.5 rounded-md bg-surface px-2.5 py-1 text-danger text-xs"
             >
-              Unavailable
+              {t("settings.unavailable")}
             </span>
           )}
         </SettingRow>
 
-        <SettingRow label="Schema" hint="Migrations applied to the local store.">
+        <SettingRow
+          label={t("settings.schema")}
+          hint={t("settings.migrationsAppliedToTheLocalStore")}
+        >
           <div className="flex items-center gap-2 flex-wrap">
             <Token testid="db-applied-migrations">
-              {status ? `${status.appliedMigrations} migrations` : "…"}
+              {status ? t("settings.migrationCount", { count: status.appliedMigrations }) : "…"}
             </Token>
             {status?.migrated ? (
               <OkChip testid="db-migrated" icon="check">
-                Up to date
+                {t("settings.upToDate")}
               </OkChip>
             ) : null}
           </div>
         </SettingRow>
 
-        <SettingRow label="Connection" hint="Journal mode, foreign keys, and write-lock timeout.">
+        <SettingRow
+          label={t("settings.connection")}
+          hint={t("settings.journalModeForeignKeysAndWriteLock")}
+        >
           <div className="flex items-center gap-2 flex-wrap">
             <Token testid="db-journal-mode">{status?.journalMode ?? "…"}</Token>
             <Token testid="db-foreign-keys">
-              {status ? (status.foreignKeys ? "FK on" : "FK off") : "…"}
+              {status ? (status.foreignKeys ? t("settings.fkOn") : t("settings.fkOff")) : "…"}
             </Token>
-            <Token testid="db-busy-timeout">{status ? `${status.busyTimeoutMs} ms` : "…"}</Token>
+            <Token testid="db-busy-timeout">
+              {status ? t("settings.milliseconds", { count: status.busyTimeoutMs }) : "…"}
+            </Token>
           </div>
         </SettingRow>
 
         <SettingRow
-          label="Persistence check"
-          hint="Write a timestamped value and read it back to confirm writes survive a restart."
+          label={t("settings.persistenceCheck")}
+          hint={t("settings.writeATimestampedValueAndReadIt")}
         >
           <div className="flex items-center gap-2 flex-wrap">
             <span data-testid="persisted-value" className="font-mono text-text-3 text-xs">
@@ -987,13 +1093,13 @@ function SystemPanel() {
               className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 font-medium text-sm text-text-2 hover:border-border-strong"
             >
               <Icon name="edit" size={14} />
-              Write check
+              {t("settings.writeCheck")}
             </button>
           </div>
         </SettingRow>
 
         {error ? (
-          <SettingRow label="System check failed" hint="See the error below.">
+          <SettingRow label={t("settings.systemCheckFailed")} hint={t("settings.seeTheErrorBelow")}>
             <span data-testid="desktop-status-error" className="text-danger text-sm">
               {error}
             </span>
@@ -1005,6 +1111,7 @@ function SystemPanel() {
 }
 
 export function Settings() {
+  useLocale();
   const desktop = isDesktop();
   const [settings, setSettings] = useState<RendererSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -1064,7 +1171,7 @@ export function Settings() {
       if (!mounted.current || requestId !== backupListRequestId.current) return;
       setBackupArtifacts([]);
       setSelectedBackupTimestamp("");
-      setBackupListError(e instanceof Error ? e.message : String(e));
+      setBackupListError(settingsError(e));
     } finally {
       if (mounted.current && requestId === backupListRequestId.current) {
         setBackupListLoading(false);
@@ -1086,7 +1193,7 @@ export function Settings() {
       setBackup(result);
       await loadBackupArtifacts();
     } catch (e) {
-      setBackupError(e instanceof Error ? e.message : String(e));
+      setBackupError(settingsError(e));
     } finally {
       setBackingUp(false);
     }
@@ -1114,11 +1221,9 @@ export function Settings() {
       setRestorePhrase("");
       setResetPhrase("");
       setDataRestartRequired(true);
-      setRestoreSuccess(
-        `Restored backup ${selectedBackupTimestamp}. Restart Interleave before continuing.`,
-      );
+      setRestoreSuccess(t("settings.restoredBackup", { name: selectedBackupTimestamp }));
     } catch (e) {
-      setRestoreError(e instanceof Error ? e.message : String(e));
+      setRestoreError(settingsError(e));
     } finally {
       replacementInFlight.current = false;
       setRestoreBusy(false);
@@ -1143,7 +1248,7 @@ export function Settings() {
       setRestoreFileError(null);
       setRestoreFileSuccess(null);
     } catch (e) {
-      setRestoreFileError(e instanceof Error ? e.message : String(e));
+      setRestoreFileError(settingsError(e));
     } finally {
       setChoosingArchive(false);
     }
@@ -1178,11 +1283,9 @@ export function Settings() {
       setRestorePhrase("");
       setResetPhrase("");
       setDataRestartRequired(true);
-      setRestoreFileSuccess(
-        `Restored backup from ${selectedArchiveName}. Restart Interleave before continuing.`,
-      );
+      setRestoreFileSuccess(t("settings.restoredFile", { name: selectedArchiveName }));
     } catch (e) {
-      setRestoreFileError(e instanceof Error ? e.message : String(e));
+      setRestoreFileError(settingsError(e));
     } finally {
       replacementInFlight.current = false;
       setRestoreFileBusy(false);
@@ -1209,9 +1312,9 @@ export function Settings() {
       setRestorePhrase("");
       setResetPhrase("");
       setDataRestartRequired(true);
-      setResetSuccess("Local data reset. Restart Interleave before continuing.");
+      setResetSuccess(t("settings.localDataResetRestartInterleaveBeforeContinuing"));
     } catch (e) {
-      setResetError(e instanceof Error ? e.message : String(e));
+      setResetError(settingsError(e));
     } finally {
       replacementInFlight.current = false;
       setResetBusy(false);
@@ -1235,7 +1338,7 @@ export function Settings() {
     try {
       await appApi.openBackupsFolder();
     } catch (e) {
-      setBackupFolderError(e instanceof Error ? e.message : String(e));
+      setBackupFolderError(settingsError(e));
     } finally {
       setOpeningBackupsFolder(false);
     }
@@ -1252,7 +1355,7 @@ export function Settings() {
         setSettings(loaded);
         applyTheme(loaded.theme);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setError(settingsError(e));
       }
     })();
     return () => {
@@ -1274,7 +1377,7 @@ export function Settings() {
         const result = await appApi.getCapturePairing();
         if (!cancelled) setPairing(result);
       } catch (e) {
-        if (!cancelled) setPairingError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) setPairingError(settingsError(e));
       }
     })();
     return () => {
@@ -1291,17 +1394,13 @@ export function Settings() {
       const full = await appApi.getCapturePairing();
       setPairing({ ...full, ...next });
     } catch (e) {
-      setPairingError(e instanceof Error ? e.message : String(e));
+      setPairingError(settingsError(e));
     }
   }, []);
 
   /** Regenerate the pairing token (UNPAIRS the current extension). */
   const regenerateToken = useCallback(async () => {
-    if (
-      !window.confirm(
-        "Regenerate the pairing token? The currently paired extension will stop working until you paste the new token into its options.",
-      )
-    ) {
+    if (!window.confirm(t("settings.regenerateThePairingTokenTheCurrentlyPaired"))) {
       return;
     }
     setPairingError(null);
@@ -1311,7 +1410,7 @@ export function Settings() {
       setPairing(full);
       setTokenCopied(false);
     } catch (e) {
-      setPairingError(e instanceof Error ? e.message : String(e));
+      setPairingError(settingsError(e));
     }
   }, []);
 
@@ -1356,7 +1455,7 @@ export function Settings() {
       // the change live — no remount required.
       window.dispatchEvent(new CustomEvent(SETTINGS_CHANGED_EVENT));
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(settingsError(e));
     }
   }, []);
 
@@ -1373,7 +1472,7 @@ export function Settings() {
       setSettings(confirmed);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(settingsError(e));
     }
   }, []);
 
@@ -1405,7 +1504,7 @@ export function Settings() {
         );
         setError(null);
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
+        setError(settingsError(e));
       }
     },
     [],
@@ -1418,17 +1517,18 @@ export function Settings() {
         data-testid="route-settings"
       >
         <header className="mb-6">
-          <h1 className="font-semibold text-2xl text-text tracking-tight">Settings</h1>
-          <p className="mt-1 text-sm text-text-2">Local-first · everything stays on this device</p>
+          <h1 className="font-semibold text-2xl text-text tracking-tight">
+            {t("settings.settings")}
+          </h1>
+          <p className="mt-1 text-sm text-text-2">
+            {t("settings.localFirstEverythingStaysOnThisDevice")}
+          </p>
         </header>
         <section
           data-testid="settings-desktop-only"
           className="rounded-lg border border-border bg-surface-2 p-4"
         >
-          <p className="text-sm text-text-2">
-            Running in a browser — settings persist in the native SQLite database, which is only
-            available in the Electron desktop app.
-          </p>
+          <p className="text-sm text-text-2">{t("settings.runningInABrowserSettingsPersistIn")}</p>
         </section>
       </div>
     );
@@ -1458,15 +1558,19 @@ export function Settings() {
     >
       <header className="mb-6">
         <div>
-          <h1 className="font-semibold text-2xl text-text tracking-tight">Settings</h1>
-          <p className="mt-1 text-sm text-text-2">Local-first · everything stays on this device</p>
+          <h1 className="font-semibold text-2xl text-text tracking-tight">
+            {t("settings.settings")}
+          </h1>
+          <p className="mt-1 text-sm text-text-2">
+            {t("settings.localFirstEverythingStaysOnThisDevice")}
+          </p>
         </div>
       </header>
 
-      <SectionPanel title="Review & scheduling">
+      <SectionPanel title={t("settings.reviewAndScheduling")}>
         <SettingRow
-          label="Daily review budget"
-          hint="Soft cap on estimated review and processing time per day."
+          label={t("settings.dailyReviewBudget")}
+          hint={t("settings.softCapOnEstimatedReviewAndProcessing")}
         >
           <div className="flex flex-col items-end gap-2">
             <Segmented
@@ -1474,12 +1578,13 @@ export function Settings() {
               value={s.dailyBudgetMinutes}
               options={DAILY_BUDGET_MINUTE_PRESETS.map((value) => ({
                 value,
-                label: `${value}m`,
+                label: t("settings.minutesShort", { count: value }),
               }))}
               onChange={(dailyBudgetMinutes) => void patch({ dailyBudgetMinutes })}
             />
             <div className="flex items-center gap-2.5">
               <input
+                aria-label={t("settings.dailyReviewBudget")}
                 type="range"
                 min={DAILY_BUDGET_MINUTES_MIN}
                 max={DAILY_BUDGET_MINUTES_MAX}
@@ -1493,15 +1598,15 @@ export function Settings() {
                 data-testid="setting-budget-value"
                 className="w-16 text-right font-mono font-semibold text-sm text-text"
               >
-                {s.dailyBudgetMinutes} min
+                {t("settings.minutes", { count: s.dailyBudgetMinutes })}
               </span>
             </div>
           </div>
         </SettingRow>
 
         <SettingRow
-          label="Distillation floor"
-          hint="Reserve this share of each day and planned session for due extract distillation. Unused share returns to normal queue work."
+          label={t("settings.distillationFloor")}
+          hint={t("settings.reserveThisShareOfEachDayAnd")}
         >
           <div className="flex items-center gap-2.5">
             <input
@@ -1510,7 +1615,7 @@ export function Settings() {
               max={100}
               step={1}
               value={s.distillationQuotaPercent}
-              aria-label="Distillation floor percent"
+              aria-label={t("settings.distillationFloorPercent")}
               data-testid="setting-distillation-quota"
               onChange={(e) => void patch({ distillationQuotaPercent: Number(e.target.value) })}
               className="w-40 accent-accent"
@@ -1519,19 +1624,21 @@ export function Settings() {
               data-testid="setting-distillation-quota-value"
               className="w-16 text-right font-mono font-semibold text-sm text-text"
             >
-              {s.distillationQuotaPercent === 0 ? "Off" : `${s.distillationQuotaPercent}%`}
+              {s.distillationQuotaPercent === 0
+                ? t("settings.off")
+                : format.number(s.distillationQuotaPercent / 100, { style: "percent" })}
             </span>
           </div>
         </SettingRow>
 
         <SettingRow
-          label="Overload policy"
+          label={t("settings.overloadPolicy")}
           hint={
             s.overloadPolicy === "automatic"
-              ? "Once per local day, safe low-value work can slip before Home, Queue, and Daily Work open; the receipt can undo the batch."
+              ? t("settings.oncePerLocalDaySafeLowValue")
               : s.overloadPolicy === "suggest"
-                ? "Manual overload suggestions stay visible and wait for confirmation."
-                : "No standing policy runs; the manual overload banner still appears when today is over budget."
+                ? t("settings.manualOverloadSuggestionsStayVisibleAndWait")
+                : t("settings.noStandingPolicyRunsTheManualOverload")
           }
         >
           <Segmented
@@ -1543,13 +1650,13 @@ export function Settings() {
         </SettingRow>
 
         <SettingRow
-          label="Extract aging"
+          label={t("settings.extractAging")}
           hint={
             s.extractAgingPolicy === "automatic"
-              ? "Once per local day, due stagnant extracts that pass the return threshold are moved to reference before daily queue materialization."
+              ? t("settings.oncePerLocalDayDueStagnantExtracts")
               : s.extractAgingPolicy === "suggest"
-                ? "Show a manual sweep for due extracts that have been postponed repeatedly without progress."
-                : "Extracts keep returning until you process them manually."
+                ? t("settings.showAManualSweepForDueExtracts")
+                : t("settings.extractsKeepReturningUntilYouProcessThem")
           }
         >
           <div className="flex max-w-md flex-col items-end gap-3">
@@ -1569,7 +1676,7 @@ export function Settings() {
             {confirmExtractAgingAutomatic ? (
               <div className="flex items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-2 text-right text-sm">
                 <span className="text-text-2">
-                  Enable a daily automatic reference sweep for stale extracts?
+                  {t("settings.enableADailyAutomaticReferenceSweepFor")}
                 </span>
                 <button
                   type="button"
@@ -1579,21 +1686,22 @@ export function Settings() {
                     void patch({ extractAgingPolicy: "automatic" });
                   }}
                 >
-                  Enable
+                  {t("settings.enable")}
                 </button>
                 <button
                   type="button"
                   className="inline-flex items-center rounded-md border border-border bg-surface px-2.5 py-1 font-medium text-text-2 hover:text-text"
                   onClick={() => setConfirmExtractAgingAutomatic(false)}
                 >
-                  Cancel
+                  {t("settings.cancel")}
                 </button>
               </div>
             ) : null}
             <div className="flex flex-wrap justify-end gap-3">
               <label className="flex items-center gap-2 text-sm text-text-2">
-                <span>Returns</span>
+                <span>{t("settings.returns")}</span>
                 <input
+                  aria-label={t("settings.extractAging")}
                   type="number"
                   min={EXTRACT_AGING_RETURN_THRESHOLD_MIN}
                   max={EXTRACT_AGING_RETURN_THRESHOLD_MAX}
@@ -1607,8 +1715,9 @@ export function Settings() {
                 />
               </label>
               <label className="flex items-center gap-2 text-sm text-text-2">
-                <span>Days</span>
+                <span>{t("settings.days")}</span>
                 <input
+                  aria-label={t("settings.extractAging")}
                   type="number"
                   min={EXTRACT_AGING_AGE_DAYS_MIN}
                   max={EXTRACT_AGING_AGE_DAYS_MAX}
@@ -1624,11 +1733,12 @@ export function Settings() {
         </SettingRow>
 
         <SettingRow
-          label="Desired retention"
-          hint="FSRS target recall probability. Higher = more reviews, stronger memory."
+          label={t("settings.desiredRetention")}
+          hint={t("settings.fsrsTargetRecallProbabilityHigherMoreReviews")}
         >
           <div className="flex items-center gap-2.5">
             <input
+              aria-label={t("settings.desiredRetention")}
               type="range"
               min={80}
               max={97}
@@ -1644,29 +1754,33 @@ export function Settings() {
               data-testid="setting-retention-value"
               className="w-16 text-right font-mono font-semibold text-accent-text text-sm"
             >
-              {retentionPct}%
+              {format.number(retentionPct / 100, { style: "percent" })}
             </span>
           </div>
         </SettingRow>
 
         <SettingRow
-          label="Default topic interval"
-          hint="How often a topic resurfaces on the attention scheduler."
+          label={t("settings.defaultTopicInterval")}
+          hint={t("settings.howOftenATopicResurfacesOnThe")}
         >
           <Segmented
             name="setting-topic-interval"
             value={s.defaultTopicIntervalDays}
             onChange={(value) => void patch({ defaultTopicIntervalDays: value })}
-            options={TOPIC_INTERVAL_OPTIONS.map((d) => ({ value: d, label: `${d}d` }))}
+            options={TOPIC_INTERVAL_OPTIONS.map((d) => ({
+              value: d,
+              label: t("settings.daysShort", { count: d }),
+            }))}
           />
         </SettingRow>
 
         <SettingRow
-          label="Parked resurfacing"
-          hint="Days before saved-for-later sources return to the maintenance sweep."
+          label={t("settings.parkedResurfacing")}
+          hint={t("settings.daysBeforeSavedForLaterSourcesReturn")}
         >
           <div className="flex items-center gap-2.5">
             <input
+              aria-label={t("settings.parkedResurfacing")}
               type="number"
               min={1}
               max={3650}
@@ -1676,13 +1790,13 @@ export function Settings() {
               onChange={(e) => void patch({ parkedResurfaceAfterDays: Number(e.target.value) })}
               className="w-24 rounded-md border border-border bg-surface px-2 py-1 text-right font-mono font-semibold text-sm text-text"
             />
-            <span className="text-sm text-text-3">days</span>
+            <span className="text-sm text-text-3">{t("settings.days2")}</span>
           </div>
         </SettingRow>
 
         <SettingRow
-          label="Default source priority"
-          hint="Priority assigned to newly imported sources."
+          label={t("settings.defaultSourcePriority")}
+          hint={t("settings.priorityAssignedToNewlyImportedSources")}
         >
           <div className="flex items-center gap-1.5" data-testid="setting-priority">
             {PRIORITY_LABELS.map((p) => {
@@ -1712,8 +1826,8 @@ export function Settings() {
         </SettingRow>
 
         <SettingRow
-          label="Bury siblings"
-          hint="Don't show cards from the same extract or cloze group back-to-back in a review session."
+          label={t("settings.burySiblings")}
+          hint={t("settings.donTShowCardsFromTheSame")}
         >
           <Toggle
             name="setting-bury-siblings"
@@ -1723,8 +1837,8 @@ export function Settings() {
         </SettingRow>
 
         <SettingRow
-          label="Import / process balance warnings"
-          hint="Warn on the inbox and analytics when you import faster than you process."
+          label={t("settings.importProcessBalanceWarnings")}
+          hint={t("settings.warnOnTheInboxAndAnalyticsWhen")}
         >
           <Toggle
             name="setting-balance-warnings"
@@ -1734,8 +1848,8 @@ export function Settings() {
         </SettingRow>
 
         <SettingRow
-          label="Weekly review"
-          hint="Schedule the ledger and integrity ritual as a system attention task."
+          label={t("settings.weeklyReview")}
+          hint={t("settings.scheduleTheLedgerAndIntegrityRitualAs")}
         >
           <div className="flex items-center gap-3">
             <Toggle
@@ -1744,6 +1858,7 @@ export function Settings() {
               onChange={(value) => void patch({ weeklyReviewEnabled: value })}
             />
             <input
+              aria-label={t("settings.weeklyReview")}
               type="number"
               min={1}
               max={90}
@@ -1754,13 +1869,13 @@ export function Settings() {
               onChange={(e) => void patch({ weeklyReviewCadenceDays: Number(e.target.value) })}
               className="w-20 rounded-md border border-border bg-surface px-2 py-1 text-right font-mono font-semibold text-sm text-text disabled:opacity-50"
             />
-            <span className="text-sm text-text-3">days</span>
+            <span className="text-sm text-text-3">{t("settings.days2")}</span>
           </div>
         </SettingRow>
 
         <SettingRow
-          label="Lapse-cluster detection"
-          hint="Surface source regions where several cards keep failing together — a comprehension-debt signal, never an alarm. Tune how rare it stays: K lapses across at least N cards in a rolling window."
+          label={t("settings.lapseClusterDetection")}
+          hint={t("settings.surfaceSourceRegionsWhereSeveralCardsKeep")}
         >
           <div className="flex items-center gap-3">
             <Toggle
@@ -1773,46 +1888,46 @@ export function Settings() {
               min={LAPSE_CLUSTER_MIN_LAPSES_MIN}
               max={LAPSE_CLUSTER_MIN_LAPSES_MAX}
               step={1}
-              aria-label="Minimum lapses"
+              aria-label={t("settings.minimumLapses")}
               value={s.lapseClusterMinLapses}
               data-testid="setting-lapse-cluster-min-lapses"
               disabled={!s.lapseClusterDetectionEnabled}
               onChange={(e) => void patch({ lapseClusterMinLapses: Number(e.target.value) })}
               className="w-16 rounded-md border border-border bg-surface px-2 py-1 text-right font-mono font-semibold text-sm text-text disabled:opacity-50"
             />
-            <span className="text-sm text-text-3">lapses ·</span>
+            <span className="text-sm text-text-3">{t("settings.lapses")}</span>
             <input
               type="number"
               min={LAPSE_CLUSTER_MIN_CARDS_MIN}
               max={LAPSE_CLUSTER_MIN_CARDS_MAX}
               step={1}
-              aria-label="Minimum cards"
+              aria-label={t("settings.minimumCards")}
               value={s.lapseClusterMinCards}
               data-testid="setting-lapse-cluster-min-cards"
               disabled={!s.lapseClusterDetectionEnabled}
               onChange={(e) => void patch({ lapseClusterMinCards: Number(e.target.value) })}
               className="w-16 rounded-md border border-border bg-surface px-2 py-1 text-right font-mono font-semibold text-sm text-text disabled:opacity-50"
             />
-            <span className="text-sm text-text-3">cards ·</span>
+            <span className="text-sm text-text-3">{t("settings.cards")}</span>
             <input
               type="number"
               min={LAPSE_CLUSTER_WINDOW_DAYS_MIN}
               max={LAPSE_CLUSTER_WINDOW_DAYS_MAX}
               step={1}
-              aria-label="Window days"
+              aria-label={t("settings.windowDays")}
               value={s.lapseClusterWindowDays}
               data-testid="setting-lapse-cluster-window"
               disabled={!s.lapseClusterDetectionEnabled}
               onChange={(e) => void patch({ lapseClusterWindowDays: Number(e.target.value) })}
               className="w-20 rounded-md border border-border bg-surface px-2 py-1 text-right font-mono font-semibold text-sm text-text disabled:opacity-50"
             />
-            <span className="text-sm text-text-3">days</span>
+            <span className="text-sm text-text-3">{t("settings.days2")}</span>
           </div>
         </SettingRow>
 
         <SettingRow
-          label="Re-read proposals"
-          hint="Turn a struggling card group into a quiet, capped suggestion to re-read the section. Accept to schedule it; dismiss to hide it until the group gets worse. The cap limits how many active proposals show at once — help, never a pile-on."
+          label={t("settings.reReadProposals")}
+          hint={t("settings.turnAStrugglingCardGroupIntoA")}
         >
           <div className="flex items-center gap-3">
             <Toggle
@@ -1825,22 +1940,22 @@ export function Settings() {
               min={REREAD_PROPOSAL_WEEKLY_CAP_MIN}
               max={REREAD_PROPOSAL_WEEKLY_CAP_MAX}
               step={1}
-              aria-label="Active proposals at once"
+              aria-label={t("settings.activeProposalsAtOnce")}
               value={s.rereadProposalWeeklyCap}
               data-testid="setting-reread-proposal-cap"
               disabled={!s.rereadProposalsEnabled}
               onChange={(e) => void patch({ rereadProposalWeeklyCap: Number(e.target.value) })}
               className="w-16 rounded-md border border-border bg-surface px-2 py-1 text-right font-mono font-semibold text-sm text-text disabled:opacity-50"
             />
-            <span className="text-sm text-text-3">active at once</span>
+            <span className="text-sm text-text-3">{t("settings.activeAtOnce")}</span>
           </div>
         </SettingRow>
       </SectionPanel>
 
-      <SectionPanel title="Retention by priority">
+      <SectionPanel title={t("settings.retentionByPriority")}>
         <SettingRow
-          label="Per-priority retention"
-          hint="Hold high-value (A) cards to a higher target and let low-value (D) cards drift — protecting fragile memory while trimming daily load. Off = one global retention for every card."
+          label={t("settings.perPriorityRetention")}
+          hint={t("settings.holdHighValueACardsToA")}
         >
           <Toggle
             name="setting-retention-by-band"
@@ -1868,36 +1983,58 @@ export function Settings() {
 
       <SearchIntelligencePanel />
 
-      <SectionPanel title="Interface">
+      <SectionPanel title={t("settings.interface")}>
+        <SettingRow label={t("common.language")}>
+          <LanguageSetting disabled={backupControlsLocked} />
+        </SettingRow>
         <SettingRow
-          label="Display name"
-          hint="Shown in the sidebar. Local to this vault — there is no account."
+          label={t("settings.displayName")}
+          hint={t("settings.shownInTheSidebarLocalToThis")}
         >
           <input
+            aria-label={t("settings.displayName")}
             type="text"
             data-testid="setting-display-name"
             value={s.displayName}
             maxLength={DISPLAY_NAME_MAX}
-            placeholder="Local vault"
+            placeholder={t("settings.localVault")}
             onChange={(e) => void patch({ displayName: e.target.value })}
             className="w-48 rounded-md border border-border bg-surface px-2.5 py-1 text-sm text-text placeholder:text-text-3 focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </SettingRow>
 
-        <SettingRow label="Theme" hint="Follow the system, or choose a fixed theme.">
+        <SettingRow label={t("settings.theme")} hint={t("settings.followTheSystemOrChooseAFixed")}>
           <Segmented
             name="setting-theme"
             value={s.theme}
             onChange={(value) => void patch({ theme: value as ThemePreference })}
             options={[
-              { value: "system", label: "System" },
-              { value: "light", label: "Light" },
-              { value: "dark", label: "Dark" },
+              {
+                value: "system",
+                get label() {
+                  return t("settings.system");
+                },
+              },
+              {
+                value: "light",
+                get label() {
+                  return t("settings.light");
+                },
+              },
+              {
+                value: "dark",
+                get label() {
+                  return t("settings.dark");
+                },
+              },
             ]}
           />
         </SettingRow>
 
-        <SettingRow label="Keyboard layout" hint="Affects default shortcut bindings.">
+        <SettingRow
+          label={t("settings.keyboardLayout")}
+          hint={t("settings.affectsDefaultShortcutBindings")}
+        >
           <Segmented
             name="setting-keyboard"
             value={s.keyboardLayout}
@@ -1907,16 +2044,15 @@ export function Settings() {
         </SettingRow>
       </SectionPanel>
 
-      <SectionPanel title="Data & backup">
+      <SectionPanel title={t("settings.dataAndBackup")}>
         <div className="border-border-faint border-b py-3.5" data-testid="settings-backup-note">
-          <InlineHint slug="backup-vs-export" slugLabel="Backup vs Export">
-            A backup is a full, recoverable copy of everything (DB + assets). An export pulls
-            specific content out to Markdown or Anki — it is not a backup.
+          <InlineHint slug="backup-vs-export" slugLabel={t("settings.backupVsExport")}>
+            {t("settings.aBackupIsAFullRecoverableCopy")}
           </InlineHint>
         </div>
         <SettingRow
-          label="Back up now"
-          hint="Export the database + asset vault to a portable, hashed ZIP under backups/."
+          label={t("settings.backUpNow")}
+          hint={t("settings.exportTheDatabaseAssetVaultToA")}
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <button
@@ -1931,7 +2067,7 @@ export function Settings() {
               }
             >
               <Icon name="download" size={14} />
-              {backingUp ? "Backing up…" : "Back up now"}
+              {backingUp ? t("settings.backingUp") : t("settings.backUpNow")}
             </button>
             <button
               type="button"
@@ -1945,52 +2081,57 @@ export function Settings() {
               }
             >
               <Icon name="external" size={14} />
-              {openingBackupsFolder ? "Opening…" : "Open backups folder"}
+              {openingBackupsFolder ? t("settings.opening") : t("settings.openBackupsFolder")}
             </button>
           </div>
         </SettingRow>
         {backup ? (
-          <SettingRow label="Last backup" hint={backup.archiveName}>
+          <SettingRow label={t("settings.lastBackup")} hint={backup.archiveName}>
             <span
               data-testid="settings-backup-result"
               className="inline-flex items-center gap-1.5 rounded-md bg-ok-soft px-2.5 py-1 text-ok text-xs"
             >
               <Icon name="check" size={13} />
-              {formatBytes(backup.sizeBytes)} · {backup.fileCount} files · {backup.schemaVersion}
+              {formatBytes(backup.sizeBytes)} ·{" "}
+              {t("settings.fileCount", { count: backup.fileCount })} · {backup.schemaVersion}
             </span>
           </SettingRow>
         ) : null}
         {dataRestartRequired ? (
-          <SettingRow label="Restart required" hint="The local data store was replaced.">
+          <SettingRow
+            label={t("settings.restartRequired")}
+            hint={t("settings.theLocalDataStoreWasReplaced")}
+          >
             <span data-testid="settings-data-restart-required" className="text-danger text-sm">
-              Restart Interleave before changing settings, importing, or reviewing.
+              {t("settings.restartInterleaveBeforeChangingSettingsImportingOr")}
             </span>
           </SettingRow>
         ) : null}
         {backupError ? (
-          <SettingRow label="Backup failed" hint="See the error below.">
+          <SettingRow label={t("settings.backupFailed")} hint={t("settings.seeTheErrorBelow")}>
             <span data-testid="settings-backup-error" className="text-danger text-sm">
               {backupError}
             </span>
           </SettingRow>
         ) : null}
         {backupFolderError ? (
-          <SettingRow label="Open folder failed" hint="The backup command is still available.">
+          <SettingRow
+            label={t("settings.openFolderFailed")}
+            hint={t("settings.theBackupCommandIsStillAvailable")}
+          >
             <span data-testid="settings-backup-folder-error" className="text-danger text-sm">
               {backupFolderError}
             </span>
           </SettingRow>
         ) : null}
         <SettingRow
-          label="Available backups"
+          label={t("settings.availableBackups")}
           hint={
             backupListLoading
-              ? "Loading app-managed backups."
+              ? t("settings.loadingAppManagedBackups")
               : backupArtifacts.length > 0
-                ? `${backupArtifacts.length} app-managed backup${
-                    backupArtifacts.length === 1 ? "" : "s"
-                  } available.`
-                : "No restorable app-managed backups found."
+                ? t("settings.backupCount", { count: backupArtifacts.length })
+                : t("settings.noRestorableAppManagedBackupsFound")
           }
         >
           <button
@@ -2001,11 +2142,11 @@ export function Settings() {
             className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 font-medium text-sm text-text hover:bg-surface-2 disabled:opacity-40"
           >
             <Icon name="review" size={14} />
-            {backupListLoading ? "Refreshing…" : "Refresh"}
+            {backupListLoading ? t("settings.refreshing") : t("settings.refresh")}
           </button>
         </SettingRow>
         {backupListError ? (
-          <SettingRow label="Backup list failed" hint="See the error below.">
+          <SettingRow label={t("settings.backupListFailed")} hint={t("settings.seeTheErrorBelow")}>
             <span data-testid="settings-backup-list-error" className="text-danger text-sm">
               {backupListError}
             </span>
@@ -2042,7 +2183,8 @@ export function Settings() {
                       {artifact.timestamp}
                     </span>
                     <span className="mt-0.5 block truncate text-sm text-text-3">
-                      {artifact.automatic ? "Automatic" : "Manual"} · {artifact.createdAt}
+                      {artifact.automatic ? t("settings.automatic") : t("settings.manual")} ·{" "}
+                      {format.date(artifact.createdAt, { dateStyle: "medium", timeStyle: "short" })}
                     </span>
                   </span>
                   <span
@@ -2060,21 +2202,21 @@ export function Settings() {
           </div>
         ) : null}
         <SettingRow
-          label="Restore selected backup"
+          label={t("settings.restoreSelectedBackup")}
           hint={
             selectedBackup
-              ? `Type ${RESTORE_BACKUP_CONFIRMATION_PHRASE} to replace this vault with the selected backup.`
-              : "Select a backup before restore."
+              ? t("settings.restoreHint", { phrase: RESTORE_BACKUP_CONFIRMATION_PHRASE })
+              : t("settings.selectABackupBeforeRestore")
           }
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <span id="settings-restore-confirm-help" className="sr-only">
-              Type {RESTORE_BACKUP_CONFIRMATION_PHRASE} to restore the selected backup.
+              {t("settings.restoreHelp", { phrase: RESTORE_BACKUP_CONFIRMATION_PHRASE })}
             </span>
             <input
               type="text"
               data-testid="settings-restore-confirm"
-              aria-label="Restore selected backup"
+              aria-label={t("settings.restoreSelectedBackup")}
               aria-describedby="settings-restore-confirm-help"
               value={restorePhrase}
               disabled={!selectedBackup || backupControlsLocked}
@@ -2094,30 +2236,39 @@ export function Settings() {
               }
             >
               <Icon name="restore" size={14} />
-              {restoreBusy ? "Restoring…" : "Restore"}
+              {restoreBusy ? t("settings.restoring") : t("settings.restore")}
             </button>
           </div>
         </SettingRow>
         {restoreSuccess ? (
-          <SettingRow label="Restore complete" hint="The app data changed underneath this UI.">
+          <SettingRow
+            label={t("settings.restoreComplete")}
+            hint={t("settings.theAppDataChangedUnderneathThisUI")}
+          >
             <span data-testid="settings-restore-success" className="text-ok text-sm">
               {restoreSuccess}
             </span>
           </SettingRow>
         ) : null}
         {restoreError ? (
-          <SettingRow label="Restore failed" hint="Backups were preserved. Review the error below.">
+          <SettingRow
+            label={t("settings.restoreFailed")}
+            hint={t("settings.backupsWerePreservedReviewTheErrorBelow")}
+          >
             <span data-testid="settings-restore-error" className="text-danger text-sm">
               {restoreError}
             </span>
           </SettingRow>
         ) : null}
         <SettingRow
-          label="Restore from a file"
+          label={t("settings.restoreFromAFile")}
           hint={
             selectedArchiveName
-              ? `Type ${RESTORE_BACKUP_CONFIRMATION_PHRASE} to replace this vault with ${selectedArchiveName}.`
-              : "Choose a backup .zip saved on this device or an external drive."
+              ? t("settings.restoreFileHint", {
+                  phrase: RESTORE_BACKUP_CONFIRMATION_PHRASE,
+                  name: selectedArchiveName,
+                })
+              : t("settings.chooseABackupZipSavedOnThis")
           }
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -2129,7 +2280,7 @@ export function Settings() {
               className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 font-medium text-sm text-text-2 hover:border-border-strong hover:text-text disabled:opacity-40"
             >
               <Icon name="external" size={14} />
-              {choosingArchive ? "Choosing…" : "Choose backup file…"}
+              {choosingArchive ? t("settings.choosing") : t("settings.chooseBackupFile")}
             </button>
             {selectedArchiveName ? (
               <span
@@ -2143,17 +2294,17 @@ export function Settings() {
         </SettingRow>
         {selectedArchiveName ? (
           <SettingRow
-            label="Confirm file restore"
-            hint={`Replaces this vault with ${selectedArchiveName}. This cannot be undone.`}
+            label={t("settings.confirmFileRestore")}
+            hint={t("settings.replaceWarning", { name: selectedArchiveName })}
           >
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <span id="settings-restore-file-confirm-help" className="sr-only">
-                Type {RESTORE_BACKUP_CONFIRMATION_PHRASE} to restore the chosen backup file.
+                {t("settings.restoreFileHelp", { phrase: RESTORE_BACKUP_CONFIRMATION_PHRASE })}
               </span>
               <input
                 type="text"
                 data-testid="settings-restore-file-confirm"
-                aria-label="Restore from a file"
+                aria-label={t("settings.restoreFromAFile")}
                 aria-describedby="settings-restore-file-confirm-help"
                 value={restoreFilePhrase}
                 disabled={!selectedArchivePath || backupControlsLocked}
@@ -2173,13 +2324,16 @@ export function Settings() {
                 }
               >
                 <Icon name="restore" size={14} />
-                {restoreFileBusy ? "Restoring…" : "Restore from file"}
+                {restoreFileBusy ? t("settings.restoring") : t("settings.restoreFromFile")}
               </button>
             </div>
           </SettingRow>
         ) : null}
         {restoreFileSuccess ? (
-          <SettingRow label="Restore complete" hint="The app data changed underneath this UI.">
+          <SettingRow
+            label={t("settings.restoreComplete")}
+            hint={t("settings.theAppDataChangedUnderneathThisUI")}
+          >
             <span data-testid="settings-restore-file-success" className="text-ok text-sm">
               {restoreFileSuccess}
             </span>
@@ -2187,8 +2341,8 @@ export function Settings() {
         ) : null}
         {restoreFileError ? (
           <SettingRow
-            label="File restore failed"
-            hint="Backups were preserved. Review the error below."
+            label={t("settings.fileRestoreFailed")}
+            hint={t("settings.backupsWerePreservedReviewTheErrorBelow")}
           >
             <span data-testid="settings-restore-file-error" className="text-danger text-sm">
               {restoreFileError}
@@ -2196,17 +2350,17 @@ export function Settings() {
           </SettingRow>
         ) : null}
         <SettingRow
-          label="Fresh start"
-          hint={`Danger: removes the current database and asset vault, but preserves backups. Type ${RESET_LOCAL_DATA_CONFIRMATION_PHRASE}.`}
+          label={t("settings.freshStart")}
+          hint={t("settings.resetHint", { phrase: RESET_LOCAL_DATA_CONFIRMATION_PHRASE })}
         >
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <span id="settings-reset-confirm-help" className="sr-only">
-              Type {RESET_LOCAL_DATA_CONFIRMATION_PHRASE} to start from scratch.
+              {t("settings.resetHelp", { phrase: RESET_LOCAL_DATA_CONFIRMATION_PHRASE })}
             </span>
             <input
               type="text"
               data-testid="settings-reset-confirm"
-              aria-label="Fresh start"
+              aria-label={t("settings.freshStart")}
               aria-describedby="settings-reset-confirm-help"
               value={resetPhrase}
               disabled={backupControlsLocked}
@@ -2226,12 +2380,15 @@ export function Settings() {
               }
             >
               <Icon name="trash" size={14} />
-              {resetBusy ? "Resetting…" : "Start over"}
+              {resetBusy ? t("settings.resetting") : t("settings.startOver")}
             </button>
           </div>
         </SettingRow>
         {resetSuccess ? (
-          <SettingRow label="Fresh start complete" hint="Backups were preserved.">
+          <SettingRow
+            label={t("settings.freshStartComplete")}
+            hint={t("settings.backupsWerePreserved")}
+          >
             <span data-testid="settings-reset-success" className="text-ok text-sm">
               {resetSuccess}
             </span>
@@ -2239,8 +2396,8 @@ export function Settings() {
         ) : null}
         {resetError ? (
           <SettingRow
-            label="Fresh start failed"
-            hint="Backups were preserved. Review the error below."
+            label={t("settings.freshStartFailed")}
+            hint={t("settings.backupsWerePreservedReviewTheErrorBelow")}
           >
             <span data-testid="settings-reset-error" className="text-danger text-sm">
               {resetError}
@@ -2252,12 +2409,12 @@ export function Settings() {
       {/* Browser capture (T062) — the loopback-server pairing card. */}
       <section className="mb-6 scroll-mt-6" id="browser-capture" data-testid="settings-capture">
         <div className="mb-1.5 font-medium text-text-2 text-xs uppercase tracking-wide">
-          Browser capture
+          {t("settings.browserCapture")}
         </div>
         <div className="rounded-lg border border-border bg-surface-2 px-4">
           <SettingRow
-            label="Capture server"
-            hint="Let the Interleave browser extension save pages & selections into your inbox — over a local 127.0.0.1 connection only, never the cloud."
+            label={t("settings.captureServer")}
+            hint={t("settings.letTheInterleaveBrowserExtensionSavePages")}
           >
             <button
               type="button"
@@ -2272,16 +2429,18 @@ export function Settings() {
               }
             >
               <Icon name={pairing?.enabled ? "check" : "globe"} size={14} />
-              {pairing?.enabled ? "Enabled" : "Disabled"}
+              {pairing?.enabled ? t("settings.enabled") : t("settings.disabled")}
             </button>
           </SettingRow>
 
           {pairing?.enabled ? (
             <>
               <SettingRow
-                label="Status"
+                label={t("settings.status")}
                 hint={
-                  pairing.running ? `Listening on 127.0.0.1:${pairing.port ?? "—"}` : "Starting…"
+                  pairing.running
+                    ? t("settings.listening", { address: `127.0.0.1:${pairing.port ?? "—"}` })
+                    : t("settings.starting")
                 }
               >
                 <span
@@ -2293,19 +2452,19 @@ export function Settings() {
                   }
                 >
                   <Icon name={pairing.running ? "check" : "clock"} size={13} />
-                  {pairing.running ? "Running" : "Stopped"}
+                  {pairing.running ? t("settings.running") : t("settings.stopped")}
                 </span>
               </SettingRow>
 
               <SettingRow
-                label="Pairing token"
-                hint="Open the extension's Options and paste this token to pair."
+                label={t("settings.pairingToken")}
+                hint={t("settings.openTheExtensionSOptionsAndPaste")}
               >
                 <div className="flex items-center gap-2">
                   <code
                     data-testid="settings-capture-token"
                     className="max-w-[15rem] truncate rounded bg-surface px-2 py-1 font-mono text-text-2 text-xs"
-                    title={tokenRevealed ? pairing.token : "Hidden — use Copy"}
+                    title={tokenRevealed ? pairing.token : t("settings.hiddenUseCopy")}
                   >
                     {tokenRevealed ? pairing.token : "•".repeat(24)}
                   </code>
@@ -2316,7 +2475,7 @@ export function Settings() {
                     className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 font-medium text-sm text-text-2 hover:border-border-strong"
                   >
                     <Icon name={tokenCopied ? "check" : "copy"} size={13} />
-                    {tokenCopied ? "Copied" : "Copy"}
+                    {tokenCopied ? t("settings.copied") : t("settings.copy")}
                   </button>
                   <button
                     type="button"
@@ -2325,13 +2484,16 @@ export function Settings() {
                     className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 font-medium text-sm text-text-3 hover:border-border-strong"
                   >
                     <Icon name="review" size={13} />
-                    Regenerate
+                    {t("settings.regenerate")}
                   </button>
                 </div>
               </SettingRow>
 
               {pairing.extensionOriginHint ? (
-                <SettingRow label="Paired with" hint="The extension that completed pairing.">
+                <SettingRow
+                  label={t("settings.pairedWith")}
+                  hint={t("settings.theExtensionThatCompletedPairing")}
+                >
                   <span
                     data-testid="settings-capture-origin"
                     className="font-mono text-text-3 text-xs"
@@ -2344,7 +2506,7 @@ export function Settings() {
           ) : null}
 
           {pairingError ? (
-            <SettingRow label="Capture error" hint="See the error below.">
+            <SettingRow label={t("settings.captureError")} hint={t("settings.seeTheErrorBelow")}>
               <span data-testid="settings-capture-error" className="text-danger text-sm">
                 {pairingError}
               </span>

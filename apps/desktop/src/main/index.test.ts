@@ -64,6 +64,7 @@ async function loadIndex(options: {
     on: vi.fn((event: string, fn: (...args: unknown[]) => unknown) => callbacks.set(event, fn)),
     whenReady: vi.fn(() => Promise.resolve()),
     getVersion: vi.fn(() => "0.2.0"),
+    getLocale: vi.fn(() => "en-US"),
     setActivationPolicy: vi.fn(),
     dock: { hide: vi.fn(), setIcon: vi.fn() },
   };
@@ -79,6 +80,7 @@ async function loadIndex(options: {
   };
 
   const dbService = {
+    getAppSettings: vi.fn(() => ({ settings: { language: "system" } })),
     open: vi.fn(),
     seedIfEmpty: vi.fn(() => false),
     seedMaintenanceIfEmpty: vi.fn(() => null),

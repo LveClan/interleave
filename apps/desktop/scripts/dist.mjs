@@ -28,6 +28,7 @@
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { checkProductionLocales } from "../../../scripts/check-i18n-build.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const desktopDir = path.resolve(here, "..");
@@ -67,6 +68,9 @@ export function packagingArgs(platform, arch, requested = []) {
 }
 
 function main() {
+  if (process.env.INTERLEAVE_I18N_TEST === "1") {
+    throw new Error("The i18n test build cannot be packaged for distribution.");
+  }
   const targetArgs = packagingArgs(process.platform, process.arch, process.argv.slice(2));
   const skipBuild = process.env.INTERLEAVE_DIST_SKIP_BUILD === "1";
   const dirOnly = process.env.INTERLEAVE_DIST_DIR_ONLY === "1";
@@ -92,6 +96,8 @@ function main() {
   } else {
     console.log("[dist] INTERLEAVE_DIST_SKIP_BUILD=1 — re-packaging existing dist/.");
   }
+
+  checkProductionLocales(repoRoot);
 
   // 4) Package. `--dir` skips installer/archive creation.
   const ebArgs = ["electron-builder", ...targetArgs, "--config", "electron-builder.config.cjs"];

@@ -896,6 +896,7 @@ describe("DbService", () => {
       burySiblings: false,
       keyboardLayout: "dvorak",
       theme: "light",
+      language: "en",
     });
     first.close();
 
@@ -934,6 +935,7 @@ describe("DbService", () => {
       adaptiveAttentionIntervals: true,
       keyboardLayout: "dvorak",
       theme: "light",
+      language: "en",
       displayName: "",
       retentionByBand: {},
       retentionByBandEnabled: false,

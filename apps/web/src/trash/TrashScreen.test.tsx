@@ -114,6 +114,18 @@ describe("TrashScreen", () => {
     await waitFor(() => expect(h.listTrash.mock.calls.length).toBeGreaterThanOrEqual(2));
   });
 
+  it("shows a translated restore error without exposing raw IPC error text", async () => {
+    h.restoreFromTrash.mockRejectedValueOnce(new Error("INTERNAL_RESTORE_TEST_CODE"));
+    render(<TrashScreen />);
+    await screen.findByTestId("trash-row");
+    fireEvent.click(screen.getByTestId("trash-restore"));
+    expect(await screen.findByTestId("trash-error")).toHaveTextContent(
+      "Could not restore the selected items. Try again.",
+    );
+    expect(screen.queryByText("INTERNAL_RESTORE_TEST_CODE")).toBeNull();
+    expect(screen.getByTestId("trash-row")).toBeInTheDocument();
+  });
+
   it("requires a confirm before permanently deleting one item", async () => {
     render(<TrashScreen />);
     await screen.findByTestId("trash-row");

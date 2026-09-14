@@ -25,6 +25,8 @@
     "bench:gate": "vitest run --config packages/local-db/vitest.bench-gate.config.ts",
     "bench:table": "vitest bench --run packages/local-db/bench/scale.bench.ts",
     "typecheck": "turbo run typecheck",
+    "i18n:check": "vitest run packages/i18n/src/resources.test.ts",
+    "i18n:check-build": "node scripts/check-i18n-build.mjs",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",

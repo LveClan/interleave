@@ -123,6 +123,7 @@ export interface AppSettings {
   readonly importBalanceFactor: number;
   readonly keyboardLayout: KeyboardLayout;
   readonly theme: ThemePreference;
+  readonly language: string;
   /**
    * The local vault owner's display name shown in the shell's user chip (and the
    * source of the avatar initials). Empty by default — the UI degrades to the
@@ -190,6 +191,12 @@ export type RendererSettings = Omit<
 
 export interface SettingsGetAllResult {
   readonly settings: RendererSettings;
+}
+
+export interface LocaleState {
+  readonly preference: string;
+  readonly locale: string;
+  readonly systemLocale: string;
 }
 
 export interface SettingsUpdateManyRequest {
@@ -5211,6 +5218,10 @@ export interface BackupsResetLocalDataResult {
 
 /** The exact shape the preload exposes as `window.appApi`. */
 export interface AppApi {
+  readonly locale: {
+    get(): Promise<LocaleState>;
+    onChanged(callback: (state: LocaleState) => void): () => void;
+  };
   readonly app: {
     health(): Promise<HealthResult>;
   };

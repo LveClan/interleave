@@ -85,6 +85,9 @@ importers:
       '@interleave/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@interleave/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@interleave/importers':
         specifier: workspace:*
         version: link:../../packages/importers
@@ -207,6 +210,9 @@ importers:
       '@interleave/editor':
         specifier: workspace:*
         version: link:../../packages/editor
+      '@interleave/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@tanstack/react-router':
         specifier: ^1.170.9
         version: 1.170.9(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -353,6 +359,16 @@ importers:
       react-dom:
         specifier: ^19.2.6
         version: 19.2.6(react@19.2.6)
+
+  packages/i18n:
+    dependencies:
+      i18next:
+        specifier: 25.10.10
+        version: 25.10.10(typescript@5.9.3)
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
 
   packages/importers:
     dependencies:
@@ -2802,6 +2818,14 @@ packages:
   https-proxy-agent@7.0.6:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
+
+  i18next@25.10.10:
+    resolution: {integrity: sha512-cqUW2Z3EkRx7NqSyywjkgCLK7KLCL6IFVFcONG7nVYIJ3ekZ1/N5jUsihHV6Bq37NfhgtczxJcxduELtjTwkuQ==}
+    peerDependencies:
+      typescript: ^5 || ^6
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
@@ -6410,6 +6434,12 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
+
+  i18next@25.10.10(typescript@5.9.3):
+    dependencies:
+      '@babel/runtime': 7.29.7
+    optionalDependencies:
+      typescript: 5.9.3
 
   iconv-lite@0.6.3:
     dependencies:

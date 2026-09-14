@@ -40,6 +40,7 @@ import { OperationLogRepository } from "./operation-log-repository";
 import { QueueActionService } from "./queue-action-service";
 import { ReverifyResolutionRepository } from "./reverify-resolution-repository";
 import { type ReviewOutcome, ReviewRepository } from "./review-repository";
+import { SettingsRepository } from "./settings-repository";
 import { SourceRepository } from "./source-repository";
 import { createInMemoryDb } from "./test-db";
 import { UndoService } from "./undo-service";
@@ -168,6 +169,16 @@ afterEach(() => {
 });
 
 describe("UndoService.undoLast", () => {
+  it("keeps the last content action undoable after changing the interface language", () => {
+    const elements = new ElementRepository(handle.db);
+    const id = createActiveElement(handle);
+    elements.softDelete(id);
+    const settings = new SettingsRepository(handle.db);
+    settings.updateAppSettings({ language: "en" });
+    expect(new UndoService(handle.db).undoLast().undone).toBe(true);
+    expect(elements.findById(id)?.deletedAt).toBeNull();
+    expect(settings.getAppSettings().language).toBe("en");
+  });
   it("undoes a soft-delete: element live again with its prior status + a restore_element op", () => {
     const elements = new ElementRepository(handle.db);
     const undo = new UndoService(handle.db);

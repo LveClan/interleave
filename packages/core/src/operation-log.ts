@@ -36,6 +36,7 @@ export const OPERATION_TYPES = [
   "remove_relation",
   "add_tag",
   "remove_tag",
+  "set_language",
 ] as const;
 export type OperationType = (typeof OPERATION_TYPES)[number];
 

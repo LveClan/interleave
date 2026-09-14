@@ -91,7 +91,10 @@ const common = {
  * only. The preload uses no `import.meta`, so it needs neither define nor inject.
  */
 const mainExtras = {
-  define: { "import.meta.url": "import_meta_url" },
+  define: {
+    "import.meta.url": "import_meta_url",
+    __INTERLEAVE_I18N_TEST__: JSON.stringify(process.env.INTERLEAVE_I18N_TEST === "1"),
+  },
   inject: [importMetaShim],
 };
 

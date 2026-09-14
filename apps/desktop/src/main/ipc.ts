@@ -9,6 +9,7 @@
  */
 
 import type { Job, JobJsonValue } from "@interleave/core";
+import { createI18n } from "@interleave/i18n";
 import { isYouTubeUrl } from "@interleave/importers";
 import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import {
@@ -230,6 +231,7 @@ import { EpubImportError } from "./epub-import-service";
 import { HighlightImportError } from "./highlight-import-service";
 import type { UrlImportJobPayload } from "./job-apply-handlers";
 import type { JobRunner } from "./job-runner";
+import type { LocaleController } from "./locale";
 import { MediaImportError } from "./media-import-service";
 import type { AppPaths } from "./paths";
 import { PdfImportError } from "./pdf-import-service";
@@ -237,6 +239,7 @@ import { UrlImportError } from "./url-import-service";
 
 /** Extra main-process context the backup handler (T047) needs (absolute paths). */
 export interface IpcHandlerContext {
+  readonly locale?: LocaleController;
   /** The resolved app-data paths (`dbPath`/`assetsDir`/`backupsDir`). */
   readonly paths: AppPaths;
   /** The Drizzle migrations folder (its journal maps idx → schema-version tag). */
@@ -286,6 +289,10 @@ function toJobSummary(job: Job): JobSummary {
  * contract/round-trip tests can register the non-filesystem handlers alone.
  */
 export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerContext): () => void {
+  ipcMain.handle(IPC_CHANNELS.localeGet, () => {
+    if (!context?.locale) throw new Error("Locale controller unavailable");
+    return context.locale.sync();
+  });
   ipcMain.handle(IPC_CHANNELS.appHealth, (): HealthResult => {
     // No payload to validate (void), but keep the schema call for symmetry.
     HealthRequestSchema.parse(undefined);
@@ -311,7 +318,9 @@ export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerCo
 
   ipcMain.handle(IPC_CHANNELS.settingsUpdate, (_event, rawRequest: unknown) => {
     const request = SettingsUpdateRequestSchema.parse(rawRequest);
-    return dbService.updateSetting(request.key, request.value);
+    const result = dbService.updateSetting(request.key, request.value);
+    if (request.key === "ui.language") context?.locale?.sync();
+    return result;
   });
 
   ipcMain.handle(IPC_CHANNELS.settingsGetAll, () => {
@@ -321,7 +330,9 @@ export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerCo
 
   ipcMain.handle(IPC_CHANNELS.settingsUpdateMany, (_event, rawRequest: unknown) => {
     const request = SettingsUpdateManyRequestSchema.parse(rawRequest);
-    return dbService.updateAppSettings(request.patch);
+    const result = dbService.updateAppSettings(request.patch);
+    if (request.patch.language !== undefined) context?.locale?.sync();
+    return result;
   });
 
   ipcMain.handle(IPC_CHANNELS.inspectorList, () => {
@@ -973,9 +984,14 @@ export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerCo
 
     const win = BrowserWindow.fromWebContents(event.sender);
     const opts: Electron.OpenDialogOptions = {
-      title: "Restore backup from file",
+      title: (context?.locale?.translate ?? createI18n().t)("menu.restoreFile"),
       properties: ["openFile"],
-      filters: [{ name: "Backup", extensions: ["zip"] }],
+      filters: [
+        {
+          name: (context?.locale?.translate ?? createI18n().t)("menu.backupFilter"),
+          extensions: ["zip"],
+        },
+      ],
     };
     const result = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
     if (result.canceled) return [];

@@ -35,6 +35,7 @@
     "@interleave/core": "workspace:*",
     "@interleave/db": "workspace:*",
     "@interleave/importers": "workspace:*",
+    "@interleave/i18n": "workspace:*",
     "@interleave/local-db": "workspace:*",
     "@interleave/scheduler": "workspace:*",
     "@interleave/testing": "workspace:*",

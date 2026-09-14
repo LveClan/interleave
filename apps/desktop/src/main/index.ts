@@ -34,8 +34,8 @@ import { EmbeddingMaintenanceService } from "./embedding-maintenance-service";
 import { registerIpcHandlers } from "./ipc";
 import { createJobApplyHandlers } from "./job-apply-handlers";
 import { JobRunner } from "./job-runner";
+import { LocaleController } from "./locale";
 import { registerMediaProtocol, registerMediaSchemePrivileges } from "./media-protocol";
-import { installApplicationMenu } from "./menu";
 import { resolveMigrationsDir } from "./migrations";
 import { resolveNativeBinding } from "./native-binding";
 import { initAppPaths } from "./paths";
@@ -438,7 +438,9 @@ function bootstrap(): void {
     embeddingMaintenanceService.start();
   }
 
+  const locale = new LocaleController(dbService);
   disposeIpc = registerIpcHandlers(dbService, {
+    locale,
     paths,
     migrationsDir,
     nativeBinding,
@@ -485,7 +487,7 @@ function bootstrap(): void {
   // 5) Native application menu (T048) — standard macOS menu + Edit clipboard roles
   //    (so the editor chords work) + Help → "Keyboard shortcuts" (⌘/) opening the
   //    in-app cheat sheet via a one-way main → renderer event.
-  installApplicationMenu();
+  locale.sync();
 
   // 6) Secure window.
   createMainWindow({ distDir, devServerUrl, showOnReady: !isQuietE2e });

@@ -7,18 +7,21 @@
  * JSON text and parsed on read. App-level desktop settings (e.g. window bounds)
  * stay in Electron config, not here.
  *
- * Settings have no dedicated op in the canonical `OPERATION_TYPES` vocabulary, so
- * writes do not append an op-log entry; they are idempotent upserts on the key.
+ * Legacy settings remain idempotent key upserts. Language preference writes append
+ * `set_language` in the same transaction; no secrets enter that operation payload.
  */
 
 import {
   type AppSettings,
   appSettingsFromStored,
   coerceSettingsPatch,
+  coerceSettingValue,
+  SETTINGS_KEYS,
   settingsPatchToStored,
 } from "@interleave/core";
 import { type InterleaveDatabase, settings } from "@interleave/db";
 import { eq } from "drizzle-orm";
+import { OperationLogRepository } from "./operation-log-repository";
 import type { TransactionClient } from "./types";
 
 export class SettingsRepository {
@@ -48,6 +51,10 @@ export class SettingsRepository {
 
   /** Create or overwrite one setting (JSON-encoded). Returns the stored value. */
   set<T>(key: string, value: T): T {
+    if (key === SETTINGS_KEYS.language) {
+      this.setMany({ [key]: coerceSettingValue("language", value) });
+      return this.get<T>(key) as T;
+    }
     const json = JSON.stringify(value ?? null);
     this.db
       .insert(settings)
@@ -67,11 +74,27 @@ export class SettingsRepository {
   /** Create/overwrite many settings inside a caller-owned transaction. */
   setManyWithin(tx: TransactionClient, values: Record<string, unknown>): void {
     for (const [key, value] of Object.entries(values)) {
-      const json = JSON.stringify(value ?? null);
+      const next = key === SETTINGS_KEYS.language ? coerceSettingValue("language", value) : value;
+      const previousLanguage =
+        key === SETTINGS_KEYS.language
+          ? tx.select().from(settings).where(eq(settings.key, key)).get()?.value
+          : undefined;
+      const json = JSON.stringify(next ?? null);
       tx.insert(settings)
         .values({ key, value: json })
         .onConflictDoUpdate({ target: settings.key, set: { value: json } })
         .run();
+      if (key === SETTINGS_KEYS.language && previousLanguage !== json) {
+        new OperationLogRepository(tx).append(tx, {
+          opType: "set_language",
+          elementId: null,
+          payload: {
+            key,
+            previous: previousLanguage ? JSON.parse(previousLanguage) : "system",
+            next,
+          },
+        });
+      }
     }
   }
 

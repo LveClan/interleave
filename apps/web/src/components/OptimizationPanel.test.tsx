@@ -126,6 +126,6 @@ describe("OptimizationPanel (T080)", () => {
     render(<OptimizationPanel />);
     fireEvent.click(screen.getByTestId("optimization-run"));
     const err = await screen.findByTestId("optimization-error");
-    expect(err.textContent).toContain("boom");
+    expect(err.textContent).toContain("Estimation failed");
   });
 });

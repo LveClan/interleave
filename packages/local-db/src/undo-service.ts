@@ -38,7 +38,7 @@
 
 import type { ElementId, ElementStatus, IsoTimestamp, OperationType } from "@interleave/core";
 import { elements, type InterleaveDatabase, operationLog, reviewStates } from "@interleave/db";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, ne, sql } from "drizzle-orm";
 import { ElementRepository } from "./element-repository";
 import {
   originStatusFromPayload,
@@ -129,6 +129,8 @@ export class UndoService {
     const lastRow = this.db
       .select()
       .from(operationLog)
+      // Presentation preferences must not displace the user's last content action.
+      .where(ne(operationLog.opType, "set_language"))
       .orderBy(desc(operationLog.createdAt), desc(sql`rowid`))
       .limit(1)
       .get() as RawOpRow | undefined;

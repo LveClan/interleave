@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 /**
  * The single shortcut registry (T048) — the ONE source of truth for the app's
  * keyboard surface.
@@ -91,35 +92,45 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   // ---- Navigation (global) -------------------------------------------------
   {
     id: "command-palette",
-    label: "Command palette",
+    get label() {
+      return t("shell.commandPalette");
+    },
     keys: ["⌘", "K"],
     group: "Navigation",
     scope: "global",
   },
   {
     id: "nav-back",
-    label: "Back",
+    get label() {
+      return t("shell.back");
+    },
     keys: ["⌘", "←"],
     group: "Navigation",
     scope: "global",
   },
   {
     id: "nav-forward",
-    label: "Forward",
+    get label() {
+      return t("shell.forward");
+    },
     keys: ["⌘", "→"],
     group: "Navigation",
     scope: "global",
   },
   {
     id: "undo",
-    label: "Undo last action",
+    get label() {
+      return t("shell.undoLastAction");
+    },
     keys: ["⌘", "Z"],
     group: "Navigation",
     scope: "global",
   },
   {
     id: "search",
-    label: "Search",
+    get label() {
+      return t("shell.search");
+    },
     keys: ["/"],
     group: "Navigation",
     scope: "global",
@@ -127,28 +138,36 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   },
   {
     id: "goto-queue",
-    label: "Go to Queue",
+    get label() {
+      return t("shell.goToQueue");
+    },
     keys: ["G", "Q"],
     group: "Navigation",
     scope: "global",
   },
   {
     id: "goto-review",
-    label: "Go to Review",
+    get label() {
+      return t("shell.goToReview");
+    },
     keys: ["G", "R"],
     group: "Navigation",
     scope: "global",
   },
   {
     id: "goto-library",
-    label: "Go to Library",
+    get label() {
+      return t("shell.goToLibrary");
+    },
     keys: ["G", "L"],
     group: "Navigation",
     scope: "global",
   },
   {
     id: "cheat-sheet",
-    label: "This cheat sheet",
+    get label() {
+      return t("shell.thisCheatSheet");
+    },
     keys: ["?"],
     group: "Navigation",
     scope: "global",
@@ -157,7 +176,9 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   // ---- Actions (global, on the selected element) ---------------------------
   {
     id: "open-source",
-    label: "Open source",
+    get label() {
+      return t("shell.openSource");
+    },
     keys: ["O"],
     group: "Actions",
     scope: "global",
@@ -165,7 +186,9 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   },
   {
     id: "open-parent",
-    label: "Open parent",
+    get label() {
+      return t("shell.openParent");
+    },
     keys: ["U"],
     group: "Actions",
     scope: "global",
@@ -173,7 +196,9 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   },
   {
     id: "raise-priority",
-    label: "Raise priority",
+    get label() {
+      return t("shell.raisePriority");
+    },
     keys: ["+"],
     group: "Actions",
     scope: "global",
@@ -181,7 +206,9 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   },
   {
     id: "lower-priority",
-    label: "Lower priority",
+    get label() {
+      return t("shell.lowerPriority");
+    },
     keys: ["-"],
     group: "Actions",
     scope: "global",
@@ -189,7 +216,9 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   },
   {
     id: "start-review",
-    label: "Start review",
+    get label() {
+      return t("shell.startReview");
+    },
     keys: ["G", "R"],
     group: "Actions",
     scope: "global",
@@ -197,7 +226,9 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   },
   {
     id: "create-backup",
-    label: "Create a backup",
+    get label() {
+      return t("shell.createABackup");
+    },
     keys: ["⌘", "B"],
     group: "Actions",
     scope: "global",
@@ -206,28 +237,36 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   // ---- Reading (reader scope) ----------------------------------------------
   {
     id: "extract",
-    label: "Extract selection",
+    get label() {
+      return t("shell.extractSelection");
+    },
     keys: ["E"],
     group: "Reading",
     scope: "reader",
   },
   {
     id: "cloze",
-    label: "Cloze selection",
+    get label() {
+      return t("shell.clozeSelection");
+    },
     keys: ["C"],
     group: "Reading",
     scope: "reader",
   },
   {
     id: "highlight",
-    label: "Highlight",
+    get label() {
+      return t("shell.highlight");
+    },
     keys: ["H"],
     group: "Reading",
     scope: "reader",
   },
   {
     id: "set-read-point",
-    label: "Set read-point",
+    get label() {
+      return t("shell.setReadPoint");
+    },
     keys: ["␣"],
     group: "Reading",
     scope: "reader",
@@ -235,28 +274,36 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   // ---- Review (review scope) -----------------------------------------------
   {
     id: "reveal",
-    label: "Reveal answer",
+    get label() {
+      return t("shell.revealAnswer");
+    },
     keys: ["␣"],
     group: "Review",
     scope: "review",
   },
   {
     id: "grade",
-    label: "Grade Again → Easy",
+    get label() {
+      return t("shell.gradeAgainEasy");
+    },
     keys: ["1", "4"],
     group: "Review",
     scope: "review",
   },
   {
     id: "review-edit",
-    label: "Edit card",
+    get label() {
+      return t("shell.editCard");
+    },
     keys: ["E"],
     group: "Review",
     scope: "review",
   },
   {
     id: "review-suspend",
-    label: "Suspend",
+    get label() {
+      return t("shell.suspend");
+    },
     keys: ["S"],
     group: "Review",
     scope: "review",
@@ -264,56 +311,72 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   // ---- Queue / process loop (queue scope) ----------------------------------
   {
     id: "process-reveal",
-    label: "Reveal card answer (on a card)",
+    get label() {
+      return t("shell.revealCardAnswerOnACard");
+    },
     keys: ["␣"],
     group: "Triage",
     scope: "queue",
   },
   {
     id: "process-grade",
-    label: "Grade Again → Easy (on a card)",
+    get label() {
+      return t("shell.gradeAgainEasyOnACard");
+    },
     keys: ["1", "4"],
     group: "Triage",
     scope: "queue",
   },
   {
     id: "next-item",
-    label: "Next / skip",
+    get label() {
+      return t("shell.nextSkip");
+    },
     keys: ["N"],
     group: "Triage",
     scope: "queue",
   },
   {
     id: "postpone",
-    label: "Postpone",
+    get label() {
+      return t("shell.postpone");
+    },
     keys: ["P"],
     group: "Triage",
     scope: "queue",
   },
   {
     id: "done",
-    label: "Mark done",
+    get label() {
+      return t("shell.markDone");
+    },
     keys: ["D"],
     group: "Triage",
     scope: "queue",
   },
   {
     id: "dismiss",
-    label: "Dismiss",
+    get label() {
+      return t("shell.dismiss");
+    },
     keys: ["X"],
     group: "Triage",
     scope: "queue",
   },
   {
     id: "delete",
-    label: "Delete",
+    get label() {
+      return t("shell.delete");
+    },
     keys: ["⌫"],
     group: "Triage",
     scope: "queue",
   },
   {
     id: "process-undo",
-    label: "Undo process action",
+    get label() {
+      return t("shell.undoProcessAction");
+    },
     keys: ["⌘", "Z"],
     group: "Triage",
     scope: "queue",
@@ -325,91 +388,117 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   // undo fires before the scope gate, so the inbox scope must not bind it.
   {
     id: "inbox-cursor-down",
-    label: "Move cursor down",
+    get label() {
+      return t("shell.moveCursorDown");
+    },
     keys: ["J"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-cursor-up",
-    label: "Move cursor up",
+    get label() {
+      return t("shell.moveCursorUp");
+    },
     keys: ["K"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-range-extend",
-    label: "Extend selection",
+    get label() {
+      return t("shell.extendSelection");
+    },
     keys: ["⇧", "J"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-toggle-row",
-    label: "Add / remove cursor row",
+    get label() {
+      return t("shell.addRemoveCursorRow");
+    },
     keys: ["X"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-select-group",
-    label: "Select rest of group",
+    get label() {
+      return t("shell.selectRestOfGroup");
+    },
     keys: ["S"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-select-all",
-    label: "Select all",
+    get label() {
+      return t("shell.selectAll");
+    },
     keys: ["⌘", "A"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-clear",
-    label: "Clear selection",
+    get label() {
+      return t("shell.clearSelection");
+    },
     keys: ["Esc"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-read-now",
-    label: "Read now (selection)",
+    get label() {
+      return t("shell.readNowSelection");
+    },
     keys: ["1"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-queue-soon",
-    label: "Queue soon (selection)",
+    get label() {
+      return t("shell.queueSoonSelection");
+    },
     keys: ["2"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-keep",
-    label: "Save for later (selection)",
+    get label() {
+      return t("shell.saveForLaterSelection");
+    },
     keys: ["3"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-delete",
-    label: "Delete (selection)",
+    get label() {
+      return t("shell.deleteSelection");
+    },
     keys: ["6"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-priority-band",
-    label: "Arm priority A / B / C / D",
+    get label() {
+      return t("shell.armPriorityABCD");
+    },
     keys: ["A", "B", "C", "D"],
     group: "Inbox",
     scope: "triage",
   },
   {
     id: "inbox-accept-suggestion",
-    label: "Accept suggested priority",
+    get label() {
+      return t("shell.acceptSuggestedPriority");
+    },
     keys: ["Enter"],
     group: "Inbox",
     scope: "triage",

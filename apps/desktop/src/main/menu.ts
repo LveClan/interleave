@@ -16,6 +16,7 @@
  * app icon/productName) lands with T050.
  */
 
+import { createI18n } from "@interleave/i18n";
 import { app, BrowserWindow, Menu, type MenuItemConstructorOptions } from "electron";
 import { IPC_CHANNELS } from "../shared/channels";
 
@@ -40,7 +41,7 @@ function sendCreateBackup(): void {
  * other platforms it is the window menu (the MVP targets macOS, but the structure
  * is portable). Call once after `app.whenReady()`.
  */
-export function installApplicationMenu(): void {
+export function installApplicationMenu(t = createI18n().t): void {
   const isMac = process.platform === "darwin";
   const appName = app.name || "Interleave";
 
@@ -65,10 +66,10 @@ export function installApplicationMenu(): void {
   // File — the macOS polish (T050): a "Back up…" item (⌘B) that asks the renderer
   // to run the SAME backup command as the in-app prompt + ⌘K palette, plus Close.
   template.push({
-    label: "File",
+    label: t("menu.file"),
     submenu: [
       {
-        label: "Back up…",
+        label: t("menu.backup"),
         accelerator: "CmdOrCtrl+B",
         click: () => sendCreateBackup(),
       },
@@ -81,7 +82,7 @@ export function installApplicationMenu(): void {
   // chords keep working) + undo/redo (native field-level; the app's command-level
   // ⌘Z lives in the renderer's shell handler).
   template.push({
-    label: "Edit",
+    label: t("menu.edit"),
     submenu: [
       { role: "undo" },
       { role: "redo" },
@@ -95,7 +96,7 @@ export function installApplicationMenu(): void {
 
   // View — reload (dev convenience) + zoom + devtools.
   template.push({
-    label: "View",
+    label: t("menu.view"),
     submenu: [
       { role: "reload" },
       { role: "toggleDevTools" },
@@ -110,7 +111,7 @@ export function installApplicationMenu(): void {
 
   // Window.
   template.push({
-    label: "Window",
+    label: t("menu.window"),
     submenu: isMac
       ? [{ role: "minimize" }, { role: "zoom" }, { type: "separator" }, { role: "front" }]
       : [{ role: "minimize" }, { role: "close" }],
@@ -121,7 +122,7 @@ export function installApplicationMenu(): void {
     role: "help",
     submenu: [
       {
-        label: "Keyboard shortcuts",
+        label: t("menu.shortcuts"),
         accelerator: "CmdOrCtrl+/",
         click: () => sendShowShortcuts(),
       },

@@ -72,4 +72,36 @@ describe("SettingsRepository", () => {
     expect(updated.chronicPostponeThreshold).toBe(50);
     expect(settings.get(SETTINGS_KEYS.chronicPostponeThreshold)).toBe(50);
   });
+
+  it("persists language in the existing settings store and rolls a failed multi-setting write back", () => {
+    expect(settings.getAppSettings().language).toBe("system");
+    settings.updateAppSettings({ language: "en" });
+    expect(new SettingsRepository(handle.db).getAppSettings().language).toBe("en");
+    expect(settings.get("ui.language")).toBe("en");
+    const operation = handle.sqlite
+      .prepare(
+        "SELECT op_type, payload, element_id FROM operation_log WHERE op_type = 'set_language'",
+      )
+      .get() as { op_type: string; payload: string; element_id: string | null };
+    expect(operation.op_type).toBe("set_language");
+    expect(operation.element_id).toBeNull();
+    expect(JSON.parse(operation.payload)).toEqual({
+      key: "ui.language",
+      previous: "system",
+      next: "en",
+    });
+    expect(() => settings.setMany({ "ui.language": "zh-CN", invalid: 1n })).toThrow();
+    expect(settings.getAppSettings().language).toBe("en");
+    expect(
+      handle.sqlite
+        .prepare("SELECT count(*) AS n FROM operation_log WHERE op_type = 'set_language'")
+        .get(),
+    ).toEqual({ n: 1 });
+    handle.sqlite.exec(
+      "CREATE TRIGGER reject_language BEFORE INSERT ON operation_log WHEN NEW.op_type = 'set_language' BEGIN SELECT RAISE(ABORT, 'test rejection'); END",
+    );
+    expect(() => settings.updateAppSettings({ language: "system" })).toThrow("test rejection");
+    expect(settings.getAppSettings().language).toBe("en");
+    expect(handle.sqlite.pragma("foreign_keys", { simple: true })).toBe(1);
+  });
 });

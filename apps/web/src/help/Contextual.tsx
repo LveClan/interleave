@@ -13,6 +13,7 @@
  */
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "../components/Icon";
+import { t, useLocale } from "../i18n";
 import { useHelp } from "./HelpContext";
 import { cx } from "./primitives";
 import "./help.css";
@@ -31,6 +32,7 @@ export function HelpLink({
   title?: string;
 }) {
   const { openHelp } = useHelp();
+  useLocale();
   const onClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -39,7 +41,7 @@ export function HelpLink({
   if (variant === "inline") {
     return (
       <button type="button" className="help-inline" onClick={onClick}>
-        {children || "Learn more"}
+        {children || t("common.learnMore")}
         <Icon name="chevronRight" size={12} />
       </button>
     );
@@ -49,8 +51,8 @@ export function HelpLink({
       type="button"
       className="help-dot"
       onClick={onClick}
-      title={title || "Open help"}
-      aria-label="Open help"
+      title={title || t("common.openHelp")}
+      aria-label={t("common.openHelp")}
     >
       ?
     </button>
@@ -81,7 +83,7 @@ export function InlineHint({
           <>
             {" "}
             <HelpLink slug={slug} variant="inline">
-              {slugLabel || "Learn more"}
+              {slugLabel || t("common.learnMore")}
             </HelpLink>
           </>
         )}

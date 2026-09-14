@@ -64,7 +64,7 @@ export const operationLog = sqliteTable(
   "operation_log",
   {
     id: text("id").primaryKey(),
-    /** Command type — one of the canonical `OperationType` values. */
+    /** Command type, including the non-element `set_language` preference command. */
     opType: text("op_type").notNull(),
     /** Command-specific data, stored as JSON; validated per `opType` upstream. */
     payload: text("payload").notNull(),
