@@ -1,7 +1,10 @@
 # Desktop Internationalization
 
 Interleave's desktop app has an offline i18next foundation. The only released language is
-English. No Chinese translation is included. This is a partial migration, not a claim that every
+English. Simplified Chinese translations for the seven migrated modules are prepared under
+`packages/i18n/src/locales/zh-CN/`, but are not registered or available in the app yet. Their
+resource contracts are tested directly; Chinese UI layout and Electron integration still need
+validation when the language is enabled. This is a partial migration, not a claim that every
 screen is translated.
 
 ## Research And Selection
@@ -94,7 +97,7 @@ the actual artifact. Native Intl units may use `kB` and grouping such as `5,000 
 
 ## Add A Language
 
-The minimal next step for `zh-CN`:
+To add or enable a language (`zh-CN` already has translations prepared in step 1):
 
 1. Add real translations under `packages/i18n/src/locales/zh-CN/`, using the English modules as
    reference. A module can export a `Record<string, string>` checked by `pnpm i18n:check`.
@@ -134,6 +137,12 @@ interpolation contracts. It parses app call sites with the TypeScript AST and ch
 message IDs and required arguments. `typecheck.ts` contains compile-only negative checks for
 unknown IDs and misspelled interpolation. Tests discover resources through the registry, without
 a second key manifest.
+
+The unregistered Chinese resources have a separate check:
+`pnpm exec vitest run packages/i18n/src/zh-CN.test.ts`. It directly imports all seven modules,
+compares their keys with English, validates interpolation and plural contracts, and exercises
+Chinese plural rendering with user content. `pnpm test` includes this check; `pnpm i18n:check`
+only covers registered languages and does not establish Chinese translation coverage yet.
 
 On a resource-constrained machine, `pnpm test -- --maxWorkers=4 --testTimeout=180000`
 keeps every test and property iteration while limiting concurrent workers and allowing the
