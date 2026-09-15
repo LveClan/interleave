@@ -109,6 +109,19 @@ as a passing queue benchmark. No budget was increased.
 - Changed repository/protocol tests and PDF lifecycle tests have passing focused
   evidence; final chapter state-action Electron check passed.
 - Final text-reader key changes: Windows briefing/pending rerun **2/2 passed**.
+- Closeout self-review compared 1369 app/package/test/design files with the Windows
+  checkout. Runtime source content agrees; media protocol differences were comments
+  and formatting, and the remaining differences were unit tests and `CLAUDE.md`
+  symlink representations.
+- Closeout focused rerun initially found one equivalent readiness race in the
+  video-reader provenance test (**102 passed, 1 failed**). Waiting for the source
+  link before asserting its URL fixed it. Final rerun of `SourceReader`,
+  `SectionReader`, `PdfReader`, media protocol, queue query and source structure
+  tests passed **103/103 across six files** in 15.28 seconds. This test-only fix
+  preserves the existing Windows runtime evidence and the combined 5023-test result.
+- Closeout root `pnpm lint`: passed (31 non-null-assertion warnings);
+  `pnpm typecheck`: **15/15 packages passed**. Closeout logs use
+  `/tmp/interleave-m29-closeout-*.log`.
 - `git diff --check`: passed.
 
 Local logs and screenshots are under `D:\CODE\interleave\.interleave\m29-*`

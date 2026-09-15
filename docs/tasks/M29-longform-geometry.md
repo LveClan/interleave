@@ -419,7 +419,7 @@ Electron, Windows switch, system configuration change, push or deployment was pe
 # T133 — Media segment states
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[~]` 已实现并审查，统一验收待进行
+- **Status:** `[x]` Windows functional acceptance complete; commit `T133: 完成媒体播放覆盖的 Windows 验收`
 - **Depends on:** T073, T074
 - **Roadmap line:** audio/video sources track per-segment processed state (derived from
   playback and fragment extraction), feeding the same surfaces — "watched 40%, 2 segments
@@ -445,14 +445,14 @@ progress, Done breakdowns, yield, and scheduling.
 
 ## Deliverables
 
-- [ ] Segment model: time-range rows per media source (transcript-chunk boundaries when
+- [x] Segment model: time-range rows per media source (transcript-chunk boundaries when
       available, else fixed windows ~2–5 min); playback coverage marks read; explicit verbs for
       ignore/needs-later per segment; fragments set extracted via lineage.
-- [ ] Reader integration: a segment strip on the timeline (states color-coded per tokens);
+- [x] Reader integration: a segment strip on the timeline (states color-coded per tokens);
       jump-to-deferred; the T130 briefing + T131 rail consume media segments unchanged.
-- [ ] Consumers verified: progress, Done breakdown, yield read%, scheduler ratios for media
+- [x] Consumers verified: progress, Done breakdown, yield read%, scheduler ratios for media
       sources (tests per consumer).
-- [ ] Tests: unit (coverage accumulation math, segment derivation); e2e — play parts of a
+- [x] Tests: unit (coverage accumulation math, segment derivation); e2e — play parts of a
       fixture video, defer a segment, extract a fragment, exit breakdown is honest, return
       briefing + rail work, restart-safe.
 
@@ -470,6 +470,14 @@ progress, Done breakdowns, yield, and scheduling.
 ---
 
 ## T133 Implementation And Basic Verification (2026-09-15)
+
+Final acceptance: [Windows evidence](./M29-windows-acceptance-2026-09-15.md).
+`media-processing.spec.ts` exercises real VP8/MP3 playback, seek gaps, segment
+decisions/undo, cross-segment clip lineage, consumer counts and restart. Native
+playback passes with standard media URL semantics; narrow layout checks include
+visible moving/color pixels. Original independent review is retained; final
+fixes were self-reviewed under the user's single-agent instruction. Earlier
+deferred checks are superseded; embedded-player and endurance limits remain.
 
 Local commit: `T133: persist media segment states and playback coverage`.
 Built after local T132 commit `05996f0`; all four M29 implementation checkpoints T130-T133

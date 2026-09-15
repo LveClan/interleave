@@ -28,14 +28,20 @@ export const MEDIA_SCHEME = "media";
 
 /**
  * Register the scheme as privileged. MUST be called before `app.whenReady()`
- * (Electron requirement for `secure`/`stream` schemes). `standard: false` keeps the
- * host == the element id (a standard scheme would lowercase/normalize the host).
+ * (Electron requirement for privileged schemes). Standard URL semantics let Chromium
+ * reopen byte ranges while seeking. Element ids are canonical lowercase UUIDs.
  */
 export function registerMediaSchemePrivileges(): void {
   protocol.registerSchemesAsPrivileged([
     {
       scheme: MEDIA_SCHEME,
-      privileges: { secure: true, stream: true, supportFetchAPI: true, bypassCSP: false },
+      privileges: {
+        standard: true,
+        secure: true,
+        stream: true,
+        supportFetchAPI: true,
+        bypassCSP: false,
+      },
     },
   ]);
 }

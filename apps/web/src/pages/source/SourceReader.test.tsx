@@ -1147,7 +1147,7 @@ describe("SourceReader", () => {
     expect(getByTestId("reader-postpone")).toBeInTheDocument();
     expect(getByTestId("reader-mark-done")).toBeInTheDocument();
     expect(getByTestId("reader-lower-priority")).toBeInTheDocument();
-    expect(getByTestId("reader-open-original")).toHaveAttribute(
+    expect(await findByTestId("reader-open-original")).toHaveAttribute(
       "href",
       "https://example.com/source",
     );

@@ -73,6 +73,7 @@ describe("media protocol", () => {
       {
         scheme: MEDIA_SCHEME,
         privileges: {
+          standard: true,
           secure: true,
           stream: true,
           supportFetchAPI: true,

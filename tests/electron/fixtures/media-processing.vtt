@@ -1,0 +1,16 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.000
+Opening of the first segment.
+
+00:00:02.000 --> 00:02:58.000
+This middle passage must remain unwatched after a seek.
+
+00:02:58.000 --> 00:03:00.000
+A clip begins before the segment boundary.
+
+00:03:00.000 --> 00:03:02.000
+The second segment starts here.
+
+00:03:02.000 --> 00:03:04.000
+The final passage completes the second segment.
