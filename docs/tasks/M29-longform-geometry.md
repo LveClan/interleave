@@ -155,7 +155,7 @@ PDF/media geometry remains T132/T133 scope.
 # T131 — Honor `needs_later`
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[~]` implemented and independently reviewed; unified verification pending
+- **Status:** `[x]` Windows functional acceptance complete; commit `T131: 完成待处理段落的 Windows 验收`
 - **Depends on:** T130
 - **Roadmap line:** deferred blocks are reachable via a jump rail (listing `needs_later` and
   `stale_after_edit` blocks) and un-deferring/resolving updates the durable state — block
@@ -189,7 +189,7 @@ updates the durable state. The deferral promise finally pays.
 - [x] Scheduler note: deferred-block presence already pressures return via `unresolvedRatio` —
       verify and add a unit test pinning that contract (no new scheduler input here; T112 owns
       interval shaping).
-- [ ] Tests: unit (rail read model, transitions); e2e — defer two blocks, exit (breakdown
+- [x] Tests: unit (rail read model, transitions); e2e — defer two blocks, exit (breakdown
       counts them), return via queue, rail lists them, jump + resolve one, counts update,
       restart-safe.
 
@@ -205,6 +205,12 @@ updates the durable state. The deferral promise finally pays.
   stays "write-only" in practice. Make next-deferred a first-class shortcut (T048 registry).
 
 ## T131 Implementation And Basic Verification (2026-09-15)
+
+Final acceptance: [Windows evidence](./M29-windows-acceptance-2026-09-15.md).
+`source-pending.spec.ts` covers both readers, keyboard navigation, state/receipt undo,
+queue return and restart; the final briefing/pending rerun passed 2/2. The original
+implementation review below is retained; acceptance fixes were self-reviewed under
+the user's single-agent instruction. Earlier deferred checks are now superseded.
 
 Local implementation commit: `T131: make deferred source passages actionable`.
 The user explicitly authorized building on T130's implementation while keeping T130 `[~]`.

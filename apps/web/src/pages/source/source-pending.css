@@ -1,4 +1,5 @@
 .source-pending {
+  flex-shrink: 0;
   font: var(--t-xs) / var(--lh-normal) var(--font-ui);
   border-bottom: 1px solid var(--border);
   color: var(--text-2);
