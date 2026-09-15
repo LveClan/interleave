@@ -271,7 +271,7 @@ verification is unchanged. T131 remains `[~]` until the user requests that unifi
 # T132 — PDF block-state parity
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[ ]` not started
+- **Status:** `[~]` 已实现并审查，统一验收待进行
 - **Depends on:** T064, T065
 - **Roadmap line:** PDF sources carry durable per-page/per-region processing state (the
   existing 7-state vocabulary + reconciliation), feeding source progress, Done-intent
@@ -329,6 +329,67 @@ already done for documents; this is extension to a second geometry.
 - Largest task in Part III — keep granularity disciplined: PAGES (with regions as derivation
   inputs), not text-line blocks; finer granularity is a non-goal and a tarpit.
 - 1000-page fixtures: verify row-count performance against the M20 large-collection harness.
+
+---
+
+## T132 Implementation And Basic Verification (2026-09-15)
+
+Local commit: `T132: persist PDF page processing states`. This checkpoint follows the user's
+explicit limited verification scope; T130/T131 remain pending unified verification.
+
+- `ProcessingUnitRepository` projects PDF pages from trusted `document_blocks.page`, keyed
+  `pdf:page:N` in the existing processing table. Rows materialize lazily on reader open or first
+  extraction. No schema change/migration is needed: existing keys have no document-block FK.
+  The typed geometry on views is shared infrastructure for T133, not a new Element model.
+- Each page stores the state of its **remaining content**. Live text/region output locations
+  separately supply output IDs/counts. A partial extraction does not make a page terminal:
+  unread/read/deferred remain unresolved. Explicit finish changes the remainder to processed;
+  with live outputs its composed state is extracted. Ignore and finish are terminal; read is not.
+  Deleted outputs cease contributing; removed stale pages retain live output counts and are
+  explicitly unlocatable. PDF read% counts whole pages marked read/finished, never scroll position.
+- Page controls provide read/unread/ignore/defer/finish plus guarded receipt undo through strict
+  `processingUnits:*` IPC. Revalidation checks source liveness, geometry, current hash and state;
+  undo also guards later outputs. Writes and operation logs share a transaction. Existing text
+  selection, region capture and page read-points remain available. The page-position percentage
+  bar was removed; page position is a caption and processing counts come from the trusted summary.
+- Shared summary/Done/yield/scheduler consumers see page units; T130 briefing and T131 pending
+  rail use the same models. The process workbench's existing specialized-reader link opens the
+  full reader with queue-entry context. No historical baseline was invented: delta stays null.
+- Hashes include normalized page text and original asset hash. Accepted OCR/document updates
+  and asset byte replacement reconcile inside their transactions. Changed/removed pages become
+  stale, restoration uses the captured hash, and subsequent edits to an already stale page
+  refresh propagation. Original location block IDs, page and rectangles are preserved.
+  Page decisions never clear derived needs_reverify. The existing reverify workflow now previews
+  page evidence and validates its hash; geometric rebase is clear-only and returns the page to
+  unread, preserving authored extract/fragment bodies.
+- Explicit pending/briefing jumps and user scrolling win over delayed restore. Identical route
+  objects cannot replay old jumps; region flash cleanup has independent lifetime. Reader/control
+  instances are keyed by source. Missing pages report unavailable. New copy follows static i18n
+  IDs and existing tokens/icons; Chinese resources were updated without enabling the language.
+- Independent actual-diff review passed. Fixed findings: removed-page output counts disappearing,
+  repeated route effects cancelling region-flash expiry, and already-confirmed outputs needing
+  reflagging when an already-stale page subsequently disappears. Review also inspected the final
+  reverify integration, current-state checks and shared consumers. No unresolved feature finding.
+
+Actual commands/results, Node 22.20.0 / pnpm 9.12.1 selected through command-local PATH:
+
+- `pnpm exec vitest run packages/local-db/src/processing-unit-service.test.ts --maxWorkers=2`:
+  final **7 passed** after reconciliation/removed-page fixes. An earlier additional region
+  lineage run with `-t 'region outputs'` passed **1 / 5 not selected**. Seven cases cover partial outputs,
+  summary/Done/yield/scheduler/briefing/pending, OCR/restoration, source verification, receipt
+  undo, forced operation-log failure rollback, enforced FKs and closing/reopening SQLite.
+- `pnpm exec vitest run packages/local-db/src/processing-unit-service.test.ts
+  apps/desktop/src/shared/contract.test.ts packages/i18n/src/resources.test.ts --maxWorkers=2`:
+  repository and IPC **297 passed**, i18n **1 failed** on dynamic IDs; fixed static message IDs.
+- `pnpm exec vitest run packages/i18n/src/resources.test.ts
+  apps/web/src/pages/source/PdfReader.test.tsx
+  apps/web/src/pages/source/ProcessingUnitControls.test.tsx --maxWorkers=2`: **10 passed** after
+  those fixes, including delayed restore, route replay, active-page commands and receipt undo.
+- Biome check/format on modified TS/TSX/CSS files only; `git diff --check`: passed.
+
+Deferred by user: whole-workspace typecheck/lint/test, Electron IPC/restart and real PDF/OCR
+flows, light/dark and process-reader GUI checks, large-PDF performance. No app/server/player,
+Electron, Windows switch, system configuration change, push or deployment was performed.
 
 ---
 

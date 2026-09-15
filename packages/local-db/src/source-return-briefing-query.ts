@@ -19,6 +19,7 @@ import { BlockProcessingService } from "./block-processing-service";
 import { DocumentRepository } from "./document-repository";
 import { LapseClusterQuery, type LapseClusterQueryInput } from "./lapse-cluster-query";
 import { windowStart } from "./lapse-window";
+import { ProcessingUnitRepository, pdfPageKey } from "./processing-unit-repository";
 import { SourceYieldQuery } from "./source-yield-query";
 import { retentionFor } from "./topic-knowledge-state-query";
 
@@ -43,18 +44,24 @@ export class SourceReturnBriefingQuery {
     const metadata = this.db.select().from(sources).where(eq(sources.elementId, sourceId)).get();
     const documents = new DocumentRepository(this.db);
     const blocks = documents.listBlocks(sourceId);
+    const geometry = new ProcessingUnitRepository(this.db).views(sourceId);
     // T130 owns document geometry only. PDF/media use their specialized readers.
     if (
-      metadata?.mediaKind ||
-      metadata?.snapshotKey?.toLowerCase().endsWith(".pdf") ||
-      blocks.length === 0 ||
-      blocks.some((block) => block.page != null || block.timestampMs != null)
+      !geometry &&
+      (metadata?.mediaKind ||
+        metadata?.snapshotKey?.toLowerCase().endsWith(".pdf") ||
+        blocks.length === 0 ||
+        blocks.some((block) => block.page != null || block.timestampMs != null))
     )
       return null;
     const readPoint = documents.getReadPoint(sourceId);
     const processing = new BlockProcessingService(this.db);
     const summary = processing.getSourceProcessingSummary(sourceId);
-    const liveIds = new Set(blocks.map((block) => block.stableBlockId));
+    const liveIds = new Set(
+      geometry
+        ? geometry.filter((v) => v.locatable).map((v) => v.stableBlockId)
+        : blocks.map((block) => block.stableBlockId),
+    );
     const views = processing
       .listBlockViews(sourceId)
       .filter((view) => liveIds.has(view.stableBlockId));
@@ -64,13 +71,14 @@ export class SourceReturnBriefingQuery {
         at: elements.createdAt,
         label: sourceLocations.label,
         blockIds: sourceLocations.blockIds,
+        page: sourceLocations.page,
       })
       .from(sourceLocations)
       .innerJoin(elements, eq(elements.id, sourceLocations.elementId))
       .where(
         and(
           eq(sourceLocations.sourceElementId, sourceId),
-          eq(elements.type, "extract"),
+          inArray(elements.type, ["extract", "media_fragment"]),
           isNull(elements.deletedAt),
         ),
       )
@@ -85,6 +93,8 @@ export class SourceReturnBriefingQuery {
       } catch {
         /* An old malformed anchor remains descriptive, never a jump target. */
       }
+      if (geometry && lastExtraction.page != null && liveIds.has(pdfPageKey(lastExtraction.page)))
+        extractionBlockId = pdfPageKey(lastExtraction.page);
     }
     const actions = this.db
       .select({ at: sourceBlockProcessing.lastActionAt })

@@ -1,0 +1,16 @@
+.processing-units {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}
+.processing-units__progress {
+  margin-left: auto;
+}
+.processing-units [role="alert"] {
+  color: var(--danger);
+}

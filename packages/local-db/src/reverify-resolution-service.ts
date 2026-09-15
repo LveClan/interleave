@@ -55,6 +55,7 @@ import { aliasedTable, and, asc, eq, isNull, sql } from "drizzle-orm";
 import { computeBlockContentHashes } from "./block-processing-service";
 import { newRowId, nowIso } from "./ids";
 import type { Repositories } from "./index";
+import { ProcessingUnitRepository } from "./processing-unit-repository";
 import { REVERIFY_FLAGGABLE_TYPES } from "./reverify-propagation-repository";
 import {
   type DetachSnapshotInput,
@@ -313,6 +314,8 @@ export class ReverifyResolutionService {
         input.sourceElementId,
       )?.prosemirrorJson;
       const currentBlockHashes = computeBlockContentHashes(currentSourceJson ?? null);
+      for (const unit of new ProcessingUnitRepository(tx).units(input.sourceElementId) ?? [])
+        currentBlockHashes.set(unit.id, unit.hash);
 
       for (const decision of input.decisions) {
         const reason = this.revalidate(tx, input.sourceElementId, decision, currentBlockText);
@@ -713,7 +716,8 @@ export class ReverifyResolutionService {
       .join("|");
 
     return [
-      blockComponent(currentBlockText, blockId),
+      new ProcessingUnitRepository(tx).units(sourceElementId)?.find((u) => u.id === blockId)
+        ?.hash ?? blockComponent(currentBlockText, blockId),
       anchor?.blockIds ?? "",
       provenanceSig,
       element?.updatedAt ?? "",
@@ -765,7 +769,12 @@ export class ReverifyResolutionService {
     if (!target) return "deleted";
 
     let prevBody: ReverifyBodyPreimage | undefined;
-    const reDerivesBody = target.type === "extract" && REBASE_BODY_STAGES.has(target.stage);
+    const geometric =
+      new ProcessingUnitRepository(tx)
+        .units(sourceElementId)
+        ?.some((u) => u.id === decision.stableBlockId) ?? false;
+    const reDerivesBody =
+      !geometric && target.type === "extract" && REBASE_BODY_STAGES.has(target.stage);
 
     if (reDerivesBody) {
       // The element's own anchor into the source — IMMUTABLE; re-derivation reads it but
@@ -850,7 +859,7 @@ export class ReverifyResolutionService {
           preStaleHash: prior.preStaleHash,
           metadata: prior.metadata,
         };
-        const restoredState = restorableStateFromMetadata(prior.metadata);
+        const restoredState = geometric ? "unread" : restorableStateFromMetadata(prior.metadata);
         this.repos.blockProcessing.upsertStateWithin(tx, {
           sourceElementId,
           stableBlockId: decision.stableBlockId,
@@ -1039,7 +1048,10 @@ export class ReverifyResolutionService {
   private currentBlockTextMap(sourceElementId: ElementId): Map<BlockId, string> {
     const document = this.repos.documents.findById(sourceElementId);
     if (!document) return new Map();
-    return blockTextMap(document.prosemirrorJson);
+    const texts = blockTextMap(document.prosemirrorJson);
+    for (const unit of new ProcessingUnitRepository(this.db).units(sourceElementId) ?? [])
+      texts.set(unit.id, unit.text);
+    return texts;
   }
 
   /** The OLD anchor text (`source_locations.selectedText`) per flagged element. */

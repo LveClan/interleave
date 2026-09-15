@@ -370,6 +370,8 @@ export type {
   Document,
   DocumentSchemaVersion,
   MediaKind,
+  ProcessingUnitGeometry,
+  SetProcessingUnitRequest,
   Source,
   SourceBlockOutputType,
   SourceBlockProcessing,
@@ -382,6 +384,7 @@ export type {
   SourceBlockReconcileReport,
 } from "./source";
 export {
+  composeProcessingUnitState,
   isTerminalSourceBlockProcessingState,
   SOURCE_BLOCK_OUTPUT_TYPES,
   SOURCE_BLOCK_PROCESSING_ACTIONS,

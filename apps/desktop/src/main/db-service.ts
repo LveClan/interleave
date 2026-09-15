@@ -102,6 +102,7 @@ import {
   type OptimizationScope,
   OptimizationService,
   type OptimizationSuggestionWithWorkload,
+  ProcessingUnitService,
   PurgeBlockedByLiveDescendantsError,
   QueueActionService,
   type QueueFilters,
@@ -6682,6 +6683,11 @@ export class DbService {
   get sourcePendingService(): SourcePendingService {
     if (!this.handle) throw new Error("Database is not open");
     return new SourcePendingService(this.handle.db);
+  }
+
+  get processingUnitService(): ProcessingUnitService {
+    if (!this.handle) throw new Error("Database is not open");
+    return new ProcessingUnitService(this.handle.db);
   }
 
   /**

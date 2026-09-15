@@ -122,6 +122,7 @@ import {
   PickImportFileRequestSchema,
   type PickImportFileResult,
   PriorityIntegrityGetRequestSchema,
+  ProcessingUnitSetRequestSchema,
   QueueActRequestSchema,
   QueueAutoPostponeRequestSchema,
   QueueCatchUpRequestSchema,
@@ -1074,6 +1075,17 @@ export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerCo
     pending: dbService.sourcePendingService.list(
       SourcePendingListRequestSchema.parse(raw).sourceId as import("@interleave/core").ElementId,
     ),
+  }));
+  ipcMain.handle(IPC_CHANNELS.processingUnitsOpen, (_event, raw: unknown) =>
+    dbService.processingUnitService.open(
+      SourcePendingListRequestSchema.parse(raw).sourceId as import("@interleave/core").ElementId,
+    ),
+  );
+  ipcMain.handle(IPC_CHANNELS.processingUnitsSet, (_event, raw: unknown) => ({
+    receipt: dbService.processingUnitService.set(ProcessingUnitSetRequestSchema.parse(raw)),
+  }));
+  ipcMain.handle(IPC_CHANNELS.processingUnitsUndo, (_event, raw: unknown) => ({
+    undone: dbService.processingUnitService.undo(SourcePendingUndoRequestSchema.parse(raw)),
   }));
   ipcMain.handle(IPC_CHANNELS.sourcePendingResume, (_event, raw: unknown) => ({
     receipt: dbService.sourcePendingService.resume(SourcePendingResumeRequestSchema.parse(raw)),

@@ -1134,7 +1134,6 @@ function SourceReaderVisit() {
   // swaps the editor body for the `pdfjs-dist` canvas + selectable text layer. The
   // read-point + extract are page-granular (handled inside `PdfReader`).
   if (doc.sourceFormat === "pdf") {
-    const pdfPct = pdfPage.total > 0 ? (pdfPage.page / pdfPage.total) * 100 : 0;
     return (
       <div className="reader-screen source-reader-screen" data-testid="route-source">
         <SourceHeader
@@ -1150,15 +1149,10 @@ function SourceReaderVisit() {
             </>
           }
         />
-        <div className="pbar" style={{ margin: 0 }}>
-          <div
-            className="pbar__fill"
-            data-testid="reader-pbar-fill"
-            style={{ width: `${pdfPct}%` }}
-          />
-        </div>
         <PdfReader
+          key={id}
           elementId={id}
+          scheduledReturn={search.entry === "queue" || rereadId !== null}
           blockPages={doc.blockPages}
           onActivePageChange={(page, total) => {
             setPdfPage({ page, total });

@@ -19,6 +19,7 @@ import { assets, elements, type InterleaveDatabase } from "@interleave/db";
 import { and, eq } from "drizzle-orm";
 import { newAssetId, nowIso } from "./ids";
 import { rowToAsset } from "./mappers";
+import { ProcessingUnitRepository } from "./processing-unit-repository";
 import type { DbClient } from "./types";
 
 /** Metadata for a new asset (the bytes are written to the vault separately). */
@@ -152,6 +153,7 @@ export class AssetRepository {
       .run();
     const row = tx.select().from(assets).where(eq(assets.id, id)).get();
     if (!row) throw new Error("AssetRepository.updateBytesWithin: asset row missing after update");
+    new ProcessingUnitRepository(tx).reconcileWithin(row.owningElementId as ElementId);
     return rowToAsset(row);
   }
 

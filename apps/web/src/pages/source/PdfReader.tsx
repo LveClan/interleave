@@ -30,6 +30,9 @@ import {
   type OcrPageSummary,
 } from "../../lib/appApi";
 import "./pdf-reader.css";
+import { t } from "../../i18n";
+import { sourceReadingChanged } from "../../lib/sourceReadingEvents";
+import { ProcessingUnitControls } from "./ProcessingUnitControls";
 
 GlobalWorkerOptions.workerSrc = PdfWorkerUrl;
 
@@ -52,6 +55,7 @@ function pageToFirstBlock(blockPages: Readonly<Record<string, number>>): Map<num
 export interface PdfReaderProps {
   /** The PDF source element id. */
   readonly elementId: string;
+  readonly scheduledReturn?: boolean;
   /** The block→page map (stable block id → 1-based page) from `documents.get`. */
   readonly blockPages: Readonly<Record<string, number>>;
   /** Called when the active page changes (so the shell can show page N of M). */
@@ -92,6 +96,7 @@ interface PageState {
 
 export function PdfReader({
   elementId,
+  scheduledReturn = false,
   blockPages,
   onActivePageChange,
   onRegionExtracted,
@@ -101,6 +106,8 @@ export function PdfReader({
 }: PdfReaderProps) {
   const desktop = isDesktop();
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const activeJump = useRef(false);
+  const appliedRouteJump = useRef<string | null>(null);
   const docRef = useRef<PDFDocumentProxy | null>(null);
   const [pages, setPages] = useState<readonly PageState[]>([]);
   const [activePage, setActivePage] = useState(1);
@@ -209,6 +216,7 @@ export function PdfReader({
   // Track the active page as the user scrolls (the page whose top is nearest the
   // viewport top), so the read-point + progress reflect where they are.
   const onScroll = useCallback(() => {
+    activeJump.current = true;
     const root = scrollRef.current;
     if (!root) return;
     const pageEls = root.querySelectorAll<HTMLElement>("[data-pdf-page]");
@@ -269,6 +277,7 @@ export function PdfReader({
         page,
       });
       onTextExtracted?.(result);
+      sourceReadingChanged(elementId);
       toast(`Extracted from page ${page}`);
       sel.removeAllRanges();
     } catch {
@@ -318,6 +327,7 @@ export function PdfReader({
       setExtractedRegions((prev) => [...prev, { page: pending.page, region: pending.region }]);
       toast(`Region extracted from page ${pending.page}`);
       onRegionExtracted?.();
+      sourceReadingChanged(elementId);
       URL.revokeObjectURL(pending.previewUrl);
       setPending(null);
       setCaption("");
@@ -360,6 +370,7 @@ export function PdfReader({
         offset: 0,
       });
       toast(`Read-point set on page ${targetPage}`);
+      sourceReadingChanged(elementId);
     } catch {
       toast("Could not set read-point");
     }
@@ -451,6 +462,7 @@ export function PdfReader({
           toast(`OCR accepted into page ${pageNumber}`);
           const r = await appApi.getOcr({ elementId });
           setOcrPages(r.pages);
+          sourceReadingChanged(elementId);
         }
       } catch {
         toast("Could not accept the OCR text");
@@ -531,18 +543,55 @@ export function PdfReader({
   // Jump-to-page-region (T065): when the route carries a `jump` target, scroll that
   // page into view and flash its region outline briefly.
   const [flashRegion, setFlashRegion] = useState<{ page: number; region: RegionRect } | null>(null);
+  const jumpUnit = useCallback((id: string): boolean => {
+    const page = Number(id.replace(/^pdf:page:/, ""));
+    const el = Number.isInteger(page)
+      ? scrollRef.current?.querySelector<HTMLElement>(`[data-pdf-page="${page}"]`)
+      : null;
+    if (!el) return false;
+    activeJump.current = true;
+    el.scrollIntoView({ block: "start", behavior: "smooth" });
+    setActivePage(page);
+    return true;
+  }, []);
+  useEffect(() => {
+    if (status !== "ready" || jump) return;
+    let cancelled = false;
+    void appApi
+      .getReadPoint({ elementId })
+      .then(({ readPoint }) => {
+        if (cancelled || activeJump.current || !readPoint) return;
+        const page = blockPages[readPoint.blockId];
+        if (page != null) jumpUnit(`pdf:page:${page}`);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [status, jump, elementId, blockPages, jumpUnit]);
   useEffect(() => {
     if (status !== "ready" || !jump) return;
+    const signature = JSON.stringify(jump);
+    if (appliedRouteJump.current === signature) return;
+    appliedRouteJump.current = signature;
     const root = scrollRef.current;
     const el = root?.querySelector<HTMLElement>(`[data-pdf-page="${jump.page}"]`);
-    el?.scrollIntoView({ block: "start", behavior: "smooth" });
+    if (!el) {
+      toast(t("sourceReturn.moved"));
+      return;
+    }
+    activeJump.current = true;
+    el.scrollIntoView({ block: "start", behavior: "smooth" });
     if (jump.region) {
       setFlashRegion({ page: jump.page, region: jump.region });
-      const t = setTimeout(() => setFlashRegion(null), 2200);
-      return () => clearTimeout(t);
     }
     return undefined;
-  }, [status, jump]);
+  }, [status, jump, toast]);
+  useEffect(() => {
+    if (!flashRegion) return;
+    const timer = setTimeout(() => setFlashRegion(null), 2200);
+    return () => clearTimeout(timer);
+  }, [flashRegion]);
 
   // Revoke any pending preview URL when the reader unmounts.
   useEffect(() => () => cancelPending(), [cancelPending]);
@@ -557,6 +606,14 @@ export function PdfReader({
 
   return (
     <div className="pdf-reader" data-testid="pdf-reader">
+      <ProcessingUnitControls
+        key={elementId}
+        sourceId={elementId}
+        activeId={`pdf:page:${activePage}`}
+        ready={status === "ready"}
+        scheduledReturn={scheduledReturn}
+        onJump={jumpUnit}
+      />
       <div className="pdf-reader-bar">
         <button
           type="button"

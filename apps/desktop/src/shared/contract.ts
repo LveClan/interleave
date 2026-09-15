@@ -8498,6 +8498,16 @@ export interface AppApi {
     resume(request: ResumeSourceBlockRequest): Promise<{ receipt: ResumeSourceBlockReceipt }>;
     undo(request: ResumeSourceBlockReceipt): Promise<{ undone: boolean }>;
   };
+  readonly processingUnits: {
+    open(request: { sourceId: string }): Promise<{
+      blocks: readonly import("@interleave/core").SourceBlockProcessingView[];
+      summary: import("@interleave/core").SourceBlockProcessingSummary;
+    }>;
+    set(
+      request: import("@interleave/core").SetProcessingUnitRequest,
+    ): Promise<{ receipt: ResumeSourceBlockReceipt }>;
+    undo(request: ResumeSourceBlockReceipt): Promise<{ undone: boolean }>;
+  };
   readonly rereadProposals: {
     /** Capped, dismissible re-read proposals (T129) — read-only, strongest-first. */
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
@@ -8679,6 +8689,23 @@ export interface SourceReturnBriefingResult {
 }
 
 export const SourcePendingListRequestSchema = z.object({ sourceId: ElementIdSchema }).strict();
+export const ProcessingUnitSetRequestSchema = z
+  .object({
+    sourceId: ElementIdSchema,
+    blockId: z.string().min(1).max(256),
+    contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+    expectedState: z.enum([
+      "unread",
+      "read",
+      "extracted",
+      "ignored",
+      "needs_later",
+      "processed_without_output",
+      "stale_after_edit",
+    ]),
+    state: z.enum(["unread", "read", "ignored", "needs_later", "processed_without_output"]),
+  })
+  .strict();
 export const SourcePendingResumeRequestSchema = z
   .object({
     sourceId: ElementIdSchema,

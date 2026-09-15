@@ -170,6 +170,9 @@ export const IPC_CHANNELS = {
   sourcePendingList: "sourcePending:list",
   sourcePendingResume: "sourcePending:resume",
   sourcePendingUndo: "sourcePending:undo",
+  processingUnitsOpen: "processingUnits:open",
+  processingUnitsSet: "processingUnits:set",
+  processingUnitsUndo: "processingUnits:undo",
   // Re-read proposals (T129) — turn a lapse cluster into capped, dismissible re-read work.
   // `list`/`item` are read-only; `accept`/`dismiss`/`undoAccept` are op-logged mutations.
   rereadProposalsList: "rereadProposals:list",

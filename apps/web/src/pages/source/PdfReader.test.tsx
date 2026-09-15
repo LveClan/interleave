@@ -6,6 +6,7 @@ const h = vi.hoisted(() => ({
   getSourcePdfData: vi.fn(),
   getOcr: vi.fn(),
   setReadPoint: vi.fn(),
+  getReadPoint: vi.fn(async () => ({ readPoint: null })),
   createExtraction: vi.fn(),
   runOcr: vi.fn(),
   acceptOcr: vi.fn(),
@@ -75,6 +76,7 @@ vi.mock("../../lib/appApi", async () => {
       getSourcePdfData: h.getSourcePdfData,
       getOcr: h.getOcr,
       setReadPoint: h.setReadPoint,
+      getReadPoint: h.getReadPoint,
       createExtraction: h.createExtraction,
       runOcr: h.runOcr,
       acceptOcr: h.acceptOcr,
@@ -86,8 +88,17 @@ vi.mock("../../lib/appApi", async () => {
 
 import { PdfReader } from "./PdfReader";
 
+vi.mock("./ProcessingUnitControls", () => ({
+  ProcessingUnitControls: ({ onJump }: { onJump: (id: string) => boolean }) => (
+    <button type="button" onClick={() => onJump("pdf:page:2")}>
+      Jump pending page
+    </button>
+  ),
+}));
+
 beforeEach(() => {
   h.desktop = true;
+  h.getReadPoint.mockReset().mockResolvedValue({ readPoint: null });
   h.getSourcePdfData.mockReset();
   h.getOcr.mockReset();
   h.setReadPoint.mockReset();
@@ -161,6 +172,41 @@ function renderReader() {
 }
 
 describe("PdfReader", () => {
+  it("keeps a pending-page jump ahead of late restore and identical route rerenders", async () => {
+    let resolve: (value: unknown) => void = () => {};
+    h.getReadPoint.mockReturnValue(
+      new Promise((done) => {
+        resolve = done;
+      }) as never,
+    );
+    const scroll = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scroll;
+    const { getByText, getByTestId, rerender } = renderReader();
+    await waitFor(() => expect(getByTestId("pdf-page-indicator")).toHaveTextContent("Page 1 of 2"));
+    fireEvent.click(getByText("Jump pending page"));
+    resolve({ readPoint: { blockId: "blk-page-1", offset: 0 } });
+    await waitFor(() => expect(getByTestId("pdf-page-indicator")).toHaveTextContent("Page 2 of 2"));
+    expect(scroll).toHaveBeenCalledTimes(1);
+    rerender(
+      <PdfReader
+        elementId="src-1"
+        blockPages={{ "blk-page-1": 1, "blk-page-2": 2 }}
+        jump={{ page: 1 }}
+        toast={h.toast}
+      />,
+    );
+    fireEvent.click(getByText("Jump pending page"));
+    const count = scroll.mock.calls.length;
+    rerender(
+      <PdfReader
+        elementId="src-1"
+        blockPages={{ "blk-page-1": 1, "blk-page-2": 2 }}
+        jump={{ page: 1 }}
+        toast={h.toast}
+      />,
+    );
+    expect(scroll).toHaveBeenCalledTimes(count);
+  });
   it("renders the desktop-only fallback without loading bytes", () => {
     h.desktop = false;
     const { getByTestId } = renderReader();

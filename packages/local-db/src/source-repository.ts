@@ -56,6 +56,7 @@ import { ElementRepository } from "./element-repository";
 import { newRowId, newSourceLocationId, nowIso } from "./ids";
 import { rowToElement, rowToSource, rowToSourceLocation } from "./mappers";
 import { OperationLogRepository } from "./operation-log-repository";
+import { ProcessingUnitRepository } from "./processing-unit-repository";
 import type { DbClient } from "./types";
 
 /** Provenance fields for a new source (all optional — manual imports omit most). */
@@ -762,6 +763,7 @@ export class SourceRepository {
    * anywhere downstream rolls the whole extraction back (no orphan element/location).
    */
   createExtractWithin(tx: DbClient, input: CreateExtractInput): ExtractWithLocation {
+    new ProcessingUnitRepository(tx).reconcileWithin(input.sourceElementId, true);
     const element = this.elementsRepo.createWithin(tx, {
       // A PDF region (T065) mints a `media_fragment`; everything else an `extract`.
       type: input.elementType ?? "extract",

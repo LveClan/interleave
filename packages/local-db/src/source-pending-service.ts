@@ -21,6 +21,8 @@ import {
 } from "./block-processing-service";
 import { DocumentRepository } from "./document-repository";
 import { newRowId } from "./ids";
+import { ProcessingUnitRepository } from "./processing-unit-repository";
+import { ProcessingUnitService } from "./processing-unit-service";
 
 /** Document-only rail. Derived output verification is never resolved here. */
 export class SourcePendingService {
@@ -35,6 +37,24 @@ export class SourcePendingService {
       )
       .get();
     if (!source) return null;
+    const geometry = new ProcessingUnitRepository(this.db).views(sourceId);
+    if (geometry)
+      return {
+        sourceId,
+        summary: new BlockProcessingService(this.db).getSourceProcessingSummary(sourceId),
+        entries: geometry
+          .filter((v) => v.state === "needs_later" || v.state === "stale_after_edit")
+          .map((v) => ({
+            blockId: v.stableBlockId,
+            order: v.locatable ? v.order : null,
+            state: v.state as "needs_later" | "stale_after_edit",
+            preview: v.preview ?? "",
+            contentHash: v.blockContentHash,
+            locatable: v.locatable === true,
+            canResume: v.locatable === true,
+            geometry: v.geometry,
+          })),
+      };
     const meta = this.db.select().from(sources).where(eq(sources.elementId, sourceId)).get();
     const docs = new DocumentRepository(this.db);
     const blocks = docs.listBlocks(sourceId);
@@ -87,6 +107,8 @@ export class SourcePendingService {
   }
 
   resume(input: ResumeSourceBlockRequest): ResumeSourceBlockReceipt {
+    if (new ProcessingUnitRepository(this.db).units(input.sourceId as ElementId))
+      return new ProcessingUnitService(this.db).set(input);
     return this.db.transaction((tx) => {
       const sourceId = input.sourceId as ElementId;
       const blockId = input.blockId as BlockId;
@@ -115,6 +137,8 @@ export class SourcePendingService {
   }
 
   undo(receipt: ResumeSourceBlockReceipt): boolean {
+    if (new ProcessingUnitRepository(this.db).units(receipt.sourceId as ElementId))
+      return new ProcessingUnitService(this.db).undo(receipt);
     return this.db.transaction((tx) => {
       const sourceId = receipt.sourceId as ElementId;
       const blockId = receipt.blockId as BlockId;

@@ -188,6 +188,28 @@ export interface SourceBlockProcessingView {
   readonly blockContentHash: string | null;
   readonly outputElementIds: readonly ElementId[];
   readonly derivedFrom: SourceBlockProcessingDerivation;
+  /** Geometric units keep the unextracted remainder independent of live outputs. */
+  readonly geometry?: ProcessingUnitGeometry;
+  readonly remainingState?: SourceBlockProcessingState;
+  readonly preview?: string;
+  readonly locatable?: boolean;
+}
+
+export type ProcessingUnitGeometry = { readonly kind: "pdf_page"; readonly page: number };
+
+export interface SetProcessingUnitRequest {
+  readonly sourceId: string;
+  readonly blockId: string;
+  readonly contentHash: string;
+  readonly expectedState: SourceBlockProcessingState;
+  readonly state: "unread" | "read" | "ignored" | "needs_later" | "processed_without_output";
+}
+
+export function composeProcessingUnitState(
+  remaining: SourceBlockProcessingState,
+  outputCount: number,
+): SourceBlockProcessingState {
+  return remaining === "processed_without_output" && outputCount > 0 ? "extracted" : remaining;
 }
 
 export interface SourceBlockProcessingSummary {

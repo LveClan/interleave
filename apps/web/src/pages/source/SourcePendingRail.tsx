@@ -282,13 +282,15 @@ function SourcePendingRailVisit({
                 <span className="source-pending__meta">
                   {entry.order === null
                     ? t("sourceReturn.moved")
-                    : t("sourceReturn.paragraph", { number: format.number(entry.order + 1) })}{" "}
+                    : entry.geometry?.kind === "pdf_page"
+                      ? t("sourceReturn.page", { number: format.number(entry.geometry.page) })
+                      : t("sourceReturn.paragraph", {
+                          number: format.number(entry.order + 1),
+                        })}{" "}
                   ·{" "}
-                  {t(
-                    entry.state === "needs_later"
-                      ? "sourceReturn.pendingDeferred"
-                      : "sourceReturn.pendingStale",
-                  )}
+                  {entry.state === "needs_later"
+                    ? t("sourceReturn.pendingDeferred")
+                    : t("sourceReturn.pendingStale")}
                 </span>
                 <span className="source-pending__preview">
                   {entry.preview || t("sourceReturn.noPreview")}

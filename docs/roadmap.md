@@ -515,8 +515,9 @@ Detailed specs: [`tasks/M29-longform-geometry.md`](./tasks/M29-longform-geometry
 - [~] **T131 — Honor `needs_later`** · _deps: T130_ · implemented and reviewed; unified verification pending
   Done when: deferred blocks are reachable via a jump rail (listing `needs_later` and `stale_after_edit` blocks) and un-deferring/resolving updates the durable state — block deferral stops being write-only bookkeeping that is counted at exit and never seen again.
   Local commit: `T131: make deferred source passages actionable`. Document-order collapsible rail in both readers, T130 entry, previous/next keyboard navigation, trusted resume-as-unread/read and guarded receipt undo. Live output/reverify provenance remains protected, stale async results are isolated, and existing unresolved-ratio scheduling is pinned. Independent review and focused tests passed; full/typecheck/Electron/GUI/restart checks were explicitly deferred by the user. See [T131 basic verification](./tasks/M29-longform-geometry.md#t131-implementation-and-basic-verification-2026-09-15). T130 stays `[~]`.
-- [ ] **T132 — PDF block-state parity** · _deps: T064, T065_
+- [~] **T132 — PDF block-state parity** · _deps: T064, T065_ · 已实现并审查，统一验收待进行
   Done when: PDF sources carry durable per-page/per-region processing state (the existing 7-state vocabulary + reconciliation), feeding source progress, Done-intent breakdowns, yield, and the scheduler exactly as document blocks do — the heaviest formats stop being invisible to honest completion.
+  Local commit: `T132: persist PDF page processing states`. Stable page keys reuse the processing table; partial text/region outputs preserve unresolved remainder, with strict IPC, receipt undo, content/OCR reconciliation and source verification. Shared progress/Done/yield/scheduler/briefing/pending now consume PDF pages. Independent review fixes complete; seven focused repository cases, eight simulated UI cases, IPC and i18n checks passed. Unified checks deferred by user; see the T132 implementation record. T130/T131 remain `[~]`.
 - [ ] **T133 — Media segment states** · _deps: T073, T074_
   Done when: audio/video sources track per-segment processed state (derived from playback and fragment extraction), feeding the same surfaces — "watched 40%, 2 segments deferred" is durable data, not memory.
 - [ ] **T134 — Structural skim pass** · _deps: T067, T132_
@@ -534,6 +535,8 @@ Detailed specs: [`plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md`](./p
 ---
 
 ## Progress log
+
+- **2026-09-15 — T132 implementation/review checkpoint:** `T132: persist PDF page processing states` (local only). Basic verification passed under the user's limited scope; `[~]` until explicitly requested unified verification. T133 can reuse the geometry, remainder composition and receipt commands. No migration, source anchor rewrite, push or app launch.
 
 Record notable completions / decisions here as tasks land (newest first).
 

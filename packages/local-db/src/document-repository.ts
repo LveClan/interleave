@@ -26,6 +26,7 @@ import { and, eq } from "drizzle-orm";
 import { newRowId, nowIso } from "./ids";
 import { rowToDocument } from "./mappers";
 import { OperationLogRepository } from "./operation-log-repository";
+import { ProcessingUnitRepository } from "./processing-unit-repository";
 import type { DbClient } from "./types";
 
 /** One stable block to persist for a document. */
@@ -175,6 +176,7 @@ export class DocumentRepository {
       payload: { elementId: input.elementId, schemaVersion, blockCount: input.blocks?.length },
     });
 
+    new ProcessingUnitRepository(tx).reconcileWithin(input.elementId);
     return {
       elementId: input.elementId,
       prosemirrorJson: input.prosemirrorJson ?? { type: "doc", content: [] },

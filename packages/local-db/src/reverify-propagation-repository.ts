@@ -30,7 +30,6 @@ import {
   elementDetachSnapshot,
   elementReverifyProvenance,
   elements,
-  type InterleaveDatabase,
   sourceLocations,
 } from "@interleave/db";
 import { and, eq, isNull, sql } from "drizzle-orm";
@@ -56,7 +55,7 @@ export const REVERIFY_FLAGGABLE_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 export class ReverifyPropagationRepository {
-  constructor(private readonly db: InterleaveDatabase) {}
+  constructor(private readonly db: DbClient) {}
 
   /**
    * Apply one reconciliation report's transitions: flag live descendants of newly
@@ -160,6 +159,7 @@ export class ReverifyPropagationRepository {
       .select({
         elementId: sourceLocations.elementId,
         blockIds: sourceLocations.blockIds,
+        page: sourceLocations.page,
         type: elements.type,
       })
       .from(sourceLocations)
@@ -176,6 +176,7 @@ export class ReverifyPropagationRepository {
       } catch {
         blockIds = [];
       }
+      if (row.page != null) blockIds = [...blockIds, `pdf:page:${row.page}`];
       for (const raw of blockIds) {
         const blockId = raw as BlockId;
         if (!blocks.has(blockId)) continue;

@@ -84,6 +84,7 @@ import { BlockProcessingService } from "./block-processing-service";
 import { chunkIds } from "./chunk-in-array";
 import { DocumentRepository } from "./document-repository";
 import { inboxSourceDomain } from "./inbox-query";
+import { ProcessingUnitRepository } from "./processing-unit-repository";
 
 /** Default cap so a broad rollup can't return an unbounded list (like `LibraryQuery`). */
 export const DEFAULT_SOURCE_YIELD_LIMIT = 200;
@@ -1074,6 +1075,16 @@ export class SourceYieldQuery {
    * read-point or no blocks; **100%** when the read-point is at/after the last block.
    */
   private computeReadPct(elementId: ElementId): number {
+    const units = new ProcessingUnitRepository(this.db).views(elementId);
+    if (units)
+      return units.length === 0
+        ? 0
+        : units.filter(
+            (unit) =>
+              unit.state === "read" ||
+              unit.state === "extracted" ||
+              unit.state === "processed_without_output",
+          ).length / units.length;
     const blocks = this.documents.listBlocks(elementId);
     if (blocks.length === 0) return 0;
     const readPoint = this.documents.getReadPoint(elementId);
@@ -1136,6 +1147,10 @@ export class SourceYieldQuery {
     }
 
     for (const id of sourceIds) {
+      if (new ProcessingUnitRepository(this.db).units(id)) {
+        out.set(id, this.computeReadPct(id));
+        continue;
+      }
       const blocks = blocksBySource.get(id) ?? [];
       if (blocks.length === 0) {
         out.set(id, 0);

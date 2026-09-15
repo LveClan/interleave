@@ -925,3 +925,4 @@ export function createRepositories(
   (repos as { weeklyReview: WeeklyReviewQuery }).weeklyReview = new WeeklyReviewQuery(db, repos);
   return repos;
 }
+export { ProcessingUnitService } from "./processing-unit-service";

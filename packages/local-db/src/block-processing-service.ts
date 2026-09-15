@@ -14,6 +14,7 @@ import { documentBlocks, documents, elements, type InterleaveDatabase } from "@i
 import { and, eq, isNull } from "drizzle-orm";
 import { BlockProcessingRepository } from "./block-processing-repository";
 import { newRowId } from "./ids";
+import { ProcessingUnitRepository } from "./processing-unit-repository";
 import { ReverifyPropagationRepository } from "./reverify-propagation-repository";
 import type { DbClient } from "./types";
 
@@ -205,6 +206,8 @@ export class BlockProcessingService {
 
   listBlockViews(sourceElementId: ElementId): SourceBlockProcessingView[] {
     this.requireSourceElement(this.db, sourceElementId);
+    const units = new ProcessingUnitRepository(this.db).views(sourceElementId);
+    if (units) return units;
     const blocks = this.repo.listSourceBlocks(sourceElementId);
     const rows = new Map(
       this.repo.listRows(sourceElementId).map((row) => [row.stableBlockId, row]),
@@ -294,6 +297,11 @@ export class BlockProcessingService {
     const outputsBySource = this.repo.listLiveOutputsForMany(sourceIds);
 
     for (const sourceElementId of sourceIds) {
+      const units = new ProcessingUnitRepository(this.db).views(sourceElementId);
+      if (units) {
+        result.set(sourceElementId, units);
+        continue;
+      }
       const blocks = blocksBySource.get(sourceElementId) ?? [];
       const rows = new Map(
         (rowsBySource.get(sourceElementId) ?? []).map((row) => [row.stableBlockId, row]),
@@ -426,7 +434,7 @@ export class BlockProcessingService {
     }
     const totalBlocks = views.length;
     const ignoredBlocks = stateCounts.ignored;
-    const extractedBlockCount = stateCounts.extracted;
+    const extractedBlockCount = views.filter((view) => view.outputElementIds.length > 0).length;
     return {
       sourceElementId,
       totalBlocks,
@@ -443,10 +451,7 @@ export class BlockProcessingService {
       // Provenance rows exist ONLY for currently-stale blocks (created on stale, deleted
       // on un-stale), so a source with zero stale blocks can have no reverify outputs —
       // skip the count query on the common clean-source summary read (a hot path).
-      needsReverifyOutputs:
-        stateCounts.stale_after_edit === 0
-          ? 0
-          : this.reverify.countLiveReverifyOutputs(sourceElementId),
+      needsReverifyOutputs: this.reverify.countLiveReverifyOutputs(sourceElementId),
       legacyProjectedBlocks: 0,
       canMarkDoneWithoutConfirmation: unresolvedBlocks === 0,
       stateCounts,

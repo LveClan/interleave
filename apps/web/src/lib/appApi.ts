@@ -5541,6 +5541,16 @@ export interface AppApi {
     resume(request: ResumeSourceBlockRequest): Promise<{ receipt: ResumeSourceBlockReceipt }>;
     undo(request: ResumeSourceBlockReceipt): Promise<{ undone: boolean }>;
   };
+  readonly processingUnits: {
+    open(request: { sourceId: string }): Promise<{
+      blocks: readonly import("@interleave/core").SourceBlockProcessingView[];
+      summary: import("@interleave/core").SourceBlockProcessingSummary;
+    }>;
+    set(
+      request: import("@interleave/core").SetProcessingUnitRequest,
+    ): Promise<{ receipt: ResumeSourceBlockReceipt }>;
+    undo(request: ResumeSourceBlockReceipt): Promise<{ undone: boolean }>;
+  };
   readonly rereadProposals: {
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
     item(request: RereadProposalsItemRequest): Promise<RereadProposalsItemResult>;
@@ -6917,6 +6927,15 @@ export const appApi = {
   },
   getSourcePending(sourceId: string): Promise<{ pending: SourcePendingBlocks | null }> {
     return requireAppApi().sourcePending.list({ sourceId });
+  },
+  openProcessingUnits(sourceId: string) {
+    return requireAppApi().processingUnits.open({ sourceId });
+  },
+  setProcessingUnit(request: import("@interleave/core").SetProcessingUnitRequest) {
+    return requireAppApi().processingUnits.set(request);
+  },
+  undoProcessingUnit(receipt: ResumeSourceBlockReceipt) {
+    return requireAppApi().processingUnits.undo(receipt);
   },
   resumeSourceBlock(
     request: ResumeSourceBlockRequest,

@@ -10,7 +10,6 @@ import {
   documentBlocks,
   documentMarks,
   elements,
-  type InterleaveDatabase,
   readPoints,
   sourceBlockProcessing,
   sourceBlockProcessingOutputs,
@@ -29,6 +28,7 @@ import type { DbClient } from "./types";
  * cannot drift if the state set ever changes.
  */
 const RESTORABLE_PROCESSED_STATES: ReadonlySet<SourceBlockProcessingState> = new Set([
+  "read",
   "extracted",
   "ignored",
   "processed_without_output",
@@ -112,7 +112,7 @@ function outputTypeForElement(type: string): SourceBlockOutputType {
 }
 
 export class BlockProcessingRepository {
-  constructor(private readonly db: InterleaveDatabase) {}
+  constructor(private readonly db: DbClient) {}
 
   listRows(sourceElementId: ElementId): SourceBlockProcessingRow[] {
     return this.db
@@ -590,6 +590,7 @@ export class BlockProcessingRepository {
     tx: DbClient,
     sourceElementId: ElementId,
     blockHashes: ReadonlyMap<BlockId, string>,
+    onlyIds?: ReadonlySet<BlockId>,
   ): SourceBlockReconcileReport {
     const staled: BlockId[] = [];
     const unStaled: BlockId[] = [];
@@ -600,6 +601,8 @@ export class BlockProcessingRepository {
       .all();
     for (const row of rows) {
       const blockId = row.stableBlockId as BlockId;
+      if (onlyIds && !onlyIds.has(blockId)) continue;
+      if (!onlyIds && blockId.startsWith("pdf:page:")) continue;
       const nextHash = blockHashes.get(blockId);
 
       // Un-stale arm (NEW in T123): a row already in `stale_after_edit` is restored
@@ -618,11 +621,34 @@ export class BlockProcessingRepository {
             metadata: { reason: "content_restored", restoredTo: restoredState },
           });
           unStaled.push(blockId);
+        } else if (
+          onlyIds &&
+          (nextHash
+            ? nextHash !== row.blockContentHash ||
+              parseMetadata(row.metadata)?.reason === "block_missing"
+            : parseMetadata(row.metadata)?.reason !== "block_missing")
+        ) {
+          this.upsertStateWithin(tx, {
+            sourceElementId,
+            stableBlockId: blockId,
+            state: "stale_after_edit",
+            action: "reconcile_document_blocks",
+            blockContentHash: nextHash ?? row.blockContentHash,
+            preStaleHash: row.preStaleHash,
+            metadata: {
+              ...parseMetadata(row.metadata),
+              reason: nextHash ? "content_changed" : "block_missing",
+            },
+          });
+          staled.push(blockId);
         }
         continue;
       }
 
-      if (!RESTORABLE_PROCESSED_STATES.has(row.state as SourceBlockProcessingState)) {
+      if (
+        !RESTORABLE_PROCESSED_STATES.has(row.state as SourceBlockProcessingState) &&
+        !(onlyIds && row.state === "unread")
+      ) {
         continue;
       }
       if (nextHash && row.blockContentHash === nextHash) continue;
@@ -670,7 +696,8 @@ export class BlockProcessingRepository {
     const previousState = metadata?.previousState;
     if (
       typeof previousState === "string" &&
-      RESTORABLE_PROCESSED_STATES.has(previousState as SourceBlockProcessingState)
+      (RESTORABLE_PROCESSED_STATES.has(previousState as SourceBlockProcessingState) ||
+        previousState === "unread")
     ) {
       return previousState as SourceBlockProcessingState;
     }

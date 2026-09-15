@@ -622,6 +622,11 @@ const appApi: AppApi = {
     resume: (request) => ipcRenderer.invoke(IPC_CHANNELS.sourcePendingResume, request),
     undo: (request) => ipcRenderer.invoke(IPC_CHANNELS.sourcePendingUndo, request),
   },
+  processingUnits: {
+    open: (request) => ipcRenderer.invoke(IPC_CHANNELS.processingUnitsOpen, request),
+    set: (request) => ipcRenderer.invoke(IPC_CHANNELS.processingUnitsSet, request),
+    undo: (request) => ipcRenderer.invoke(IPC_CHANNELS.processingUnitsUndo, request),
+  },
   rereadProposals: {
     list: (request?: RereadProposalsListRequest) =>
       ipcRenderer.invoke(IPC_CHANNELS.rereadProposalsList, request),
