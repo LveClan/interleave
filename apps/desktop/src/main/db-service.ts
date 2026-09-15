@@ -126,6 +126,7 @@ import {
   type SchedulerSignals,
   type SemanticResolveContext,
   SessionPlanQuery,
+  SourcePendingService,
   SourceReturnBriefingQuery,
   SourceYieldQuery,
   StandingAutoPostponeService,
@@ -6676,6 +6677,11 @@ export class DbService {
         },
       }),
     };
+  }
+
+  get sourcePendingService(): SourcePendingService {
+    if (!this.handle) throw new Error("Database is not open");
+    return new SourcePendingService(this.handle.db);
   }
 
   /**

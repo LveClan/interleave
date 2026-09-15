@@ -31,6 +31,20 @@ vi.mock("../../lib/appApi", async () => {
 
 import { useProcessedSpans } from "./useProcessedSpans";
 
+it("keeps the latest reload when an earlier reading-state request finishes late", async () => {
+  const old = deferred<{
+    blocks: SourceBlockProcessingViewPayload[];
+    summary: SourceBlockProcessingSummaryPayload;
+  }>();
+  h.listBlockProcessing.mockReturnValueOnce(old.promise);
+  const { result } = renderHook(() => useProcessedSpans("src-1"));
+  h.listBlockProcessing.mockResolvedValue({ blocks: [block("p", "read")], summary: summary() });
+  await act(async () => result.current.reload());
+  expect(result.current.stateFor("p")).toBe("read");
+  await act(async () => old.resolve({ blocks: [block("p", "needs_later")], summary: summary() }));
+  expect(result.current.stateFor("p")).toBe("read");
+});
+
 function block(
   stableBlockId: string,
   state: SourceBlockProcessingViewPayload["state"],

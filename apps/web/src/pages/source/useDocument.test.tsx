@@ -108,6 +108,7 @@ describe("useDocument — debounced save", () => {
     await act(async () => {
       await vi.runOnlyPendingTimersAsync(); // resolve the load
     });
+    const persisted = result.current.persistedDoc;
 
     act(() => {
       result.current.save(change("one", "blk_a"));
@@ -116,11 +117,13 @@ describe("useDocument — debounced save", () => {
     });
     // Nothing written yet — still inside the debounce window.
     expect(h.saveDocument).not.toHaveBeenCalled();
+    expect(result.current.persistedDoc).toEqual(persisted);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(700);
     });
     expect(h.saveDocument).toHaveBeenCalledTimes(1);
+    expect(result.current.persistedDoc).toEqual(change("three", "blk_a").prosemirrorJson);
     expect(h.saveDocument).toHaveBeenCalledWith(
       expect.objectContaining({ elementId: "src-a", plainText: "three" }),
     );

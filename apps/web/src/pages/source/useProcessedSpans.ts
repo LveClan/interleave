@@ -73,6 +73,7 @@ export function useProcessedSpans(elementId: string | null | undefined): UseProc
   const [error, setError] = useState<string | null>(null);
   const activeElementId = useRef<string | null>(elementId ?? null);
   const requestVersion = useRef(0);
+  const readSequence = useRef(0);
 
   if (activeElementId.current !== (elementId ?? null)) {
     activeElementId.current = elementId ?? null;
@@ -91,14 +92,15 @@ export function useProcessedSpans(elementId: string | null | undefined): UseProc
     }
     const requestSourceId = elementId;
     const version = requestVersion.current;
+    const sequence = ++readSequence.current;
     try {
       const result = await appApi.listBlockProcessing({ sourceElementId: requestSourceId });
-      if (!isCurrentRequest(requestSourceId, version)) return;
+      if (!isCurrentRequest(requestSourceId, version) || sequence !== readSequence.current) return;
       setBlocks(result.blocks);
       setSummary(result.summary);
       setError(null);
     } catch (e) {
-      if (!isCurrentRequest(requestSourceId, version)) return;
+      if (!isCurrentRequest(requestSourceId, version) || sequence !== readSequence.current) return;
       setError(e instanceof Error ? e.message : String(e));
     }
   }, [elementId, isCurrentRequest]);
@@ -112,17 +114,26 @@ export function useProcessedSpans(elementId: string | null | undefined): UseProc
     }
     const requestSourceId = elementId;
     const version = requestVersion.current;
+    const sequence = ++readSequence.current;
     void appApi
       .listBlockProcessing({ sourceElementId: requestSourceId })
       .then((result) => {
-        if (!cancelled && isCurrentRequest(requestSourceId, version)) {
+        if (
+          !cancelled &&
+          isCurrentRequest(requestSourceId, version) &&
+          sequence === readSequence.current
+        ) {
           setBlocks(result.blocks);
           setSummary(result.summary);
           setError(null);
         }
       })
       .catch((e: unknown) => {
-        if (!cancelled && isCurrentRequest(requestSourceId, version)) {
+        if (
+          !cancelled &&
+          isCurrentRequest(requestSourceId, version) &&
+          sequence === readSequence.current
+        ) {
           setError(e instanceof Error ? e.message : String(e));
         }
       });
@@ -170,6 +181,7 @@ export function useProcessedSpans(elementId: string | null | undefined): UseProc
       try {
         const result = await fn({ sourceElementId: requestSourceId, stableBlockId: blockId });
         if (!isCurrentRequest(requestSourceId, version)) return false;
+        readSequence.current++;
         setBlocks((current) => {
           const next = current.map((block) =>
             block.stableBlockId === result.block.stableBlockId ? result.block : block,

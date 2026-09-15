@@ -384,6 +384,7 @@ vi.mock("../../lib/appApi", async () => {
     isDesktop: () => true,
     appApi: {
       getSourceReturnBriefing: vi.fn().mockResolvedValue({ briefing: null }),
+      getSourcePending: vi.fn().mockResolvedValue({ pending: null }),
       listQueue: h.listQueue,
       getDailyWorkSummary: h.getDailyWorkSummary,
       actOnQueueItem: h.actOnQueueItem,

@@ -146,7 +146,7 @@ PDF/media geometry remains T132/T133 scope.
 # T131 — Honor `needs_later`
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[ ]` not started
+- **Status:** `[~]` implemented and independently reviewed; unified verification pending
 - **Depends on:** T130
 - **Roadmap line:** deferred blocks are reachable via a jump rail (listing `needs_later` and
   `stale_after_edit` blocks) and un-deferring/resolving updates the durable state — block
@@ -172,12 +172,12 @@ updates the durable state. The deferral promise finally pays.
 
 ## Deliverables
 
-- [ ] Jump rail in the reader: a collapsible list/strip of `needs_later` +
+- [x] Jump rail in the reader: a collapsible list/strip of `needs_later` +
       `stale_after_edit` (+ needs-reverify when T123 exists) blocks with snippet previews;
       keyboard next/prev-deferred navigation; entry from the T130 briefing.
-- [ ] Resolution affordances at the rail/inline: un-defer (back to unread/read), mark read /
+- [x] Resolution affordances at the rail/inline: un-defer (back to unread/read), mark read /
       extract (existing verbs), each updating durable block state via the service.
-- [ ] Scheduler note: deferred-block presence already pressures return via `unresolvedRatio` —
+- [x] Scheduler note: deferred-block presence already pressures return via `unresolvedRatio` —
       verify and add a unit test pinning that contract (no new scheduler input here; T112 owns
       interval shaping).
 - [ ] Tests: unit (rail read model, transitions); e2e — defer two blocks, exit (breakdown
@@ -194,6 +194,77 @@ updates the durable state. The deferral promise finally pays.
 
 - This is the trust-repair task for the marking feature — if the rail is buried, the feature
   stays "write-only" in practice. Make next-deferred a first-class shortcut (T048 registry).
+
+## T131 Implementation And Basic Verification (2026-09-15)
+
+Local implementation commit: `T131: make deferred source passages actionable`.
+The user explicitly authorized building on T130's implementation while keeping T130 `[~]`.
+This is an implementation/review checkpoint, not completion of the standard gates.
+
+- `SourcePendingService.list` provides a document-only read model through strict typed
+  `sourcePending:list` IPC. Deferred and stale blocks appear in document order with bounded,
+  normalized current-text previews. Removed/unlocatable stale blocks sort last and remain
+  visible as unavailable; they cannot navigate or mutate. PDF/media and non-source bodies
+  are excluded. Shared block text extraction preserves the existing content-hash calculation.
+- Both readers host the shared `SourcePendingRail`, with a compact collapsible list, T130
+  briefing entry, click navigation and `Alt+[` / `Alt+]` previous/next navigation registered
+  in the shortcut catalogue. Existing text selection/extraction controls remain the extraction
+  workflow. The rail does not introduce a bulk-extraction command or a scheduler algorithm.
+- Resume explicitly chooses `unread` or `read`; neither is terminal. Trusted writes revalidate
+  the source, live geometry, expected state and current content hash, and refuse blocks with
+  live output lineage or live reverify provenance (including transitive descendants when a
+  directly anchored extract was deleted). A distinct output count links to the existing
+  source-scoped `/maintenance/reverify` workflow. No rail action clears provenance or flags.
+- `sourcePending:resume` and `sourcePending:undo` reuse the block repository's transactional,
+  operation-logged writes. A trusted stored preimage plus opaque receipt token implements the
+  same guarded receipt approach used by existing non-global undo workflows. Undo refuses later
+  state/content/output changes; it does not join global undo, whose `update_document` operations
+  are not generally invertible. No schema migration or new scheduling state was introduced.
+- Source-scoped change events refresh the rail, briefing counts and standalone processing
+  decorations after edits, extraction, read-point or block changes. Existing undo notifications
+  refresh the read models too. Briefing entry history and dismissal remain visit-scoped. Read
+  sequences and keyed source instances discard stale reads/mutations. User jumps retain T130's
+  precedence over late read-point/reread responses, verify the live editor target, and commit
+  filter visibility before scrolling. Missing editor targets leave selection unchanged.
+- State mutations compare the editor's normalized ProseMirror node to `persistedDoc`, the last
+  acknowledged saved body, so neither editor nor persistence debounce can authorize an outdated
+  decision. Schema normalization permits imported default attributes without false dirty states.
+- Independent review found and verified fixes for hidden-filter jump ordering, unsaved-editor
+  state changes (including raw-JSON comparison false positives), stale processing reads
+  overwriting current statistics, and hidden transitive reverify counts. No unresolved
+  implementation finding remains. GUI appearance was not tested in this checkpoint.
+
+Actual basic checks (Node 22.20.0 / pnpm 9.12.1; all Vitest runs `--maxWorkers=2`):
+
+- `pnpm exec vitest run packages/local-db/src/source-pending-service.test.ts --maxWorkers=2`:
+  final **8 passed**. Covers ordering/filtering, current previews, unavailable locations, read-only
+  operation count, resume/undo guards, forced operation-log failure rollback, foreign keys,
+  preserved lineage/provenance and scheduler `source_unresolved_shortened` with ratio `1/3`.
+- `pnpm exec vitest run apps/web/src/pages/source/SourcePendingRail.test.tsx
+  apps/web/src/pages/source/SourceReader.test.tsx apps/web/src/pages/source/useDocument.test.tsx
+  apps/web/src/pages/source/useProcessedSpans.test.tsx --maxWorkers=2`: **54 passed** after
+  the interaction fixes. This includes keyboard/click targeting, source switch isolation,
+  pending mutation isolation, unsaved-edit refusal and stale reload suppression.
+- `pnpm exec vitest run apps/web/src/pages/source/pendingEditor.test.ts --maxWorkers=2`:
+  **1 passed**, covering the final normalized-editor guard used by both hosts.
+- `pnpm exec vitest run apps/web/src/pages/source/SourcePendingRail.test.tsx
+  apps/web/src/pages/source/SourceReturnBriefing.test.tsx
+  apps/desktop/src/shared/contract.test.ts --maxWorkers=2`: **301 passed** at that stage;
+  subsequent rail edits were covered by the 54-test run. IPC allowlist/strict payloads,
+  briefing refresh/history/dismissal and rail entry were verified.
+- `apps/web/src/shell/shortcuts.test.ts` passed in the first focused UI run. That run caught
+  a synthetic window key target without `closest`; it was fixed and the rail rerun passed.
+- `pnpm exec vitest run apps/web/src/pages/queue/ProcessQueue.test.tsx -t
+  'renders a source as an inline reading workbench|keeps specialized|sets a source read-point inline'
+  --maxWorkers=2`: **4 selected passed**; other cases were not selected, not claimed as verified.
+- Biome check/format on task-modified files only and `git diff --check`: passed. The only Biome
+  warnings are three pre-existing non-null assertions in the modified T130 briefing test.
+
+Per explicit user instructions, no full `pnpm test`, workspace typecheck, Electron E2E, GUI
+validation, app/server launch, Windows switch or system configuration change was performed.
+Unified verification still needs final typechecking, actual reader/process layout and keyboard
+behavior, real IPC/restart persistence, and the remaining standard gates. Existing T130 deferred
+verification is unchanged. T131 remains `[~]` until the user requests that unified pass.
 
 ---
 

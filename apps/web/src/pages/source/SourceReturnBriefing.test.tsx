@@ -1,6 +1,7 @@
 import type { SourceReturnBriefing as Briefing } from "@interleave/core";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { sourceReadingChanged } from "../../lib/sourceReadingEvents";
 
 const h = vi.hoisted(() => ({ get: vi.fn(), desktop: true }));
 vi.mock("../../lib/appApi", () => ({
@@ -45,6 +46,36 @@ beforeEach(() => {
   h.desktop = true;
 });
 describe("SourceReturnBriefing", () => {
+  it("refreshes current counts without changing entry history, and opens the pending rail", async () => {
+    const open = vi.fn();
+    render(
+      <SourceReturnBriefing
+        sourceId="a"
+        scheduledReturn
+        canJump
+        onJump={vi.fn()}
+        onOpenPending={open}
+      />,
+    );
+    await screen.findByTestId("source-return-briefing");
+    fireEvent.click(screen.getByRole("button", { name: "Pending passages" }));
+    expect(open).toHaveBeenCalledOnce();
+    h.get.mockResolvedValue({
+      briefing: {
+        ...briefing(),
+        show: false,
+        lastVisitAt: "2026-09-15T00:00:00Z",
+        stateCounts: { ...briefing().stateCounts, needs_later: 0 },
+      },
+    });
+    act(() => sourceReadingChanged("a"));
+    await screen.findByText("0 deferred");
+    expect(screen.getByText(/Last recorded reading activity:/)).toHaveTextContent("Sep 1, 2026");
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss briefing" }));
+    act(() => sourceReadingChanged("a"));
+    await act(async () => {});
+    expect(screen.queryByTestId("source-return-briefing")).toBeNull();
+  });
   it("shows trusted current counts, unknown delta, health and last extract; jumps only on command", async () => {
     const onJump = vi.fn();
     render(<SourceReturnBriefing sourceId="a" scheduledReturn canJump onJump={onJump} />);

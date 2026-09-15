@@ -164,6 +164,9 @@ import {
   SettingsGetRequestSchema,
   SettingsUpdateManyRequestSchema,
   SettingsUpdateRequestSchema,
+  SourcePendingListRequestSchema,
+  SourcePendingResumeRequestSchema,
+  SourcePendingUndoRequestSchema,
   SourceReturnBriefingRequestSchema,
   SourcesAcceptOcrRequestSchema,
   SourcesDismissRetirementSuggestionRequestSchema,
@@ -1067,6 +1070,17 @@ export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerCo
   ipcMain.handle(IPC_CHANNELS.sourceReturnBriefing, (_event, rawRequest: unknown) =>
     dbService.getSourceReturnBriefing(SourceReturnBriefingRequestSchema.parse(rawRequest)),
   );
+  ipcMain.handle(IPC_CHANNELS.sourcePendingList, (_event, raw: unknown) => ({
+    pending: dbService.sourcePendingService.list(
+      SourcePendingListRequestSchema.parse(raw).sourceId as import("@interleave/core").ElementId,
+    ),
+  }));
+  ipcMain.handle(IPC_CHANNELS.sourcePendingResume, (_event, raw: unknown) => ({
+    receipt: dbService.sourcePendingService.resume(SourcePendingResumeRequestSchema.parse(raw)),
+  }));
+  ipcMain.handle(IPC_CHANNELS.sourcePendingUndo, (_event, raw: unknown) => ({
+    undone: dbService.sourcePendingService.undo(SourcePendingUndoRequestSchema.parse(raw)),
+  }));
 
   // Re-read proposals (T129). `list`/`item` read-only; `accept`/`dismiss`/`undoAccept` mutate.
   ipcMain.handle(IPC_CHANNELS.rereadProposalsList, (_event, rawRequest: unknown) => {

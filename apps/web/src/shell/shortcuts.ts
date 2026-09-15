@@ -89,6 +89,24 @@ export type PaletteActionId =
  * scope-claimed entry is actually wired by reading the scope's known key set.
  */
 export const SHORTCUTS: readonly ShortcutDef[] = [
+  {
+    id: "previous-pending-passage",
+    get label() {
+      return t("sourceReturn.previousPending");
+    },
+    keys: ["Alt", "["],
+    group: "Reading",
+    scope: "reader",
+  },
+  {
+    id: "next-pending-passage",
+    get label() {
+      return t("sourceReturn.nextPending");
+    },
+    keys: ["Alt", "]"],
+    group: "Reading",
+    scope: "reader",
+  },
   // ---- Navigation (global) -------------------------------------------------
   {
     id: "command-palette",

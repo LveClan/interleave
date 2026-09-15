@@ -388,6 +388,12 @@ export {
   SOURCE_BLOCK_PROCESSING_STATES,
   TERMINAL_SOURCE_BLOCK_PROCESSING_STATES,
 } from "./source";
+export type {
+  ResumeSourceBlockReceipt,
+  ResumeSourceBlockRequest,
+  SourcePendingBlock,
+  SourcePendingBlocks,
+} from "./source-pending";
 // Source reference (the refblock) — citation formatter, one source of truth (./source-ref).
 // Source-reliability metadata (T091) — tier/type/confidence tuples + the badge summary.
 export type {

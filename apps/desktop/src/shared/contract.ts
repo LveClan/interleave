@@ -80,11 +80,14 @@ import {
   REVIEW_RATINGS,
   type ReliabilityTier,
   type RendererSettings,
+  type ResumeSourceBlockReceipt,
+  type ResumeSourceBlockRequest,
   type ReviewModeSelector,
   SOURCE_BLOCK_PROCESSING_STATES,
   SOURCE_TYPES,
   type SourceBlockProcessingDerivation,
   type SourceBlockProcessingState,
+  type SourcePendingBlocks,
   type SourceRef,
   type SourceReturnBriefing,
   type SourceType,
@@ -8490,6 +8493,11 @@ export interface AppApi {
   readonly sourceReturn: {
     briefing(request: SourceReturnBriefingRequest): Promise<SourceReturnBriefingResult>;
   };
+  readonly sourcePending: {
+    list(request: { sourceId: string }): Promise<{ pending: SourcePendingBlocks | null }>;
+    resume(request: ResumeSourceBlockRequest): Promise<{ receipt: ResumeSourceBlockReceipt }>;
+    undo(request: ResumeSourceBlockReceipt): Promise<{ undone: boolean }>;
+  };
   readonly rereadProposals: {
     /** Capped, dismissible re-read proposals (T129) — read-only, strongest-first. */
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
@@ -8669,3 +8677,21 @@ export type SourceReturnBriefingRequest = z.infer<typeof SourceReturnBriefingReq
 export interface SourceReturnBriefingResult {
   readonly briefing: SourceReturnBriefing | null;
 }
+
+export const SourcePendingListRequestSchema = z.object({ sourceId: ElementIdSchema }).strict();
+export const SourcePendingResumeRequestSchema = z
+  .object({
+    sourceId: ElementIdSchema,
+    blockId: z.string().min(1).max(256),
+    expectedState: z.enum(["needs_later", "stale_after_edit"]),
+    contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+    state: z.enum(["unread", "read"]),
+  })
+  .strict();
+export const SourcePendingUndoRequestSchema = z
+  .object({
+    sourceId: ElementIdSchema,
+    blockId: z.string().min(1).max(256),
+    token: z.string().min(1).max(256),
+  })
+  .strict();

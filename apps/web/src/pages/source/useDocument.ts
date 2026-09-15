@@ -39,6 +39,8 @@ export interface UseDocumentResult {
    * position from this. `null` while loading.
    */
   readonly currentDoc: unknown;
+  /** Last body acknowledged by persistence; excludes both debounce windows. */
+  readonly persistedDoc: unknown;
   /**
    * Distinct stable block ids in this source that already have a child extract
    * anchored to them (T018 display markers). M3 DISPLAYS them; creating extracts
@@ -101,6 +103,7 @@ export function useDocument(elementId: string | null | undefined): UseDocumentRe
   const [status, setStatus] = useState<DocumentStatus>(isDesktop() ? "loading" : "no-desktop");
   const [initialDoc, setInitialDoc] = useState<unknown>(null);
   const [currentDoc, setCurrentDoc] = useState<unknown>(null);
+  const [persistedDoc, setPersistedDoc] = useState<unknown>(null);
   const [extractedBlockIds, setExtractedBlockIds] = useState<readonly string[]>([]);
   const [sourceFormat, setSourceFormat] = useState<"pdf" | "video" | null>(null);
   const [mediaSource, setMediaSource] = useState<"local" | "youtube" | null>(null);
@@ -152,6 +155,7 @@ export function useDocument(elementId: string | null | undefined): UseDocumentRe
         const loaded = doc?.prosemirrorJson ?? emptyDoc();
         setInitialDoc(loaded);
         setCurrentDoc(loaded);
+        setPersistedDoc(loaded);
         setExtractedBlockIds(result.extractedBlockIds);
         setSourceFormat(result.sourceFormat ?? null);
         setMediaSource(result.mediaSource ?? null);
@@ -210,6 +214,7 @@ export function useDocument(elementId: string | null | undefined): UseDocumentRe
       // element; a late-resolving save for a navigated-away source never disturbs
       // the now-visible source's state.
       if (idRef.current === targetId) {
+        setPersistedDoc(result.document.prosemirrorJson);
         setPlainText(result.document.plainText);
         setError(null);
       }
@@ -276,6 +281,7 @@ export function useDocument(elementId: string | null | undefined): UseDocumentRe
     status,
     initialDoc,
     currentDoc,
+    persistedDoc,
     extractedBlockIds,
     sourceFormat,
     mediaSource,

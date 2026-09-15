@@ -20,6 +20,7 @@ import { describe, expect, it } from "vitest";
 // hook actually binds without leaving the renderer toolchain.
 import inboxTriageSrc from "../pages/inbox/useInboxTriageShortcuts.ts?raw";
 import processSrc from "../pages/queue/useProcessShortcuts.ts?raw";
+import pendingSrc from "../pages/source/SourcePendingRail.tsx?raw";
 import readerSrc from "../pages/source/SourceReader.tsx?raw";
 import reviewRepairSrc from "../review/ReviewRepairBar.tsx?raw";
 import reviewScreenSrc from "../review/ReviewScreen.tsx?raw";
@@ -108,7 +109,7 @@ describe("registry-vs-handlers drift guard", () => {
   // Source of the hook that binds each scope's keys.
   const SCOPE_SOURCE: Record<ShortcutScope, string> = {
     global: shellSrc,
-    reader: readerSrc,
+    reader: readerSrc + pendingSrc,
     // The review surface binds `␣`/`1–4`/`o` in ReviewScreen and the `E`/`S` repair
     // keys in the repair bar — both own the review keyboard.
     review: reviewScreenSrc + reviewRepairSrc,
@@ -122,6 +123,8 @@ describe("registry-vs-handlers drift guard", () => {
   /** The handler-literal(s) we expect to see in source for a registry keycap. */
   function handlerLiterals(cap: string): string[] {
     switch (cap) {
+      case "Alt":
+        return ["altKey"];
       case "⌘":
         return ["metaKey"];
       case "⇧":

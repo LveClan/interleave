@@ -41,6 +41,7 @@ import {
 } from "@interleave/editor";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { ExternalUrlLink } from "../../components/ExternalUrlLink";
 import { Icon } from "../../components/Icon";
 import { requestInspectorRefresh } from "../../components/inspector/Inspector";
@@ -59,6 +60,7 @@ import {
   type QueueScheduleChoice,
   type RereadItemDetailDto,
 } from "../../lib/appApi";
+import { listenSourceReading } from "../../lib/sourceReadingEvents";
 import {
   AtomicExtractPrompt,
   type AtomicExtractPromptState,
@@ -72,7 +74,9 @@ import { resumeLabel } from "../queue/doneIntentBreakdown";
 import { MediaReader } from "./MediaReader";
 import { PdfReader } from "./PdfReader";
 import { ProcessedSpanButtons, type ProcessingFilter } from "./ProcessedSpanButtons";
+import { isPendingEditorSaved } from "./pendingEditor";
 import { RereadPanel } from "./RereadPanel";
+import { SourcePendingRail } from "./SourcePendingRail";
 import { SourceReturnBriefing } from "./SourceReturnBriefing";
 import { useDocument } from "./useDocument";
 import { useHighlights } from "./useHighlights";
@@ -295,6 +299,7 @@ function SourceReaderVisit() {
   // Whether we have already jumped to the read-point for the current load.
   const jumpedRef = useRef(false);
   const briefingJumpRef = useRef(false);
+  const [pendingOpenSignal, setPendingOpenSignal] = useState(0);
   const briefingJumpDisposeRef = useRef<(() => void) | null>(null);
 
   // A token that changes whenever something that can move the paragraph anchors
@@ -408,6 +413,34 @@ function SourceReaderVisit() {
       flashTimerRef.current = null;
     }, 1600);
   }, []);
+  const jumpToPendingBlock = useCallback(
+    (blockId: string): boolean => {
+      const instance = editorRef.current;
+      if (!instance) return false;
+      let found = false;
+      instance.state.doc.descendants((node) => {
+        if (node.attrs.blockId === blockId) found = true;
+      });
+      if (!found) {
+        toast(t("sourceReturn.moved"));
+        return false;
+      }
+      briefingJumpRef.current = true;
+      jumpedRef.current = true;
+      flushSync(() => setProcessingFilter("all"));
+      briefingJumpDisposeRef.current?.();
+      briefingJumpDisposeRef.current = jumpToSource(instance, blockId).dispose;
+      return true;
+    },
+    [toast],
+  );
+  useEffect(
+    () =>
+      listenSourceReading(id, () => {
+        void proc.reload();
+      }),
+    [id, proc.reload],
+  );
 
   const noteCreatedExtract = useCallback((result: ExtractionCreateResult) => {
     if (result.extract.stage !== "atomic_statement") {
@@ -1205,17 +1238,18 @@ function SourceReaderVisit() {
               sourceId={id}
               scheduledReturn={search.entry === "queue" || rereadId !== null}
               canJump={editorReady && doc.status === "ready"}
-              onJump={(blockId) => {
-                const instance = editorRef.current;
-                if (!instance) return;
-                briefingJumpRef.current = true;
-                jumpedRef.current = true;
-                setProcessingFilter("all");
-                briefingJumpDisposeRef.current?.();
-                const jump = jumpToSource(instance, blockId);
-                briefingJumpDisposeRef.current = jump.dispose;
-                if (jump.result.kind === "fallback") toast(t("sourceReturn.moved"));
-              }}
+              onJump={jumpToPendingBlock}
+              onOpenPending={() => setPendingOpenSignal((value) => value + 1)}
+            />
+            <SourcePendingRail
+              key={id}
+              sourceId={id}
+              canJump={editorReady && doc.status === "ready" && !doc.saving}
+              onJump={jumpToPendingBlock}
+              canMutate={() =>
+                !doc.saving && isPendingEditorSaved(editorRef.current, doc.persistedDoc)
+              }
+              openSignal={pendingOpenSignal}
             />
           </div>
           <div

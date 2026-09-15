@@ -62,20 +62,24 @@ function hashText(text: string): string {
 }
 
 export function computeBlockContentHashes(doc: unknown): Map<BlockId, string> {
-  const hashes = new Map<BlockId, string>();
-  if (!doc || typeof doc !== "object") return hashes;
+  return new Map([...computeBlockTexts(doc)].map(([id, text]) => [id, hashText(text)]));
+}
+
+export function computeBlockTexts(doc: unknown): Map<BlockId, string> {
+  const texts = new Map<BlockId, string>();
+  if (!doc || typeof doc !== "object") return texts;
   const visit = (node: PmNode, parentType?: string): void => {
     const type = node.type ?? "";
     if (shouldCarryBlockId(type, parentType)) {
       const blockId = node.attrs?.blockId;
       if (typeof blockId === "string" && blockId.length > 0) {
-        hashes.set(blockId as BlockId, hashText(normalizeBlockText(nodeText(node))));
+        texts.set(blockId as BlockId, normalizeBlockText(nodeText(node)));
       }
     }
     for (const child of node.content ?? []) visit(child, type);
   };
   visit(doc as PmNode);
-  return hashes;
+  return texts;
 }
 
 export interface MarkBlockInput {

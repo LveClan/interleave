@@ -12,6 +12,7 @@ const h = vi.hoisted(() => ({
   getInspectorData: vi.fn(),
   getLapseClusters: vi.fn(),
   getSourceReturnBriefing: vi.fn(),
+  getSourcePending: vi.fn(),
   getRereadProposalItem: vi.fn(),
   actOnQueueItem: vi.fn(),
   countDescendants: vi.fn(),
@@ -27,7 +28,15 @@ const h = vi.hoisted(() => ({
   getBlockProcessingSummary: vi.fn(),
   refreshInspector: vi.fn(),
   editor: {
-    state: { selection: { empty: true, from: 1 } },
+    state: {
+      selection: { empty: true, from: 1 },
+      doc: {
+        descendants: (fn: (node: { attrs: { blockId: string } }) => void) => {
+          fn({ attrs: { blockId: "blk-1" } });
+          fn({ attrs: { blockId: "blk-2" } });
+        },
+      },
+    },
     commands: { focus: vi.fn() },
   },
   documentState: {
@@ -180,6 +189,7 @@ vi.mock("../../lib/appApi", async () => {
       getBlockProcessingSummary: h.getBlockProcessingSummary,
       getLapseClusters: h.getLapseClusters,
       getSourceReturnBriefing: h.getSourceReturnBriefing,
+      getSourcePending: h.getSourcePending,
       getRereadProposalItem: h.getRereadProposalItem,
     },
   };
@@ -365,6 +375,7 @@ beforeEach(() => {
   // T128 source-page cluster indicator: default to no clusters (renders nothing).
   h.getLapseClusters.mockReset();
   h.getSourceReturnBriefing.mockReset().mockResolvedValue({ briefing: null });
+  h.getSourcePending.mockReset().mockResolvedValue({ pending: null });
   h.getRereadProposalItem.mockReset().mockResolvedValue({ item: null });
   h.getLapseClusters.mockResolvedValue({ asOf: "", windowDays: 30, clusters: [] });
   h.actOnQueueItem.mockReset();
@@ -1140,6 +1151,37 @@ describe("SourceReader", () => {
       "href",
       "https://example.com/source",
     );
+  });
+  it("commits the visible filter before jumping to a pending passage", async () => {
+    h.getSourcePending.mockResolvedValue({
+      pending: {
+        sourceId: "src-1",
+        summary: h.processedState.summary,
+        entries: [
+          {
+            blockId: "blk-2",
+            order: 1,
+            state: "needs_later",
+            preview: "Pending second",
+            locatable: true,
+            canResume: true,
+            contentHash: "a".repeat(64),
+          },
+        ],
+      },
+    });
+    const view = render(<SourceReader />);
+    await view.findByTestId("source-pending-rail");
+    fireEvent.click(view.getByRole("button", { name: "Extracted" }));
+    vi.mocked(jumpToSource).mockImplementationOnce(() => {
+      expect(view.container.querySelector(".reader-page")).toHaveAttribute(
+        "data-processing-filter",
+        "all",
+      );
+      return { result: { kind: "exact" }, dispose: vi.fn() } as never;
+    });
+    fireEvent.click(view.getByRole("button", { name: "Next pending passage" }));
+    expect(jumpToSource).toHaveBeenLastCalledWith(h.editor, "blk-2");
   });
 
   it.each([

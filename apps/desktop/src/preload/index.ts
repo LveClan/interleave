@@ -617,6 +617,11 @@ const appApi: AppApi = {
     briefing: (request: SourceReturnBriefingRequest) =>
       ipcRenderer.invoke(IPC_CHANNELS.sourceReturnBriefing, request),
   },
+  sourcePending: {
+    list: (request) => ipcRenderer.invoke(IPC_CHANNELS.sourcePendingList, request),
+    resume: (request) => ipcRenderer.invoke(IPC_CHANNELS.sourcePendingResume, request),
+    undo: (request) => ipcRenderer.invoke(IPC_CHANNELS.sourcePendingUndo, request),
+  },
   rereadProposals: {
     list: (request?: RereadProposalsListRequest) =>
       ipcRenderer.invoke(IPC_CHANNELS.rereadProposalsList, request),

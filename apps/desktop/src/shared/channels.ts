@@ -167,6 +167,9 @@ export const IPC_CHANNELS = {
   // source-region ancestor that keep lapsing. No `operation_log`, no schedule change.
   lapseClusters: "lapse:clusters",
   sourceReturnBriefing: "sourceReturn:briefing",
+  sourcePendingList: "sourcePending:list",
+  sourcePendingResume: "sourcePending:resume",
+  sourcePendingUndo: "sourcePending:undo",
   // Re-read proposals (T129) — turn a lapse cluster into capped, dismissible re-read work.
   // `list`/`item` are read-only; `accept`/`dismiss`/`undoAccept` are op-logged mutations.
   rereadProposalsList: "rereadProposals:list",

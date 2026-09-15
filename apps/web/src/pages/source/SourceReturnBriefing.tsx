@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Icon } from "../../components/Icon";
 import { format, t, useLocale } from "../../i18n";
 import { appApi, isDesktop } from "../../lib/appApi";
+import { listenSourceReading } from "../../lib/sourceReadingEvents";
+import { UNDO_EVENT } from "../../shell/nav";
 import "./source-return-briefing.css";
 
 /** Mounted with a visit key by each host, so dismissals end when that visit ends. */
@@ -11,11 +13,13 @@ export function SourceReturnBriefing({
   scheduledReturn,
   onJump,
   canJump,
+  onOpenPending,
 }: {
   sourceId: string;
   scheduledReturn: boolean;
   onJump: (blockId: string) => void;
   canJump: boolean;
+  onOpenPending?: () => void;
 }) {
   useLocale();
   const [result, setResult] = useState<{ sourceId: string; value: Briefing | null } | null>(null);
@@ -27,16 +31,37 @@ export function SourceReturnBriefing({
     setResult(null);
     if (!isDesktop()) return;
     let cancelled = false;
-    void appApi
-      .getSourceReturnBriefing({ sourceId, scheduledReturn })
-      .then(({ briefing }) => {
-        if (!cancelled) setResult({ sourceId, value: briefing });
-      })
-      .catch(() => {
-        /* Advisory read failures leave the reading surface available. */
-      });
+    let version = 0;
+    const reload = () => {
+      const request = ++version;
+      void appApi
+        .getSourceReturnBriefing({ sourceId, scheduledReturn })
+        .then(({ briefing }) => {
+          if (!cancelled && request === version)
+            setResult((previous) => ({
+              sourceId,
+              value:
+                previous?.sourceId === sourceId && previous.value && briefing
+                  ? {
+                      ...briefing,
+                      show: previous.value.show,
+                      lastVisitAt: previous.value.lastVisitAt,
+                      visitEvidence: previous.value.visitEvidence,
+                    }
+                  : briefing,
+            }));
+        })
+        .catch(() => {
+          /* Advisory read failures leave the reading surface available. */
+        });
+    };
+    reload();
+    const unlisten = listenSourceReading(sourceId, reload);
+    window.addEventListener(UNDO_EVENT, reload);
     return () => {
       cancelled = true;
+      unlisten();
+      window.removeEventListener(UNDO_EVENT, reload);
     };
   }, [sourceId, scheduledReturn]);
   const data = result?.sourceId === sourceId ? result.value : null;
@@ -140,6 +165,12 @@ export function SourceReturnBriefing({
           <Icon name="postpone" size={13} />
           {t("sourceReturn.firstDeferred")}
         </button>
+        {onOpenPending && (
+          <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenPending}>
+            <Icon name="queue" size={13} />
+            {t("sourceReturn.pendingTitle")}
+          </button>
+        )}
       </div>
     </section>
   );

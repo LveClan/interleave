@@ -838,6 +838,10 @@ mark.extracted {
   max-width: var(--reader-text-measure);
   margin: 0 auto;
 }
+.reader-briefing-slot .source-pending {
+  max-width: var(--reader-text-measure);
+  margin-inline: auto;
+}
 
 .reread-panel {
   flex: 0 0 320px;

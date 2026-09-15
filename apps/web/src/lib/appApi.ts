@@ -14,7 +14,13 @@
  * UI degrade gracefully instead of throwing.
  */
 
-import type { SourceReturnBriefing } from "@interleave/core";
+import type {
+  ResumeSourceBlockReceipt,
+  ResumeSourceBlockRequest,
+  SourcePendingBlocks,
+  SourceReturnBriefing,
+} from "@interleave/core";
+import { withSourceReadingChange } from "./sourceReadingEvents";
 
 /** Liveness/readiness of the desktop shell + local DB. */
 export interface HealthResult {
@@ -5530,6 +5536,11 @@ export interface AppApi {
       scheduledReturn: boolean;
     }): Promise<{ briefing: SourceReturnBriefing | null }>;
   };
+  readonly sourcePending: {
+    list(request: { sourceId: string }): Promise<{ pending: SourcePendingBlocks | null }>;
+    resume(request: ResumeSourceBlockRequest): Promise<{ receipt: ResumeSourceBlockReceipt }>;
+    undo(request: ResumeSourceBlockReceipt): Promise<{ undone: boolean }>;
+  };
   readonly rereadProposals: {
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
     item(request: RereadProposalsItemRequest): Promise<RereadProposalsItemResult>;
@@ -6069,7 +6080,7 @@ export const appApi = {
   },
   /** Upsert an element's document body; logs `update_document` (T015). */
   saveDocument(request: DocumentsSaveRequest): Promise<DocumentsSaveResult> {
-    return requireAppApi().documents.save(request);
+    return withSourceReadingChange(request.elementId, requireAppApi().documents.save(request));
   },
   /** Add a highlight (or other) mark over a stable block range (T020). */
   addDocumentMark(request: DocumentMarksAddRequest): Promise<DocumentMarksAddResult> {
@@ -6097,29 +6108,44 @@ export const appApi = {
   markBlockIgnored(
     request: BlockProcessingMarkBlockRequest,
   ): Promise<BlockProcessingMarkBlockResult> {
-    return requireAppApi().blockProcessing.markIgnored(request);
+    return withSourceReadingChange(
+      request.sourceElementId,
+      requireAppApi().blockProcessing.markIgnored(request),
+    );
   },
   /** Mark a source block processed without output. */
   markBlockProcessed(
     request: BlockProcessingMarkBlockRequest,
   ): Promise<BlockProcessingMarkBlockResult> {
-    return requireAppApi().blockProcessing.markProcessed(request);
+    return withSourceReadingChange(
+      request.sourceElementId,
+      requireAppApi().blockProcessing.markProcessed(request),
+    );
   },
   /** Mark a source block as needing a later pass. */
   markBlockNeedsLater(
     request: BlockProcessingMarkBlockRequest,
   ): Promise<BlockProcessingMarkBlockResult> {
-    return requireAppApi().blockProcessing.markNeedsLater(request);
+    return withSourceReadingChange(
+      request.sourceElementId,
+      requireAppApi().blockProcessing.markNeedsLater(request),
+    );
   },
   /** Restore a source block to explicit unread. */
   markBlockUnread(
     request: BlockProcessingMarkBlockRequest,
   ): Promise<BlockProcessingMarkBlockResult> {
-    return requireAppApi().blockProcessing.markUnread(request);
+    return withSourceReadingChange(
+      request.sourceElementId,
+      requireAppApi().blockProcessing.markUnread(request),
+    );
   },
   /** Lift selected text into a new independent, attention-scheduled extract (T021). */
   createExtraction(request: ExtractionCreateRequest): Promise<ExtractionCreateResult> {
-    return requireAppApi().extractions.create(request);
+    return withSourceReadingChange(
+      request.sourceElementId,
+      requireAppApi().extractions.create(request),
+    );
   },
   /**
    * Author a card (Q&A or cloze) from an extract (T032). One transaction: the card
@@ -6628,7 +6654,7 @@ export const appApi = {
   },
   /** Upsert an element's read-point; logs `set_read_point` (T017). */
   setReadPoint(request: ReadPointSetRequest): Promise<ReadPointSetResult> {
-    return requireAppApi().readPoints.set(request);
+    return withSourceReadingChange(request.elementId, requireAppApi().readPoints.set(request));
   },
   /** Every soft-deleted element with its origin context (T044). Read-only. */
   listTrash(): Promise<TrashListResult> {
@@ -6888,6 +6914,17 @@ export const appApi = {
     scheduledReturn: boolean;
   }): Promise<{ briefing: SourceReturnBriefing | null }> {
     return requireAppApi().sourceReturn.briefing(request);
+  },
+  getSourcePending(sourceId: string): Promise<{ pending: SourcePendingBlocks | null }> {
+    return requireAppApi().sourcePending.list({ sourceId });
+  },
+  resumeSourceBlock(
+    request: ResumeSourceBlockRequest,
+  ): Promise<{ receipt: ResumeSourceBlockReceipt }> {
+    return requireAppApi().sourcePending.resume(request);
+  },
+  undoSourceBlockResume(request: ResumeSourceBlockReceipt): Promise<{ undone: boolean }> {
+    return requireAppApi().sourcePending.undo(request);
   },
   /**
    * Re-read proposals (T129) — capped, dismissible scheduled re-read work over the T128

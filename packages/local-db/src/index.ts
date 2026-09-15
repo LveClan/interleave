@@ -832,6 +832,7 @@ import { resolveSourceRef } from "./source-ref-query";
 import { SourceRepository } from "./source-repository";
 import { SourceYieldQuery } from "./source-yield-query";
 
+export { SourcePendingService } from "./source-pending-service";
 export { SourceReturnBriefingQuery } from "./source-return-briefing-query";
 
 import { SynthesisService } from "./synthesis-service";

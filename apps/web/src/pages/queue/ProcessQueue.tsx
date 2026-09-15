@@ -93,6 +93,8 @@ import {
 import { formatDifficulty, formatStability } from "../../lib/formatFsrs";
 import { CardBody } from "../../review/CardBody";
 import { CardFront } from "../../review/CardFront";
+import { isPendingEditorSaved } from "../source/pendingEditor";
+import { SourcePendingRail } from "../source/SourcePendingRail";
 import { SourceReturnBriefing } from "../source/SourceReturnBriefing";
 import { type UseDocumentResult, useDocument } from "../source/useDocument";
 import { useHighlights } from "../source/useHighlights";
@@ -2060,6 +2062,22 @@ function ProcessSourceWorkbench({
   onSelectionAction: (action: SelectionToolbarAction) => void;
 }) {
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [pendingOpenSignal, setPendingOpenSignal] = useState(0);
+  const jumpToPendingBlock = useCallback(
+    (blockId: string): boolean => {
+      if (!editor) return false;
+      let found = false;
+      editor.state.doc.descendants((node) => {
+        if (node.attrs.blockId === blockId) found = true;
+      });
+      if (!found) return false;
+      onBriefingJump();
+      jumpDispose.current?.();
+      jumpDispose.current = jumpToSource(editor, blockId).dispose;
+      return true;
+    },
+    [editor, onBriefingJump],
+  );
   const jumpDispose = useRef<(() => void) | null>(null);
   useEffect(() => () => jumpDispose.current?.(), []);
   const editorReady = useCallback(
@@ -2099,12 +2117,16 @@ function ProcessSourceWorkbench({
           sourceId={item.id}
           scheduledReturn
           canJump={editor !== null && doc.status === "ready"}
-          onJump={(blockId) => {
-            if (!editor) return;
-            onBriefingJump();
-            jumpDispose.current?.();
-            jumpDispose.current = jumpToSource(editor, blockId).dispose;
-          }}
+          onJump={jumpToPendingBlock}
+          onOpenPending={() => setPendingOpenSignal((value) => value + 1)}
+        />
+        <SourcePendingRail
+          key={item.id}
+          sourceId={item.id}
+          canJump={editor !== null && doc.status === "ready" && !doc.saving}
+          onJump={jumpToPendingBlock}
+          canMutate={() => !doc.saving && isPendingEditorSaved(editor, doc.persistedDoc)}
+          openSignal={pendingOpenSignal}
         />
         <div className="pbar pq-source__pbar" data-testid="process-source-pbar">
           <div

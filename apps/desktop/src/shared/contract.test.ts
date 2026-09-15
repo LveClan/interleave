@@ -135,6 +135,9 @@ import {
   SettingsPatchSchema,
   SettingsUpdateManyRequestSchema,
   SettingsUpdateRequestSchema,
+  SourcePendingListRequestSchema,
+  SourcePendingResumeRequestSchema,
+  SourcePendingUndoRequestSchema,
   SourcesAcceptOcrRequestSchema,
   SourcesDismissRetirementSuggestionRequestSchema,
   SourcesExtractClipRequestSchemaRefined,
@@ -192,6 +195,33 @@ import {
 } from "./contract";
 
 describe("IPC channels", () => {
+  it("bounds the T131 read, resume preconditions and opaque undo receipt", () => {
+    expect(
+      SourcePendingListRequestSchema.safeParse({ sourceId: "source", sql: "select" }).success,
+    ).toBe(false);
+    const request = {
+      sourceId: "source",
+      blockId: "block",
+      state: "read",
+      expectedState: "needs_later",
+      contentHash: "a".repeat(64),
+    };
+    expect(SourcePendingResumeRequestSchema.safeParse(request).success).toBe(true);
+    expect(
+      SourcePendingResumeRequestSchema.safeParse({ ...request, state: "extracted" }).success,
+    ).toBe(false);
+    expect(
+      SourcePendingResumeRequestSchema.safeParse({ ...request, contentHash: "stale" }).success,
+    ).toBe(false);
+    expect(
+      SourcePendingUndoRequestSchema.safeParse({
+        sourceId: "source",
+        blockId: "block",
+        token: "receipt",
+        previous: {},
+      }).success,
+    ).toBe(false);
+  });
   it("exposes exactly the M1 commands plus the M2 inbox mutation + M3 document/read-point + M4 marks/extraction/lineage/extract-review + M5 priority/queue surface and no generic SQL channel", () => {
     expect(Object.values(IPC_CHANNELS).sort()).toEqual(
       [
@@ -317,6 +347,9 @@ describe("IPC channels", () => {
         "review:leeches",
         "lapse:clusters",
         "sourceReturn:briefing",
+        "sourcePending:list",
+        "sourcePending:resume",
+        "sourcePending:undo",
         "rereadProposals:list",
         "rereadProposals:item",
         "rereadProposals:accept",
