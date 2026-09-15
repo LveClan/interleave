@@ -625,6 +625,7 @@ export function QueueScreen() {
       void navigate({
         to: "/source/$id",
         params: { id: dailyWork.resumeSource.id },
+        search: { entry: "queue" },
       });
       return;
     }
@@ -1210,7 +1211,11 @@ export function QueueScreen() {
                     if (!source) return;
                     const id = source.id;
                     select(id);
-                    void navigate({ to: "/source/$id", params: { id } });
+                    void navigate({
+                      to: "/source/$id",
+                      params: { id },
+                      search: { entry: "queue" },
+                    });
                   }}
                 >
                   <Icon name="source" size={14} />

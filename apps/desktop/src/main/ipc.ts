@@ -164,6 +164,7 @@ import {
   SettingsGetRequestSchema,
   SettingsUpdateManyRequestSchema,
   SettingsUpdateRequestSchema,
+  SourceReturnBriefingRequestSchema,
   SourcesAcceptOcrRequestSchema,
   SourcesDismissRetirementSuggestionRequestSchema,
   SourcesExtractClipRequestSchemaRefined,
@@ -1061,6 +1062,11 @@ export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerCo
     const request = LapseClustersListRequestSchema.parse(rawRequest);
     return dbService.listLapseClusters(request);
   });
+
+  // Source re-entry briefing (T130): read-only, with trusted statistics and gating.
+  ipcMain.handle(IPC_CHANNELS.sourceReturnBriefing, (_event, rawRequest: unknown) =>
+    dbService.getSourceReturnBriefing(SourceReturnBriefingRequestSchema.parse(rawRequest)),
+  );
 
   // Re-read proposals (T129). `list`/`item` read-only; `accept`/`dismiss`/`undoAccept` mutate.
   ipcMain.handle(IPC_CHANNELS.rereadProposalsList, (_event, rawRequest: unknown) => {

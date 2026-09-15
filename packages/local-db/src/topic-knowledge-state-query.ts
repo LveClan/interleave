@@ -749,7 +749,7 @@ function ratio(numerator: number, denominator: number): number | null {
   return denominator > 0 ? numerator / denominator : null;
 }
 
-function retentionFor(reviews: readonly ReviewInfo[]): number | null {
+export function retentionFor(reviews: readonly { readonly rating: string }[]): number | null {
   if (reviews.length === 0) return null;
   const retained = reviews.filter((review) => review.rating !== "again").length;
   return retained / reviews.length;

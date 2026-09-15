@@ -34,7 +34,7 @@
 # T130 — Source re-entry briefing
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[ ]` not started
+- **Status:** `[~]` implemented and independently reviewed; unified verification deferred by user
 - **Depends on:** T083
 - **Roadmap line:** opening a scheduled source return renders a since-last-visit briefing —
   read %, new/deferred/stale block counts, descendant card performance, last extraction point —
@@ -60,14 +60,14 @@ payoff on data the block system already stores.
 
 ## Deliverables
 
-- [ ] `SourceReturnBriefing` read model: last-visit timestamp, read% delta, counts by state
+- [x] `SourceReturnBriefing` read model: last-visit timestamp, read% delta, counts by state
       (new/unread, `needs_later`, `stale_after_edit`, needs-reverify when T123 exists),
       descendant card health (count, retention, struggling clusters when T128 exists), last
       extraction point, next-unresolved-block target.
-- [ ] Briefing UI at the top of the reader on scheduled returns: compact, dismissible, with
+- [x] Briefing UI at the top of the reader on scheduled returns: compact, dismissible, with
       one-click "jump to next unresolved" (and "jump to first deferred" — T131 deepens this);
       copy derived from domain predicates (no renderer-invented numbers).
-- [ ] Tests: unit (read model math on seeded block/yield fixtures; scheduled-return gating);
+- [x] Tests: unit (read model math on seeded block/yield fixtures; scheduled-return gating);
       e2e — process-queue into a partially-read fixture source, briefing renders correct
       counts, jump lands on the right block, restart-safe.
 
@@ -80,6 +80,66 @@ payoff on data the block system already stores.
 ## Notes / risks
 
 - Keep it glanceable: one compact strip, not a dashboard — the user is here to read.
+
+## Implementation And Verification (2026-09-15)
+
+Implementation commit: `T130: add source re-entry briefing` (local only).
+
+- `SourceReturnBriefingQuery` reads document sources through `sourceReturn:briefing`, with a
+  strict typed request. It reuses block-processing views/summary, scoped source yield,
+  measured retention, and settings-governed T128 clusters. Reads do not materialize state,
+  reschedule anything, or write an operation log; no migration or new persistent write exists.
+- Historical audit: the database has no per-open visit records or visit-time read-percentage
+  denominator. `lastVisitAt` therefore means **last recorded reading activity**, explicitly
+  labeled in the UI, from read-points, direct extraction, and explicit block actions. Existing
+  operation-log evidence preserves earlier actions overwritten by automatic reconciliation;
+  reconciliation/backfill and generic `elements.updatedAt` are not visits. `readPctDelta` is
+  `null` and displayed as unknown. Block counts and card health are current totals; retention
+  is labeled as a rolling 30-day graded-review rate, excluding edit markers.
+- Prior recorded activity is required. Queue/process returns show the briefing; casual opens
+  show it only after strictly more than seven days. First opens remain quiet. Dismissal lasts
+  the host visit, including same-source search changes. PDF/media and non-source bodies are
+  excluded from T130. Recent extraction labels remain descriptive when their block was removed.
+- Both the standalone reader and process workbench mount the compact shared component. The
+  standalone strip sits outside the document scroller so restoring a distant read-point cannot
+  hide it. Jumps use live stable block IDs, excluding removed stale blocks. Explicit URL targets
+  take priority over automatic resume; a briefing click wins over late read-point/reread loads;
+  unavailable reread targets fall back to the stored read-point. Source changes discard pending
+  results and reset visit UI. English/Chinese resources follow existing i18n conventions without
+  enabling another language.
+- Independent review found and verified fixes for reconciliation misclassified as a visit,
+  briefing visibility after automatic scrolling, dismissal resetting on search changes, and
+  invalid reread targets preventing resume. Light/dark and 900px screenshots were inspected.
+- Environment: clean `main` checkout, WSL2 Linux, Node `22.20.0`, pnpm `9.12.1` selected from the
+  installed Node 22 toolchain. Electron uses the real WSLg GUI with `DISPLAY=:0`; the first launch
+  without DISPLAY failed before app initialization. This was an environment failure, not a pass.
+- Passed focused checks during implementation: 194 tests across query, briefing, reader,
+  ProcessQueue and QueueScreen; IPC contract, queue routing and i18n resource checks also passed.
+  Final behavior after the reread fallback fix: `pnpm exec vitest run
+  packages/local-db/src/source-return-briefing-query.test.ts
+  apps/web/src/pages/source/SourceReturnBriefing.test.tsx
+  apps/web/src/pages/source/SourceReader.test.tsx --maxWorkers=2` passed **44 tests** in 7.12s.
+  Coverage includes all-table read-only snapshots, retention scoping, historical unknowns,
+  stale targets, display gates, per-visit dismissal, A/B/A response isolation, and delayed jumps.
+- `DISPLAY=:0 pnpm e2e tests/electron/source-return-briefing.spec.ts` passed: real queue entry,
+  process entry, counts, viewport visibility, both jumps, dismissal, IPC rejection, and restart.
+  The related run adding `source-reader.spec.ts`, `read-points.spec.ts`, `processed-spans.spec.ts`
+  and `reread-proposals.spec.ts` recorded **15 passed / 1 timeout** (`processed-spans`, 30s).
+  These Electron results precede the final missing/error-reread fallback fix; that fix has final
+  focused host coverage, and final Electron rerun remains for unified verification.
+- `pnpm lint` passed with non-null-assertion warnings in fixture tests; `pnpm typecheck` passed
+  all 15 workspace tasks before the final fallback/import cleanup. Full `pnpm test` was stopped
+  at the user's request after roughly six minutes, with failures observed in PDF-region,
+  concept-members and LibraryScreen tests. A concurrent targeted PDF retry also timed out.
+  These failures have not been resolved or classified as harmless; no full-suite pass is claimed.
+- **User-directed checkpoint:** on 2026-09-15 the user requested stopping full unit tests,
+  running only focused feature checks, and committing now. Unified tests, remaining failure
+  investigation and final broad verification wait for an explicit later request. Keep T130
+  `[~]` until that verification is complete. No further tasks, push, publication or deployment.
+
+Downstream: T131 can reuse the live unresolved/deferred targets and state predicates. Historical
+percentage deltas require an explicit visit snapshot design; current counters cannot supply one.
+PDF/media geometry remains T132/T133 scope.
 
 ---
 

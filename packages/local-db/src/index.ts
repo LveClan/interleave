@@ -831,6 +831,9 @@ import { SourceDedupQuery } from "./source-dedup-query";
 import { resolveSourceRef } from "./source-ref-query";
 import { SourceRepository } from "./source-repository";
 import { SourceYieldQuery } from "./source-yield-query";
+
+export { SourceReturnBriefingQuery } from "./source-return-briefing-query";
+
 import { SynthesisService } from "./synthesis-service";
 import { TaskService } from "./task-service";
 import { TopicKnowledgeStateQuery } from "./topic-knowledge-state-query";

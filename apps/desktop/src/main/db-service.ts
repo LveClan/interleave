@@ -126,6 +126,7 @@ import {
   type SchedulerSignals,
   type SemanticResolveContext,
   SessionPlanQuery,
+  SourceReturnBriefingQuery,
   SourceYieldQuery,
   StandingAutoPostponeService,
   type SynthesisData,
@@ -388,6 +389,8 @@ import type {
   SettingsUpdateManyResult,
   SettingsUpdateResult,
   SettingValue,
+  SourceReturnBriefingRequest,
+  SourceReturnBriefingResult,
   SourcesAcceptOcrRequest,
   SourcesAcceptOcrResult,
   SourcesDismissRetirementSuggestionRequest,
@@ -6655,6 +6658,24 @@ export class DbService {
       ...(request?.limit !== undefined ? { limit: request.limit } : {}),
     });
     return { asOf, windowDays: settings.lapseClusterWindowDays, clusters };
+  }
+
+  getSourceReturnBriefing(request: SourceReturnBriefingRequest): SourceReturnBriefingResult {
+    if (!this.handle) throw new Error("Database is not open");
+    const settings = this.repos.settings.getAppSettings();
+    return {
+      briefing: new SourceReturnBriefingQuery(this.handle.db).get({
+        sourceId: request.sourceId as ElementId,
+        asOf: nowIso(),
+        scheduledReturn: request.scheduledReturn,
+        clusters: {
+          enabled: settings.lapseClusterDetectionEnabled,
+          minLapses: settings.lapseClusterMinLapses,
+          minCards: settings.lapseClusterMinCards,
+          windowDays: settings.lapseClusterWindowDays,
+        },
+      }),
+    };
   }
 
   /**

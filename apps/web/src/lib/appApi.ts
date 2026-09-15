@@ -14,6 +14,8 @@
  * UI degrade gracefully instead of throwing.
  */
 
+import type { SourceReturnBriefing } from "@interleave/core";
+
 /** Liveness/readiness of the desktop shell + local DB. */
 export interface HealthResult {
   readonly status: "ok";
@@ -5522,6 +5524,12 @@ export interface AppApi {
   readonly lapseClusters: {
     list(request?: LapseClustersListRequest): Promise<LapseClustersListResult>;
   };
+  readonly sourceReturn: {
+    briefing(request: {
+      sourceId: string;
+      scheduledReturn: boolean;
+    }): Promise<{ briefing: SourceReturnBriefing | null }>;
+  };
   readonly rereadProposals: {
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
     item(request: RereadProposalsItemRequest): Promise<RereadProposalsItemResult>;
@@ -6874,6 +6882,12 @@ export const appApi = {
    */
   getLapseClusters(request?: LapseClustersListRequest): Promise<LapseClustersListResult> {
     return requireAppApi().lapseClusters.list(request);
+  },
+  getSourceReturnBriefing(request: {
+    sourceId: string;
+    scheduledReturn: boolean;
+  }): Promise<{ briefing: SourceReturnBriefing | null }> {
+    return requireAppApi().sourceReturn.briefing(request);
   },
   /**
    * Re-read proposals (T129) — capped, dismissible scheduled re-read work over the T128

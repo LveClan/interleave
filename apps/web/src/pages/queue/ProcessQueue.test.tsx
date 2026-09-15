@@ -383,6 +383,7 @@ vi.mock("../../lib/appApi", async () => {
     ...actual,
     isDesktop: () => true,
     appApi: {
+      getSourceReturnBriefing: vi.fn().mockResolvedValue({ briefing: null }),
       listQueue: h.listQueue,
       getDailyWorkSummary: h.getDailyWorkSummary,
       actOnQueueItem: h.actOnQueueItem,
@@ -417,6 +418,7 @@ vi.mock("@interleave/editor", async () => {
     ...actual,
     emptyDoc: () => ({ type: "doc", content: [], mockPlainText: "" }),
     setReaderDecorations: vi.fn(),
+    readerDecorationsKey: { getState: vi.fn(() => null) },
     toPlainText: (doc: { mockPlainText?: string } | null | undefined) =>
       doc?.mockPlainText ?? "Edited extract body.",
     toBlockInputs: vi.fn(() => [
@@ -1228,6 +1230,7 @@ describe("ProcessQueue", () => {
     expect(h.navigateSpy).toHaveBeenCalledWith({
       to: "/source/$id",
       params: { id: "source-active" },
+      search: { entry: "queue" },
     });
   });
 
@@ -2331,7 +2334,11 @@ describe("ProcessQueue", () => {
     fireEvent.click(screen.getByTestId("process-action-skip"));
     await waitFor(() => expect(currentItemId()).toBe("source-1"));
     fireEvent.click(screen.getByTestId("process-action-open"));
-    expect(h.navigateSpy).toHaveBeenCalledWith({ to: "/source/$id", params: { id: "source-1" } });
+    expect(h.navigateSpy).toHaveBeenCalledWith({
+      to: "/source/$id",
+      params: { id: "source-1" },
+      search: { entry: "queue" },
+    });
   });
 
   it("opens a card-linked task by clearing inspector selection and routing to card detail", async () => {

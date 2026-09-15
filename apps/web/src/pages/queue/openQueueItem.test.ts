@@ -63,6 +63,7 @@ describe("openQueueItem", () => {
     expect(h.navigate).toHaveBeenLastCalledWith({
       to: "/source/$id",
       params: { id: "source-1" },
+      search: { entry: "queue" },
     });
 
     openQueueItem({ item: queueItem({ type: "extract", id: "extract-1" }), ...h });
@@ -100,6 +101,7 @@ describe("openQueueItem", () => {
     expect(h.navigate).toHaveBeenLastCalledWith({
       to: "/source/$id",
       params: { id: "source-1" },
+      search: { entry: "queue" },
     });
 
     openQueueItem({
@@ -168,7 +170,7 @@ describe("openQueueItem", () => {
     expect(h.navigate).toHaveBeenLastCalledWith({
       to: "/source/$id",
       params: { id: "source-9" },
-      search: { reread: "reread-1", n: expect.any(Number) },
+      search: { reread: "reread-1", n: expect.any(Number), entry: "queue" },
     });
   });
 

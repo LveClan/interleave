@@ -35,6 +35,8 @@
 import { renderClozePrompt } from "@interleave/core";
 import {
   type Editor,
+  jumpToSource,
+  readerDecorationsKey,
   SourceEditor,
   type SourceEditorChange,
   setReaderDecorations,
@@ -91,6 +93,7 @@ import {
 import { formatDifficulty, formatStability } from "../../lib/formatFsrs";
 import { CardBody } from "../../review/CardBody";
 import { CardFront } from "../../review/CardFront";
+import { SourceReturnBriefing } from "../source/SourceReturnBriefing";
 import { type UseDocumentResult, useDocument } from "../source/useDocument";
 import { useHighlights } from "../source/useHighlights";
 import { type UseReadPointResult, useReadPoint } from "../source/useReadPoint";
@@ -757,6 +760,7 @@ export function ProcessQueue() {
       void navigate({
         to: "/source/$id",
         params: { id: dailyWork.resumeSource.id },
+        search: { entry: "queue" },
       });
     }
   }, [dailyWork, navigate, select]);
@@ -1007,7 +1011,7 @@ export function ProcessQueue() {
       extractedBlockIds: doc.extractedBlockIds,
       highlights: sourceHighlights.highlights,
       processed: [],
-      flashedBlockId: null,
+      flashedBlockId: readerDecorationsKey.getState(sourceEditor.state)?.flashedBlockId ?? null,
     });
     if (currentId && sourceReadPoint.readPoint && sourceJumpedRef.current !== currentId) {
       sourceReadPoint.jump(sourceEditor);
@@ -1780,6 +1784,9 @@ export function ProcessQueue() {
             sourceSelectionPosition={sourceSelection.position}
             onSourceSelectionAction={onSourceSelectionAction}
             onSourceEditorReady={onSourceEditorReady}
+            onSourceBriefingJump={() => {
+              sourceJumpedRef.current = currentId;
+            }}
             onSetSourceReadPoint={() => void setSourceReadPoint()}
             extractSelectionPosition={extractSelection.position}
             onExtractSelectionAction={onExtractSelectionAction}
@@ -2041,6 +2048,7 @@ function ProcessSourceWorkbench({
   readPoint,
   selectionPosition,
   onEditorReady,
+  onBriefingJump,
   onSelectionAction,
 }: {
   item: QueueItemSummary;
@@ -2048,8 +2056,19 @@ function ProcessSourceWorkbench({
   readPoint: UseReadPointResult;
   selectionPosition: SelectionToolbarPosition | null;
   onEditorReady: (editor: Editor | null) => void;
+  onBriefingJump: () => void;
   onSelectionAction: (action: SelectionToolbarAction) => void;
 }) {
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const jumpDispose = useRef<(() => void) | null>(null);
+  useEffect(() => () => jumpDispose.current?.(), []);
+  const editorReady = useCallback(
+    (instance: Editor | null) => {
+      setEditor(instance);
+      onEditorReady(instance);
+    },
+    [onEditorReady],
+  );
   const progress = readPoint.progress(doc.currentDoc);
   const progressPct = readPoint.progressFraction(doc.currentDoc) * 100;
   // Identity (title, author, URL, status, priority, scheduler) is owned by the
@@ -2075,6 +2094,18 @@ function ProcessSourceWorkbench({
   return (
     <div className="pq-source" data-testid="process-source-workbench">
       <div className="pq-source__rail" data-testid="process-source-rail">
+        <SourceReturnBriefing
+          key={item.id}
+          sourceId={item.id}
+          scheduledReturn
+          canJump={editor !== null && doc.status === "ready"}
+          onJump={(blockId) => {
+            if (!editor) return;
+            onBriefingJump();
+            jumpDispose.current?.();
+            jumpDispose.current = jumpToSource(editor, blockId).dispose;
+          }}
+        />
         <div className="pbar pq-source__pbar" data-testid="process-source-pbar">
           <div
             className="pbar__fill"
@@ -2110,7 +2141,7 @@ function ProcessSourceWorkbench({
               openLinksOnClick
               debounceMs={180}
               onChange={doc.save}
-              onEditorReady={onEditorReady}
+              onEditorReady={editorReady}
             />
           )}
         </div>
@@ -2370,6 +2401,7 @@ function ProcessCard({
   sourceSelectionPosition,
   onSourceSelectionAction,
   onSourceEditorReady,
+  onSourceBriefingJump,
   onSetSourceReadPoint,
   extractSelectionPosition,
   onExtractSelectionAction,
@@ -2421,6 +2453,7 @@ function ProcessCard({
   sourceSelectionPosition: SelectionToolbarPosition | null;
   onSourceSelectionAction: (action: SelectionToolbarAction) => void;
   onSourceEditorReady: (editor: Editor | null) => void;
+  onSourceBriefingJump: () => void;
   onSetSourceReadPoint: () => void;
   extractSelectionPosition: SelectionToolbarPosition | null;
   onExtractSelectionAction: (action: SelectionToolbarAction) => void;
@@ -2670,6 +2703,7 @@ function ProcessCard({
           readPoint={sourceReadPoint}
           selectionPosition={sourceSelectionPosition}
           onEditorReady={onSourceEditorReady}
+          onBriefingJump={onSourceBriefingJump}
           onSelectionAction={onSourceSelectionAction}
         />
       ) : isExtract ? (

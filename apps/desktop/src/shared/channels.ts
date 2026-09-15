@@ -166,6 +166,7 @@ export const IPC_CHANNELS = {
   // Lapse-cluster detection (T128) — read-only: groups of live cards sharing a
   // source-region ancestor that keep lapsing. No `operation_log`, no schedule change.
   lapseClusters: "lapse:clusters",
+  sourceReturnBriefing: "sourceReturn:briefing",
   // Re-read proposals (T129) — turn a lapse cluster into capped, dismissible re-read work.
   // `list`/`item` are read-only; `accept`/`dismiss`/`undoAccept` are op-logged mutations.
   rereadProposalsList: "rereadProposals:list",

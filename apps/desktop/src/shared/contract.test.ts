@@ -316,6 +316,7 @@ describe("IPC channels", () => {
         "review:grade",
         "review:leeches",
         "lapse:clusters",
+        "sourceReturn:briefing",
         "rereadProposals:list",
         "rereadProposals:item",
         "rereadProposals:accept",

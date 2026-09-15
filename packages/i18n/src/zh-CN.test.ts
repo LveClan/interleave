@@ -5,6 +5,7 @@ import { menu } from "./locales/zh-CN/menu";
 import { optimization } from "./locales/zh-CN/optimization";
 import { settings } from "./locales/zh-CN/settings";
 import { shell } from "./locales/zh-CN/shell";
+import { sourceReturn } from "./locales/zh-CN/sourceReturn";
 import { trash } from "./locales/zh-CN/trash";
 import { workload } from "./locales/zh-CN/workload";
 import { validateLanguage } from "./validate";
@@ -14,7 +15,7 @@ const chinese = {
   code: "zh-CN",
   nativeName: "Simplified Chinese",
   direction: "ltr",
-  messages: { common, menu, optimization, settings, shell, trash, workload },
+  messages: { common, menu, optimization, settings, shell, trash, workload, sourceReturn },
 } as const satisfies LanguageDefinition;
 
 describe("Simplified Chinese translation resources", () => {

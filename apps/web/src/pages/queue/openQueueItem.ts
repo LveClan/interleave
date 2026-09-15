@@ -33,7 +33,7 @@ function routeToElement(
   options: { linkedTaskTarget?: boolean } = {},
 ): void {
   if (type === "source" || (options.linkedTaskTarget && type === "topic")) {
-    void navigate({ to: "/source/$id", params: { id } });
+    void navigate({ to: "/source/$id", params: { id }, search: { entry: "queue" } });
     return;
   }
 
@@ -71,7 +71,7 @@ export function openQueueItem({ item, navigate, select, asOf }: OpenQueueItemOpt
     void navigate({
       to: "/source/$id",
       params: { id: item.linkedSourceId },
-      search: { reread: item.id, n: Date.now() },
+      search: { reread: item.id, n: Date.now(), entry: "queue" },
     });
     return;
   }

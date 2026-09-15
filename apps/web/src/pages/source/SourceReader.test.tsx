@@ -1,4 +1,6 @@
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import type { SourceReturnBriefing as Briefing } from "@interleave/core";
+import { jumpToReadPoint, jumpToSource } from "@interleave/editor";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => ({
@@ -9,6 +11,8 @@ const h = vi.hoisted(() => ({
   select: vi.fn(),
   getInspectorData: vi.fn(),
   getLapseClusters: vi.fn(),
+  getSourceReturnBriefing: vi.fn(),
+  getRereadProposalItem: vi.fn(),
   actOnQueueItem: vi.fn(),
   countDescendants: vi.fn(),
   softDeleteSubtree: vi.fn(),
@@ -175,6 +179,8 @@ vi.mock("../../lib/appApi", async () => {
       createExtraction: h.createExtraction,
       getBlockProcessingSummary: h.getBlockProcessingSummary,
       getLapseClusters: h.getLapseClusters,
+      getSourceReturnBriefing: h.getSourceReturnBriefing,
+      getRereadProposalItem: h.getRereadProposalItem,
     },
   };
 });
@@ -358,6 +364,8 @@ beforeEach(() => {
   h.getInspectorData.mockReset();
   // T128 source-page cluster indicator: default to no clusters (renders nothing).
   h.getLapseClusters.mockReset();
+  h.getSourceReturnBriefing.mockReset().mockResolvedValue({ briefing: null });
+  h.getRereadProposalItem.mockReset().mockResolvedValue({ item: null });
   h.getLapseClusters.mockResolvedValue({ asOf: "", windowDays: 30, clusters: [] });
   h.actOnQueueItem.mockReset();
   // The source-delete control now reads the blast radius first (T135 / U7). Default to a
@@ -1132,5 +1140,80 @@ describe("SourceReader", () => {
       "href",
       "https://example.com/source",
     );
+  });
+
+  it.each([
+    "missing",
+    "error",
+  ])("restores the read-point when a reread target is %s", async (outcome) => {
+    h.search = { reread: "old-task" };
+    h.readPointState.readPoint = { blockId: "blk-1", offset: 0 };
+    if (outcome === "error") h.getRereadProposalItem.mockRejectedValue(new Error("unavailable"));
+    else h.getRereadProposalItem.mockResolvedValue({ item: null });
+    vi.mocked(jumpToReadPoint).mockClear();
+    const view = render(<SourceReader />);
+    await waitFor(() =>
+      expect(jumpToReadPoint).toHaveBeenCalledWith(h.editor, h.readPointState.readPoint),
+    );
+    view.unmount();
+    h.search = {};
+  });
+
+  it.each([
+    false,
+    true,
+  ])("a briefing jump wins over a late read-point or reread response (reread=%s)", async (reread) => {
+    h.search = reread ? { reread: "task-1", entry: "queue" } : { entry: "queue" };
+    h.readPointState.readPoint = null;
+    h.getSourceReturnBriefing.mockResolvedValue({
+      briefing: {
+        sourceId: "src-1",
+        asOf: "2026-09-15T00:00:00Z",
+        show: true,
+        lastVisitAt: "2026-09-01T00:00:00Z",
+        visitEvidence: "reading_activity",
+        readPct: 0.5,
+        readPctDelta: null,
+        stateCounts: h.processedState.summary.stateCounts,
+        unresolvedBlocks: 1,
+        needsReverifyOutputs: 0,
+        cards: { count: 0, mature: 0, leeches: 0, retention: null, reviewCount: 0, windowDays: 30 },
+        strugglingGroups: { count: 0, windowDays: 30 },
+        lastExtraction: null,
+        nextUnresolvedBlockId: "blk-2",
+        firstDeferredBlockId: null,
+      } satisfies Briefing,
+    });
+    let resolveItem: (value: unknown) => void = () => {};
+    h.getRereadProposalItem.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveItem = resolve;
+        }),
+    );
+    vi.mocked(jumpToSource).mockClear();
+    vi.mocked(jumpToReadPoint).mockClear();
+    const view = render(<SourceReader />);
+    await view.findByTestId("source-return-briefing");
+    fireEvent.click(view.getByRole("button", { name: "Next unresolved" }));
+    expect(jumpToSource).toHaveBeenLastCalledWith(h.editor, "blk-2");
+    h.readPointState.readPoint = { blockId: "blk-1", offset: 0 };
+    view.rerender(<SourceReader />);
+    if (reread) {
+      await act(async () =>
+        resolveItem({
+          item: {
+            taskElementId: "task-1",
+            region: { sourceElementId: "src-1", blockIds: ["blk-1"], label: "Region", page: null },
+            members: [],
+            windowDays: 30,
+          },
+        }),
+      );
+    }
+    expect(jumpToReadPoint).not.toHaveBeenCalled();
+    expect(jumpToSource).toHaveBeenCalledTimes(1);
+    view.unmount();
+    h.search = {};
   });
 });

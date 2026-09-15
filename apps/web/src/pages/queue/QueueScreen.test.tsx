@@ -781,6 +781,7 @@ describe("QueueScreen", () => {
     expect(h.navigateSpy).toHaveBeenCalledWith({
       to: "/source/$id",
       params: { id: "source-active" },
+      search: { entry: "queue" },
     });
 
     h.selectSpy.mockClear();
@@ -791,6 +792,7 @@ describe("QueueScreen", () => {
     expect(h.navigateSpy).toHaveBeenCalledWith({
       to: "/source/$id",
       params: { id: "source-active" },
+      search: { entry: "queue" },
     });
   });
 
@@ -1035,6 +1037,7 @@ describe("QueueScreen", () => {
     expect(h.navigateSpy).toHaveBeenCalledWith({
       to: "/source/$id",
       params: { id: "source-1" },
+      search: { entry: "queue" },
     });
   });
 
@@ -1070,6 +1073,7 @@ describe("QueueScreen", () => {
     expect(h.navigateSpy).toHaveBeenCalledWith({
       to: "/source/$id",
       params: { id: "source-1" },
+      search: { entry: "queue" },
     });
     expect(h.navigateSpy).not.toHaveBeenCalledWith({ to: "/process", search: {} });
   });

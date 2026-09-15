@@ -3,13 +3,23 @@ import { menu } from "./locales/en/menu";
 import { optimization } from "./locales/en/optimization";
 import { settings } from "./locales/en/settings";
 import { shell } from "./locales/en/shell";
+import { sourceReturn } from "./locales/en/sourceReturn";
 import { trash } from "./locales/en/trash";
 import { workload } from "./locales/en/workload";
 import { pseudoLanguage } from "./pseudo";
 
 declare const __INTERLEAVE_I18N_TEST__: boolean;
 
-export const english = { common, menu, settings, shell, trash, optimization, workload } as const;
+export const english = {
+  common,
+  menu,
+  settings,
+  shell,
+  trash,
+  optimization,
+  workload,
+  sourceReturn,
+} as const;
 
 export type Messages = {
   [N in keyof typeof english]?: Record<string, string>;

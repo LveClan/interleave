@@ -50,6 +50,7 @@ import { useLineageDelete } from "../../components/lineage/useLineageDelete";
 import { type DoneIntent, DoneIntentMenu } from "../../components/queue/DoneIntentMenu";
 import { ScheduleMenu } from "../../components/queue/ScheduleMenu";
 import { Snackbar } from "../../components/Snackbar";
+import { t } from "../../i18n";
 import {
   appApi,
   type ExtractionCreateResult,
@@ -72,6 +73,7 @@ import { MediaReader } from "./MediaReader";
 import { PdfReader } from "./PdfReader";
 import { ProcessedSpanButtons, type ProcessingFilter } from "./ProcessedSpanButtons";
 import { RereadPanel } from "./RereadPanel";
+import { SourceReturnBriefing } from "./SourceReturnBriefing";
 import { useDocument } from "./useDocument";
 import { useHighlights } from "./useHighlights";
 import { useProcessedSpans } from "./useProcessedSpans";
@@ -207,6 +209,11 @@ function SourceClusterIndicator({ sourceId }: { sourceId: string | null }) {
 
 export function SourceReader() {
   const { id } = useParams({ from: "/source/$id" });
+  return <SourceReaderVisit key={id} />;
+}
+
+function SourceReaderVisit() {
+  const { id } = useParams({ from: "/source/$id" });
   // Jump-to-source target (T022): `?block=<stableId>&offset=<n>&n=<nonce>` set by
   // `useNavigateToLocation` when the user clicks "Jump to source" on an extract.
   // The source route declares no `validateSearch`, so search is loosely typed.
@@ -223,6 +230,7 @@ export function SourceReader() {
     // T129 — opened from a `reread_region` task: the task element id whose failing
     // cards the reader panels beside the column (and whose region it jumps to).
     reread?: string;
+    entry?: string;
   };
   const jumpBlock = typeof search.block === "string" ? search.block : null;
   const jumpOffset = typeof search.offset === "number" ? search.offset : 0;
@@ -264,10 +272,11 @@ export function SourceReader() {
   // T129 — the fetched re-read item (failing cards + region) when arriving via
   // `?reread=<taskId>`. Held in state so the aside renders beside the column.
   const [rereadItem, setRereadItem] = useState<RereadItemDetailDto | null>(null);
+  const [rereadPending, setRereadPending] = useState(rereadId !== null);
   // A stale-async token: each fetch captures the `rereadId` it was launched for, so a
   // response that resolves after the user rapid-opened a DIFFERENT re-read (or cleared
   // it) is discarded — prevents A's cards flashing on B.
-  const rereadFetchTokenRef = useRef<string | null>(null);
+  const rereadFetchTokenRef = useRef<object | null>(null);
   // Latches the region jump so it fires once per fetched item (re-armed on a new item).
   const rereadJumpedRef = useRef<string | null>(null);
   const exitActionBusyRef = useRef(false);
@@ -285,6 +294,8 @@ export function SourceReader() {
   const [editorReady, setEditorReady] = useState(false);
   // Whether we have already jumped to the read-point for the current load.
   const jumpedRef = useRef(false);
+  const briefingJumpRef = useRef(false);
+  const briefingJumpDisposeRef = useRef<(() => void) | null>(null);
 
   // A token that changes whenever something that can move the paragraph anchors
   // changes (the loaded doc, the processed set — dimming shrinks a block's margin —
@@ -328,22 +339,31 @@ export function SourceReader() {
   useEffect(() => {
     if (!desktop || !rereadId) {
       setRereadItem(null);
+      setRereadPending(false);
       rereadFetchTokenRef.current = null;
       return;
     }
-    rereadFetchTokenRef.current = rereadId;
+    const token = {};
+    setRereadPending(true);
+    rereadFetchTokenRef.current = token;
+    setRereadItem(null);
     void appApi
       .getRereadProposalItem({ taskElementId: rereadId })
       .then((res) => {
         // Discard if `reread` changed (or cleared) before this resolved.
-        if (rereadFetchTokenRef.current !== rereadId) return;
-        setRereadItem(res.item);
+        if (rereadFetchTokenRef.current !== token) return;
+        setRereadItem(res.item?.region.sourceElementId === id ? res.item : null);
+        setRereadPending(false);
       })
       .catch(() => {
-        if (rereadFetchTokenRef.current !== rereadId) return;
+        if (rereadFetchTokenRef.current !== token) return;
         setRereadItem(null); // a reading surface stays calm; no error chrome
+        setRereadPending(false);
       });
-  }, [desktop, rereadId]);
+    return () => {
+      if (rereadFetchTokenRef.current === token) rereadFetchTokenRef.current = null;
+    };
+  }, [desktop, rereadId, id]);
 
   // A fresh editor must be minted once per loaded document so its `content`
   // reflects the async-loaded body (Tiptap only reads `content` on creation).
@@ -368,6 +388,7 @@ export function SourceReader() {
         clearTimeout(flashTimerRef.current);
         flashTimerRef.current = null;
       }
+      briefingJumpDisposeRef.current?.();
     };
   }, []);
 
@@ -595,7 +616,14 @@ export function SourceReader() {
     });
     // Resume near the read-point exactly once per load, so reopening lands at the
     // saved block rather than the top.
-    if (!jumpedRef.current && rp.readPoint) {
+    if (
+      !jumpedRef.current &&
+      !briefingJumpRef.current &&
+      !jumpBlock &&
+      !rereadPending &&
+      !rereadItem?.region.blockIds.length &&
+      rp.readPoint
+    ) {
       jumpToReadPoint(editor, rp.readPoint);
       jumpedRef.current = true;
     }
@@ -608,6 +636,9 @@ export function SourceReader() {
     hl.highlights,
     proc.processed,
     editorKey,
+    jumpBlock,
+    rereadPending,
+    rereadItem,
   ]);
 
   // Jump-to-source (T022): when arriving with a `?block=…` target (clicked "Jump
@@ -637,7 +668,7 @@ export function SourceReader() {
   // path above. Latched per item (`rereadJumpedRef`) so it fires once, re-arming when a
   // new item loads. A missing/moved block degrades gracefully (the jump's own fallback).
   useEffect(() => {
-    if (!desktop || !rereadItem) return;
+    if (!desktop || !rereadItem || jumpBlock || briefingJumpRef.current) return;
     const firstBlock = rereadItem.region.blockIds[0];
     if (!firstBlock) return;
     if (rereadJumpedRef.current === rereadItem.taskElementId) return;
@@ -651,7 +682,7 @@ export function SourceReader() {
         : "Jumped to the section to re-read",
     );
     return dispose;
-  }, [desktop, rereadItem, editorReady, toast]);
+  }, [desktop, rereadItem, editorReady, toast, jumpBlock]);
 
   // Clicking a persisted highlight removes it (T020 — highlights are removable).
   // The highlight is rendered as an inline `mark.hl` ProseMirror decoration
@@ -1168,99 +1199,119 @@ export function SourceReader() {
 
       {/* reading column (+ the T129 re-read aside, when present) */}
       <div className="reader-with-aside" data-has-aside={rereadItem ? "true" : "false"}>
-        <div
-          className="reader-page"
-          data-processing-filter={processingFilter}
-          data-hide-ignored={hideIgnored ? "true" : "false"}
-        >
-          <div className="reader-rail">
-            <div className="reader-railhead">
-              <span data-testid="reader-progress">{blockProgressText}</span>
-              <span>
-                {blockSummary
-                  ? `${blockSummary.extractedBlockCount} extracted · ${Math.round(
-                      blockSummary.ignoredRatio * 100,
-                    )}% ignored`
-                  : "read · set a read-point with ␣"}
-              </span>
-            </div>
-            <div className="pbar" style={{ marginBottom: 28 }}>
-              <div
-                className="pbar__fill"
-                data-testid="reader-pbar-fill"
-                style={{ width: `${blockProgressPct}%` }}
-              />
-            </div>
-            <fieldset className="reader-block-filters">
-              <legend className="reader-block-filters__legend">Block processing filter</legend>
-              {(
-                [
-                  ["all", "All"],
-                  ["hide_processed", "Hide processed"],
-                  ["unresolved", "Unresolved"],
-                  ["extracted", "Extracted"],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  className="reader-filter-btn"
-                  aria-pressed={processingFilter === value}
-                  data-testid={`reader-filter-${value}`}
-                  onClick={() => setProcessingFilter(value)}
-                >
-                  {label}
-                </button>
-              ))}
-              <button
-                type="button"
-                className="reader-filter-btn reader-filter-btn--toggle"
-                aria-pressed={hideIgnored}
-                data-testid="reader-filter-hide-ignored"
-                onClick={() => setHideIgnored((value) => !value)}
-              >
-                <Icon name="eye" size={13} /> {hideIgnored ? "Ignored hidden" : "Ignored visible"}
-              </button>
-            </fieldset>
-
-            {doc.status === "loading" ? (
-              <p className="dimmed" data-testid="reader-loading">
-                Loading source…
-              </p>
-            ) : doc.status === "error" ? (
-              <p className="text-danger text-sm" data-testid="reader-error">
-                {doc.error ?? "Failed to load this source."}
-              </p>
-            ) : (
-              <>
-                <SourceEditor
-                  key={editorKey}
-                  initialDoc={doc.initialDoc}
-                  editable
-                  readerDecorations
-                  openLinksOnClick
-                  onChange={doc.save}
-                  onEditorReady={onEditorReady}
+        <div className="reader-main-column">
+          <div className="reader-briefing-slot">
+            <SourceReturnBriefing
+              sourceId={id}
+              scheduledReturn={search.entry === "queue" || rereadId !== null}
+              canJump={editorReady && doc.status === "ready"}
+              onJump={(blockId) => {
+                const instance = editorRef.current;
+                if (!instance) return;
+                briefingJumpRef.current = true;
+                jumpedRef.current = true;
+                setProcessingFilter("all");
+                briefingJumpDisposeRef.current?.();
+                const jump = jumpToSource(instance, blockId);
+                briefingJumpDisposeRef.current = jump.dispose;
+                if (jump.result.kind === "fallback") toast(t("sourceReturn.moved"));
+              }}
+            />
+          </div>
+          <div
+            className="reader-page"
+            data-processing-filter={processingFilter}
+            data-hide-ignored={hideIgnored ? "true" : "false"}
+          >
+            <div className="reader-rail">
+              <div className="reader-railhead">
+                <span data-testid="reader-progress">{blockProgressText}</span>
+                <span>
+                  {blockSummary
+                    ? `${blockSummary.extractedBlockCount} extracted · ${Math.round(
+                        blockSummary.ignoredRatio * 100,
+                      )}% ignored`
+                    : "read · set a read-point with ␣"}
+                </span>
+              </div>
+              <div className="pbar" style={{ marginBottom: 28 }}>
+                <div
+                  className="pbar__fill"
+                  data-testid="reader-pbar-fill"
+                  style={{ width: `${blockProgressPct}%` }}
                 />
-                {/* Per-paragraph "mark processed (dim)" / "restore" affordance (T026),
+              </div>
+              <fieldset className="reader-block-filters">
+                <legend className="reader-block-filters__legend">Block processing filter</legend>
+                {(
+                  [
+                    ["all", "All"],
+                    ["hide_processed", "Hide processed"],
+                    ["unresolved", "Unresolved"],
+                    ["extracted", "Extracted"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className="reader-filter-btn"
+                    aria-pressed={processingFilter === value}
+                    data-testid={`reader-filter-${value}`}
+                    onClick={() => setProcessingFilter(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="reader-filter-btn reader-filter-btn--toggle"
+                  aria-pressed={hideIgnored}
+                  data-testid="reader-filter-hide-ignored"
+                  onClick={() => setHideIgnored((value) => !value)}
+                >
+                  <Icon name="eye" size={13} /> {hideIgnored ? "Ignored hidden" : "Ignored visible"}
+                </button>
+              </fieldset>
+
+              {doc.status === "loading" ? (
+                <p className="dimmed" data-testid="reader-loading">
+                  Loading source…
+                </p>
+              ) : doc.status === "error" ? (
+                <p className="text-danger text-sm" data-testid="reader-error">
+                  {doc.error ?? "Failed to load this source."}
+                </p>
+              ) : (
+                <>
+                  <SourceEditor
+                    key={editorKey}
+                    initialDoc={doc.initialDoc}
+                    editable
+                    readerDecorations
+                    openLinksOnClick
+                    onChange={doc.save}
+                    onEditorReady={onEditorReady}
+                  />
+                  {/* Per-paragraph "mark processed (dim)" / "restore" affordance (T026),
                   overlaid on the live editor's paragraph blocks (never mutating its
                   DOM). Re-measures whenever the doc or the processed/highlight set
                   changes (the `revision` token). */}
-                <ProcessedSpanButtons
-                  editor={editor}
-                  editorReady={editorReady}
-                  processed={proc}
-                  processingFilter={processingFilter}
-                  hideIgnored={hideIgnored}
-                  revision={processedRevision}
-                  onToggled={(result) => {
-                    void refreshSourceInspector();
-                    toast(result === "marked" ? "Marked processed" : "Restored");
-                  }}
-                  onToggleFailed={() => toast("Could not update processed mark")}
-                />
-              </>
-            )}
+                  <ProcessedSpanButtons
+                    editor={editor}
+                    editorReady={editorReady}
+                    processed={proc}
+                    processingFilter={processingFilter}
+                    hideIgnored={hideIgnored}
+                    revision={processedRevision}
+                    onToggled={(result) => {
+                      void refreshSourceInspector();
+                      toast(result === "marked" ? "Marked processed" : "Restored");
+                    }}
+                    onToggleFailed={() => toast("Could not update processed mark")}
+                  />
+                </>
+              )}
+            </div>
           </div>
         </div>
         {rereadItem ? (

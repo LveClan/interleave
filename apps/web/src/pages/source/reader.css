@@ -823,6 +823,21 @@ mark.extracted {
      measure (the rail caps its own width at `--reader-text-measure`). */
   flex: 1 1 auto;
 }
+.reader-main-column {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.reader-briefing-slot {
+  padding-inline: 28px;
+  flex-shrink: 0;
+}
+.reader-briefing-slot .source-return {
+  max-width: var(--reader-text-measure);
+  margin: 0 auto;
+}
 
 .reread-panel {
   flex: 0 0 320px;

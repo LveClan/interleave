@@ -86,6 +86,7 @@ import {
   type SourceBlockProcessingDerivation,
   type SourceBlockProcessingState,
   type SourceRef,
+  type SourceReturnBriefing,
   type SourceType,
   TASK_TYPES,
   type TaskType,
@@ -8486,6 +8487,9 @@ export interface AppApi {
      */
     list(request?: LapseClustersListRequest): Promise<LapseClustersListResult>;
   };
+  readonly sourceReturn: {
+    briefing(request: SourceReturnBriefingRequest): Promise<SourceReturnBriefingResult>;
+  };
   readonly rereadProposals: {
     /** Capped, dismissible re-read proposals (T129) — read-only, strongest-first. */
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
@@ -8653,4 +8657,15 @@ export interface AppApi {
      */
     onCreateBackup(callback: () => void): () => void;
   };
+}
+
+export const SourceReturnBriefingRequestSchema = z
+  .object({
+    sourceId: ElementIdSchema,
+    scheduledReturn: z.boolean(),
+  })
+  .strict();
+export type SourceReturnBriefingRequest = z.infer<typeof SourceReturnBriefingRequestSchema>;
+export interface SourceReturnBriefingResult {
+  readonly briefing: SourceReturnBriefing | null;
 }

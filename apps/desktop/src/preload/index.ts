@@ -150,6 +150,7 @@ import type {
   SettingsGetRequest,
   SettingsUpdateManyRequest,
   SettingsUpdateRequest,
+  SourceReturnBriefingRequest,
   SourcesAcceptOcrRequest,
   SourcesDismissRetirementSuggestionRequest,
   SourcesExtractClipRequest,
@@ -611,6 +612,10 @@ const appApi: AppApi = {
   lapseClusters: {
     list: (request?: LapseClustersListRequest) =>
       ipcRenderer.invoke(IPC_CHANNELS.lapseClusters, request),
+  },
+  sourceReturn: {
+    briefing: (request: SourceReturnBriefingRequest) =>
+      ipcRenderer.invoke(IPC_CHANNELS.sourceReturnBriefing, request),
   },
   rereadProposals: {
     list: (request?: RereadProposalsListRequest) =>

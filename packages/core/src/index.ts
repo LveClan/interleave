@@ -408,6 +408,10 @@ export {
   RELIABILITY_TIERS,
   SOURCE_TYPES,
 } from "./source-ref";
+export {
+  type SourceReturnBriefing,
+  shouldShowSourceReturnBriefing,
+} from "./source-return-briefing";
 // Source-yield scoring — the pure, tunable per-source yield rank (T083, ./source-yield).
 export type { SourceYieldInputs, SourceYieldVerdict, YieldBand } from "./source-yield";
 export {
