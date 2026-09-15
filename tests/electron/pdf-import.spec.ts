@@ -202,7 +202,7 @@ test("drawing a region on a page creates a media_fragment image extract (T065)",
   await captureBaseUrl(page);
 
   const id = await firstInboxId(page);
-  await page.goto(`${baseUrl}/source/${id}`);
+  await page.goto(`${baseUrl}/source/${id}?page=1`);
   await page.waitForLoadState("domcontentloaded");
   await expect(page.getByTestId("pdf-reader")).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId("pdf-page-1")).toBeVisible();
@@ -220,10 +220,16 @@ test("drawing a region on a page creates a media_fragment image extract (T065)",
   // Drag a rectangle over page 1 (a chunk of the page's interior).
   const box = await overlay.boundingBox();
   if (!box) throw new Error("region overlay has no bounding box");
-  const startX = box.x + box.width * 0.2;
-  const startY = box.y + box.height * 0.2;
-  const endX = box.x + box.width * 0.7;
-  const endY = box.y + box.height * 0.6;
+  const viewport = await page.getByTestId("pdf-reader-scroll").boundingBox();
+  if (!viewport) throw new Error("PDF viewport has no bounding box");
+  const left = Math.max(box.x, viewport.x),
+    top = Math.max(box.y, viewport.y);
+  const width = Math.min(box.x + box.width, viewport.x + viewport.width) - left;
+  const height = Math.min(box.y + box.height, viewport.y + viewport.height) - top;
+  const startX = left + width * 0.2;
+  const startY = top + height * 0.2;
+  const endX = left + width * 0.7;
+  const endY = top + height * 0.6;
   await page.mouse.move(startX, startY);
   await page.mouse.down();
   await page.mouse.move(startX + (endX - startX) / 2, startY + (endY - startY) / 2);

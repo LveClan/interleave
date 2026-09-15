@@ -28,6 +28,7 @@ vi.mock("pdfjs-dist/build/pdf.worker.mjs?url", () => ({ default: "/mock-pdf-work
 vi.mock("pdfjs-dist", () => {
   class TextLayer {
     container: HTMLElement;
+    cancel = vi.fn();
 
     constructor({ container }: { container: HTMLElement }) {
       this.container = container;
@@ -49,7 +50,7 @@ vi.mock("pdfjs-dist", () => {
       getTextContent: vi.fn(async () => ({
         items: h.textItemsByPage.get(pageNumber) ?? [],
       })),
-      render: vi.fn(() => ({ promise: Promise.resolve() })),
+      render: vi.fn(() => ({ promise: Promise.resolve(), cancel: vi.fn() })),
       cleanup: vi.fn(),
     };
   }
@@ -59,7 +60,7 @@ vi.mock("pdfjs-dist", () => {
     TextLayer,
     getDocument: vi.fn(() => ({
       promise: Promise.resolve({
-        numPages: 2,
+        numPages: h.textItemsByPage.size,
         getPage: vi.fn((pageNumber: number) => Promise.resolve(fakePage(pageNumber))),
         destroy: h.docDestroy,
       }),
@@ -173,6 +174,34 @@ function renderReader() {
 }
 
 describe("PdfReader", () => {
+  it("releases offscreen canvases and recreates selectable pages on return", async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    h.textItemsByPage = new Map(
+      Array.from({ length: 5 }, (_, i) => [i + 1, [{ str: `Page ${i + 1}` }]]),
+    );
+    const props = {
+      elementId: "src-1",
+      blockPages: { "blk-page-1": 1, "blk-page-5": 5 },
+      toast: h.toast,
+    };
+    const view = render(<PdfReader {...props} />);
+    await waitFor(() =>
+      expect(view.getByTestId("pdf-page-1").querySelector(".textLayer span")).not.toBeNull(),
+    );
+    expect(view.getByTestId("pdf-page-5").querySelector("canvas")).toBeNull();
+    const firstCanvas = view.getByTestId("pdf-page-1").querySelector("canvas");
+    view.rerender(<PdfReader {...props} jump={{ page: 5 }} />);
+    await waitFor(() =>
+      expect(view.getByTestId("pdf-page-5").querySelector(".textLayer span")).not.toBeNull(),
+    );
+    expect(view.getByTestId("pdf-page-1").querySelector("canvas")).toBeNull();
+    expect(firstCanvas?.width).toBe(0);
+    view.rerender(<PdfReader {...props} jump={{ page: 1 }} />);
+    await waitFor(() =>
+      expect(view.getByTestId("pdf-page-1").querySelector(".textLayer span")).not.toBeNull(),
+    );
+    expect(view.getByTestId("pdf-page-5").querySelector("canvas")).toBeNull();
+  });
   it("restricts a section to its pages and retains the loaded PDF across equal-range refreshes", async () => {
     const view = render(
       <PdfReader

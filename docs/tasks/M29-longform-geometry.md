@@ -286,7 +286,7 @@ verification is unchanged. T131 remains `[~]` until the user requests that unifi
 # T132 — PDF block-state parity
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[~]` 已实现并审查，统一验收待进行
+- **Status:** `[x]` Windows functional acceptance complete; commit `T132: 完成 PDF 处理状态与千页规模验收`
 - **Depends on:** T064, T065
 - **Roadmap line:** PDF sources carry durable per-page/per-region processing state (the
   existing 7-state vocabulary + reconciliation), feeding source progress, Done-intent
@@ -316,20 +316,20 @@ already done for documents; this is extension to a second geometry.
 
 ## Deliverables
 
-- [ ] Unit model: page-level rows for every PDF source (created lazily on first open or at
+- [x] Unit model: page-level rows for every PDF source (created lazily on first open or at
       import — decide and document; lazy avoids 400-row writes for never-opened files), plus
       region-level derivation for extracted regions (a page with live region extracts counts
       extracted; remaining page text stays unread/read — document the page-state composition
       rule).
-- [ ] Reader integration: page states driven by reading position + explicit verbs (mark-read,
+- [x] Reader integration: page states driven by reading position + explicit verbs (mark-read,
       ignore, needs-later at page granularity — a compact per-page affordance, not per-line
       chrome); the existing extraction flows set extracted state via lineage derivation.
-- [ ] Consumers verified: source progress, Done-intent breakdown, `sourceProcessing` ratios,
+- [x] Consumers verified: source progress, Done-intent breakdown, `sourceProcessing` ratios,
       T083 read%, T130 briefing, T131 rail — all render PDF sources with no special-casing
       (tests per consumer).
-- [ ] Reconciliation: page-content hashes; re-import/OCR transitions changed pages to
+- [x] Reconciliation: page-content hashes; re-import/OCR transitions changed pages to
       `stale_after_edit` (and T123 propagation picks it up when present).
-- [ ] Tests: unit (row lifecycle, composition rule, reconciliation); e2e — read a fixture PDF,
+- [x] Tests: unit (row lifecycle, composition rule, reconciliation); e2e — read a fixture PDF,
       mark pages, extract a region, exit shows an honest breakdown, return shows the briefing,
       restart-safe.
 
@@ -348,6 +348,14 @@ already done for documents; this is extension to a second geometry.
 ---
 
 ## T132 Implementation And Basic Verification (2026-09-15)
+
+Final acceptance: [Windows evidence](./M29-windows-acceptance-2026-09-15.md).
+`pdf-processing.spec.ts` covers page decisions, partial extraction, real OCR,
+consumer consistency and restart. The final PDF import/region/1000-page rerun
+passed 6/6 with unchanged performance budgets; the related process-entry rerun
+passed 2/2. Offscreen canvases are released and re-rendered on return. Original
+independent review is retained; final fixes were self-reviewed under the user's
+single-agent instruction. Earlier deferred checks are now superseded.
 
 Local commit: `T132: persist PDF page processing states`. This checkpoint follows the user's
 explicit limited verification scope; T130/T131 remain pending unified verification.

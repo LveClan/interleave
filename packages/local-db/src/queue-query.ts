@@ -983,10 +983,8 @@ export class QueueQuery {
       : batch
         ? false
         : (this.repos.review.findCardById(element.id)?.card.isRetired ?? false);
-    const ownsRange = this.repos.queue.ownsReadingRange(element.id);
-    const queueEligibility = !ownsRange
-      ? { eligible: false, reason: "Reading is scheduled through chapter ranges" }
-      : batch && !inventory
+    const queueEligibility =
+      batch && !inventory
         ? { eligible: true, reason: null }
         : queueEligibilityFor(element, dueAt, asOfMs, cardRetired);
     const fallow = inventory

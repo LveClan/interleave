@@ -22,7 +22,7 @@ import type { BlockId, ElementId, IsoTimestamp } from "@interleave/core";
 import { PRIORITY_LABEL_VALUE } from "@interleave/core";
 import { type DbHandle, elements, operationLog } from "@interleave/db";
 import { eq } from "drizzle-orm";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BlockProcessingService } from "./block-processing-service";
 import { CardRetirementService } from "./card-retirement-service";
 import { DocumentRepository } from "./document-repository";
@@ -143,6 +143,14 @@ function buildDueSet(): {
 }
 
 describe("QueueQuery", () => {
+  it("keeps FSRS eligibility independent of source chapter ownership", () => {
+    const { qaCardId } = buildDueSet();
+    const ownership = vi.spyOn(repos.queue, "ownsReadingRange").mockReturnValue(false);
+    expect(queue.summaryFor(qaCardId, NOW)?.queueEligible).toBe(true);
+    expect(queue.summaryForMany([qaCardId], NOW).get(qaCardId)?.queueEligible).toBe(true);
+    expect(queue.list({ asOf: NOW }).items.some((item) => item.id === qaCardId)).toBe(true);
+    expect(ownership).not.toHaveBeenCalled();
+  });
   it("returns due cards AND due attention items, each tagged with the right scheduler", () => {
     const { sourceId, extractId, qaCardId, clozeCardId } = buildDueSet();
     const { items } = queue.list({ asOf: NOW });

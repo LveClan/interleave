@@ -554,17 +554,21 @@ export function PdfReader({
   // Jump-to-page-region (T065): when the route carries a `jump` target, scroll that
   // page into view and flash its region outline briefly.
   const [flashRegion, setFlashRegion] = useState<{ page: number; region: RegionRect } | null>(null);
-  const jumpUnit = useCallback((id: string): boolean => {
-    const page = Number(id.replace(/^pdf:page:/, ""));
-    const el = Number.isInteger(page)
-      ? scrollRef.current?.querySelector<HTMLElement>(`[data-pdf-page="${page}"]`)
-      : null;
-    if (!el) return false;
-    activeJump.current = true;
-    el.scrollIntoView({ block: "start", behavior: "smooth" });
-    setActivePage(page);
-    return true;
-  }, []);
+  const jumpUnit = useCallback(
+    (id: string): boolean => {
+      const page = Number(id.replace(/^pdf:page:/, ""));
+      const el = Number.isInteger(page)
+        ? scrollRef.current?.querySelector<HTMLElement>(`[data-pdf-page="${page}"]`)
+        : null;
+      if (!el) return false;
+      activeJump.current = true;
+      el.scrollIntoView({ block: "start", behavior: "smooth" });
+      setActivePage(page);
+      onActivePageChangeRef.current?.(page, pages.length);
+      return true;
+    },
+    [pages.length],
+  );
   useEffect(() => {
     if (status !== "ready" || jump) return;
     let cancelled = false;
@@ -585,19 +589,15 @@ export function PdfReader({
     const signature = JSON.stringify(jump);
     if (appliedRouteJump.current === signature) return;
     appliedRouteJump.current = signature;
-    const root = scrollRef.current;
-    const el = root?.querySelector<HTMLElement>(`[data-pdf-page="${jump.page}"]`);
-    if (!el) {
+    if (!jumpUnit(`pdf:page:${jump.page}`)) {
       toast(t("sourceReturn.moved"));
       return;
     }
-    activeJump.current = true;
-    el.scrollIntoView({ block: "start", behavior: "smooth" });
     if (jump.region) {
       setFlashRegion({ page: jump.page, region: jump.region });
     }
     return undefined;
-  }, [status, jump, toast]);
+  }, [status, jump, toast, jumpUnit]);
   useEffect(() => {
     if (!flashRegion) return;
     const timer = setTimeout(() => setFlashRegion(null), 2200);
@@ -617,9 +617,9 @@ export function PdfReader({
 
   return (
     <div className="pdf-reader" data-testid="pdf-reader">
-      {!sectionId && <StructuralSkim key={elementId} sourceId={elementId} />}
+      {!sectionId && <StructuralSkim key={`skim:${elementId}`} sourceId={elementId} />}
       <ProcessingUnitControls
-        key={elementId}
+        key={`processing:${elementId}`}
         sourceId={elementId}
         activeId={`pdf:page:${activePage}`}
         ready={status === "ready"}
@@ -800,18 +800,21 @@ function PdfPageView({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const textRef = useRef<HTMLDivElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
-  const renderedRef = useRef(false);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const [drag, setDrag] = useState<DragRect | null>(null);
   const shouldRender = Math.abs(page.pageNumber - activePage) <= RENDER_WINDOW;
 
   useEffect(() => {
-    if (!shouldRender || renderedRef.current) return;
+    if (!shouldRender) return;
     const doc = docRef.current;
     const canvas = canvasRef.current;
     const textEl = textRef.current;
     if (!doc || !canvas || !textEl) return;
     let cancelled = false;
+    let renderTask:
+      | ReturnType<Awaited<ReturnType<PDFDocumentProxy["getPage"]>>["render"]>
+      | undefined;
+    let textLayer: TextLayer | undefined;
     void (async () => {
       const pdfPage = await doc.getPage(page.pageNumber);
       if (cancelled) return;
@@ -824,7 +827,8 @@ function PdfPageView({
       canvas.style.width = `${viewport.width}px`;
       canvas.style.height = `${viewport.height}px`;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+      renderTask = pdfPage.render({ canvasContext: ctx, viewport });
+      await renderTask.promise;
       if (cancelled) return;
       // Text layer for selection (positioned over the canvas).
       const textContent = await pdfPage.getTextContent();
@@ -832,17 +836,23 @@ function PdfPageView({
       textEl.replaceChildren();
       textEl.style.width = `${viewport.width}px`;
       textEl.style.height = `${viewport.height}px`;
-      const textLayer = new TextLayer({
+      textLayer = new TextLayer({
         textContentSource: textContent,
         container: textEl,
         viewport,
       });
       await textLayer.render();
-      renderedRef.current = true;
       pdfPage.cleanup();
-    })();
+    })().catch((error: unknown) => {
+      if (!cancelled) console.error("PDF page rendering failed", error);
+    });
     return () => {
       cancelled = true;
+      renderTask?.cancel();
+      textLayer?.cancel();
+      canvas.width = 0;
+      canvas.height = 0;
+      textEl.replaceChildren();
     };
   }, [shouldRender, docRef, page.pageNumber]);
 
@@ -942,8 +952,8 @@ function PdfPageView({
       data-testid={`pdf-page-${page.pageNumber}`}
       style={{ width: page.width, height: page.height }}
     >
-      <canvas ref={canvasRef} className="pdf-page-canvas" />
-      <div ref={textRef} className="pdf-page-text textLayer" />
+      {shouldRender && <canvas ref={canvasRef} className="pdf-page-canvas" />}
+      {shouldRender && <div ref={textRef} className="pdf-page-text textLayer" />}
 
       {/* Already-extracted region outlines (a light marker, like extracted spans). */}
       {extractedRegions.map((r) => (
