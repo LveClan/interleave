@@ -29,6 +29,11 @@
 >
 > **File/line references** verified 2026-06-09/10; re-verify with grep before editing.
 
+> **2026-09-15 basic-check follow-up:** the user subsequently authorized full Linux basic
+> checks and repair of their failures. See [results and repairs](./M29-basic-checks-2026-09-15.md).
+> All 5020 tests have final passing evidence across the full run and affected-file reruns;
+> lint and typechecking pass. Electron/Windows/GUI acceptance remains deferred; statuses stay `[~]`.
+
 ---
 
 # T130 — Source re-entry briefing

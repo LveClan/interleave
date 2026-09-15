@@ -16,6 +16,7 @@ interface OpenQueueItemOptions {
   readonly navigate: NavigateFn;
   readonly select: (id: string | null) => void;
   readonly asOf?: string | undefined;
+  readonly scheduledReturn?: boolean;
 }
 
 function routeToProcess(navigate: NavigateFn, asOf?: string): void {
@@ -31,10 +32,14 @@ function routeToElement(
   id: string,
   navigate: NavigateFn,
   asOf?: string,
-  options: { linkedTaskTarget?: boolean } = {},
+  options: { linkedTaskTarget?: boolean; scheduledReturn?: boolean } = {},
 ): void {
   if (type === "source" || (options.linkedTaskTarget && type === "topic")) {
-    void navigate({ to: "/source/$id", params: { id }, search: { entry: "queue" } });
+    void navigate({
+      to: "/source/$id",
+      params: { id },
+      ...(options.scheduledReturn ? { search: { entry: "queue" as const } } : {}),
+    });
     return;
   }
 
@@ -55,10 +60,20 @@ function routeToElement(
  * Open an element row in its work surface. Linked verification tasks open the element
  * they protect, while unlinked tasks stay in the process loop.
  */
-export function openQueueItem({ item, navigate, select, asOf }: OpenQueueItemOptions): void {
+export function openQueueItem({
+  item,
+  navigate,
+  select,
+  asOf,
+  scheduledReturn = true,
+}: OpenQueueItemOptions): void {
   if (item.sectionSourceTitle) {
     select(item.id);
-    void navigate({ to: "/source/$id", params: { id: item.id }, search: { entry: "queue" } });
+    void navigate({
+      to: "/source/$id",
+      params: { id: item.id },
+      ...(scheduledReturn ? { search: { entry: "queue" as const } } : {}),
+    });
     return;
   }
   if (item.type === "task" && item.taskType === "weekly_review") {
@@ -86,10 +101,11 @@ export function openQueueItem({ item, navigate, select, asOf }: OpenQueueItemOpt
     select(item.linkedElementType === "card" ? null : item.linkedElementId);
     routeToElement(item.linkedElementType ?? null, item.linkedElementId, navigate, asOf, {
       linkedTaskTarget: true,
+      scheduledReturn,
     });
     return;
   }
 
   select(item.type === "card" ? null : item.id);
-  routeToElement(item.type, item.id, navigate, asOf);
+  routeToElement(item.type, item.id, navigate, asOf, { scheduledReturn });
 }

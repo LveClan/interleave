@@ -25,7 +25,14 @@ import type {
   IsoTimestamp,
   ReviewState,
 } from "@interleave/core";
-import { cards, elements, type InterleaveDatabase, reviewStates } from "@interleave/db";
+import {
+  cards,
+  elements,
+  type InterleaveDatabase,
+  reviewStates,
+  sourceSections,
+  sources,
+} from "@interleave/db";
 import {
   and,
   asc,
@@ -34,6 +41,7 @@ import {
   inArray,
   isNotNull,
   isNull,
+  like,
   lte,
   notInArray,
   count as sqlCount,
@@ -73,6 +81,18 @@ function attentionTypeCondition(types?: readonly ElementType[]) {
 
 export class QueueRepository {
   constructor(private readonly db: InterleaveDatabase) {}
+  private needsOwnershipFilter(types?: readonly ElementType[]): boolean {
+    if (types && !types.some((type) => type === "source" || type === "topic")) return false;
+    return (
+      this.db.select({ id: sourceSections.topicId }).from(sourceSections).limit(1).get() != null ||
+      this.db
+        .select({ id: sources.elementId })
+        .from(sources)
+        .where(like(sources.snapshotKey, "%.epub"))
+        .limit(1)
+        .get() != null
+    );
+  }
   ownsReadingRange(id: string): boolean {
     return new SourceSectionRepository(this.db).isQueueOwner(id);
   }
@@ -181,6 +201,8 @@ export class QueueRepository {
         ),
       )
       .orderBy(asc(elements.dueAt));
+    if (!this.needsOwnershipFilter(options.types))
+      return (limit === undefined ? base.all() : base.limit(limit).all()).map(rowToElement);
     const sections = new SourceSectionRepository(this.db);
     const rows = base.all().filter((row) => sections.isQueueOwner(row.id));
     return (limit === undefined ? rows : rows.slice(0, limit)).map(rowToElement);
@@ -238,7 +260,24 @@ export class QueueRepository {
     asOf: IsoTimestamp,
     options: { readonly types?: readonly ElementType[] } = {},
   ): number {
-    return this.dueAttentionItems(asOf, undefined, options).length;
+    const typeCondition = attentionTypeCondition(options.types);
+    if (!typeCondition) return 0;
+    const condition = and(
+      typeCondition,
+      isNull(elements.deletedAt),
+      notInArray(elements.status, QUEUE_EXCLUDED_STATUSES as ElementStatus[]),
+      isNotNull(elements.dueAt),
+      lte(elements.dueAt, asOf),
+    );
+    if (!this.needsOwnershipFilter(options.types))
+      return this.db.select({ n: sqlCount() }).from(elements).where(condition).get()?.n ?? 0;
+    const sections = new SourceSectionRepository(this.db);
+    return this.db
+      .select({ id: elements.id })
+      .from(elements)
+      .where(condition)
+      .all()
+      .filter((row) => sections.isQueueOwner(row.id)).length;
   }
 
   /**

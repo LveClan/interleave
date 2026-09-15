@@ -538,6 +538,8 @@ Detailed specs: [`plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md`](./p
 
 ## Progress log
 
+- **2026-09-15 — M29 Linux basic-check repairs:** user-authorized full checks found 23 unit/property/UI failures plus format/type errors. Repairs and independent review complete; 5020 tests across 476 files have passing evidence from the full run plus final affected-file reruns, with lint/typecheck passing. See [the detailed check record](./tasks/M29-basic-checks-2026-09-15.md). T130-T134 remain `[~]` pending Electron/Windows/GUI acceptance.
+
 - **2026-09-15 — T134 implementation/review checkpoint:** `T134: add structural skim and chapter scheduling` (local only). PDF/book/document ranges, chapter returns and parent remainder ownership implemented with one-batch undo and canonical lineage/statistics. Final focused evidence: 11 repository cases, one migration case, two skim/reader cases, 17 PDF/queue/i18n checks and three selected IPC checks passed across bounded runs. Unified acceptance remains deferred; all M29 tasks retain `[~]`.
 
 - **2026-09-15 — T133 implementation/review checkpoint:** `T133: persist media segment states and playback coverage` (local only). Followed T132 `05996f0`; actual playback interval union, stable segment states and cross-format consumers verified with bounded focused tests. Both tasks remain `[~]`; no unified verification or T134 started.

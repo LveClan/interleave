@@ -321,6 +321,7 @@ function FallowSection({
   const [reason, setReason] = useState(element.fallowReason ?? "");
   const [message, setMessage] = useState<string | null>(null);
   const fallowUntil = element.fallowUntil ?? null;
+  const persistedRest = useRef({ until: fallowUntil, reason: element.fallowReason ?? "" });
   const untilMs = fallowUntil ? Date.parse(fallowUntil) : Number.NaN;
   const state = fallowUntil
     ? Number.isFinite(untilMs) && untilMs > Date.now()
@@ -332,8 +333,12 @@ function FallowSection({
   const canSubmit = Number.isFinite(requestedMs) && requestedMs > Date.now() && !busy;
 
   useEffect(() => {
-    setDate(defaultFallowDate(element.fallowUntil));
-    setReason(element.fallowReason ?? "");
+    const next = { until: element.fallowUntil ?? null, reason: element.fallowReason ?? "" };
+    if (persistedRest.current.until === next.until && persistedRest.current.reason === next.reason)
+      return;
+    persistedRest.current = next;
+    setDate(defaultFallowDate(next.until));
+    setReason(next.reason);
     setMessage(null);
   }, [element.fallowUntil, element.fallowReason]);
 

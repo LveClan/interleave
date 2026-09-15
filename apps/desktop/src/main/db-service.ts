@@ -3915,7 +3915,6 @@ export class DbService {
    */
   saveDocument(request: DocumentsSaveRequest): DocumentsSaveResult {
     const elementId = request.elementId as ElementId;
-    const element = this.repos.elements.findById(elementId);
     const saved = this.require().db.transaction((tx) => {
       const document = this.repos.documents.upsertWithin(tx, {
         elementId,
@@ -3932,7 +3931,7 @@ export class DbService {
             }
           : {}),
       });
-      if (element?.type === "source" || element?.type === "topic") {
+      if (this.isLiveSource(elementId)) {
         this.blockProcessingService.reconcileSourceDocumentWithin(
           tx,
           elementId,
@@ -4019,8 +4018,7 @@ export class DbService {
   }
 
   private isLiveSource(sourceElementId: ElementId): boolean {
-    const element = this.repos.elements.findById(sourceElementId);
-    return (element?.type === "source" || element?.type === "topic") && element.deletedAt == null;
+    return new SourceSectionRepository(this.require().db).isProcessingSource(sourceElementId);
   }
 
   markBlockIgnored(request: BlockProcessingMarkBlockRequest): BlockProcessingMarkBlockResult {

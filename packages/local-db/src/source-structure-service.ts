@@ -363,7 +363,7 @@ export class SourceStructureService {
     const token = newRowId();
     return this.db.transaction((tx) =>
       withOperationContext(tx, { skimBatch: token, batchId: token }, () => {
-        const service = new SourceStructureService(tx as InterleaveDatabase);
+        const service = this;
         const repo = new SourceSectionRepository(tx);
         const previous = service.snapshot(input.sourceId);
         const seen = new Set<string>();

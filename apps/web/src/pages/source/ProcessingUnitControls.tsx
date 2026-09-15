@@ -193,7 +193,7 @@ export function ProcessingUnitControls({
           )}
           {t("sourceReturn.resolvedUnits", {
             count: resolved,
-            total: format.number(blocks.length),
+            total: blocks.length,
           })}
         </span>
         {actions

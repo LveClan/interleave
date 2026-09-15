@@ -7,7 +7,7 @@
  * the typed `appApi.semanticSearch` bridge (the SAME embedding-based retrieval as
  * the main `/search` box), with navigation delegated to the caller.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { t, useLocale } from "../i18n";
 import { appApi, isDesktop, type SearchResult } from "../lib/appApi";
@@ -242,7 +242,7 @@ export function CommandPalette({
   }, [paletteRows.length]);
 
   // Keyboard handling while open.
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {

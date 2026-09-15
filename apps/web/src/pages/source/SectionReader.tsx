@@ -161,7 +161,7 @@ export function SectionReader({
           className="btn btn--ghost btn--sm"
           onClick={() => void navigate({ to: "/source/$id", params: { id: data.sourceId } })}
         >
-          <Icon name="arrowLeft" size={14} />
+          <Icon name="chevronLeft" size={14} />
           {t("sourceReturn.sectionOf", { title: data.sourceTitle })}
         </button>
         <strong>{data.title}</strong>

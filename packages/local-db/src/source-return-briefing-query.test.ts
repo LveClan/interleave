@@ -240,7 +240,7 @@ describe("SourceReturnBriefingQuery", () => {
       })?.strugglingGroups.count,
     ).toBe(0);
   });
-  it("returns null for missing, deleted, non-source, PDF and media elements", () => {
+  it("rejects missing/deleted sources and reports PDF/media without invented visit history", () => {
     const query = new SourceReturnBriefingQuery(handle.db);
     expect(
       query.get({ sourceId: "missing" as ElementId, asOf: NOW, scheduledReturn: true }),
@@ -250,13 +250,18 @@ describe("SourceReturnBriefingQuery", () => {
       .set({ snapshotKey: "vault/file.pdf" })
       .where(eq(sources.elementId, sourceId))
       .run();
-    expect(get()).toBeNull();
+    expect(get()).toMatchObject({ show: false, lastVisitAt: null, readPctDelta: null });
     handle.db
       .update(sources)
       .set({ snapshotKey: null, mediaKind: "youtube" })
       .where(eq(sources.elementId, sourceId))
       .run();
-    expect(get()).toBeNull();
+    expect(get()).toMatchObject({
+      show: false,
+      lastVisitAt: null,
+      readPctDelta: null,
+      readPctKnown: false,
+    });
     handle.db.update(sources).set({ mediaKind: null }).where(eq(sources.elementId, sourceId)).run();
     new ElementRepository(handle.db).softDelete(sourceId);
     expect(get()).toBeNull();

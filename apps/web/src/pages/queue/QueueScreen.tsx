@@ -531,7 +531,7 @@ export function QueueScreen() {
       void refresh();
       return;
     }
-    const timer = window.setTimeout(() => void refresh(), delay + 100);
+    const timer = window.setTimeout(() => void refresh(), Math.min(delay + 100, 2_147_483_647));
     return () => window.clearTimeout(timer);
   }, [priorityDismissed, priorityDismissals, refresh]);
 

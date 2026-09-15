@@ -265,7 +265,7 @@ function SourcePendingRailVisit({
             }
           >
             <Icon name="warning" size={13} />
-            {t("sourceReturn.reverify", { count: data?.summary.needsReverifyOutputs })}
+            {t("sourceReturn.reverify", { count: data?.summary.needsReverifyOutputs ?? 0 })}
           </button>
         )}
       </div>
@@ -294,7 +294,7 @@ function SourcePendingRailVisit({
                   {entry.order === null
                     ? t("sourceReturn.moved")
                     : entry.geometry?.kind === "pdf_page"
-                      ? t("sourceReturn.page", { number: format.number(entry.geometry.page) })
+                      ? t("sourceReturn.page", { number: entry.geometry.page })
                       : entry.geometry?.kind === "media_segment"
                         ? t("sourceReturn.segment", {
                             start: format.number(entry.geometry.startMs / 1000),

@@ -240,6 +240,7 @@ export class BlockProcessingService {
       this.repo.listRows(sourceElementId).map((row) => [row.stableBlockId, row]),
     );
     const currentBlockIds = new Set(blocks.map((block) => block.stableBlockId));
+    const currentHashes = this.computeCurrentBlockHashes(sourceElementId);
     const readPointOrder = this.repo.getReadPointOrder(sourceElementId);
     const outputsByBlock = new Map<BlockId, ElementId[]>();
     for (const output of this.repo.listLiveOutputs(sourceElementId)) {
@@ -275,9 +276,7 @@ export class BlockProcessingService {
         order: block.order,
         state,
         storedState: row?.state ?? null,
-        blockContentHash:
-          row?.blockContentHash ??
-          this.computeCurrentBlockHash(sourceElementId, block.stableBlockId),
+        blockContentHash: row?.blockContentHash ?? currentHashes.get(block.stableBlockId) ?? null,
         outputElementIds,
         derivedFrom,
       };
@@ -337,6 +336,9 @@ export class BlockProcessingService {
         continue;
       }
       const blocks = blocksBySource.get(sourceElementId) ?? [];
+      const currentHashes = blocks.length
+        ? this.computeCurrentBlockHashes(sourceElementId)
+        : new Map<BlockId, string>();
       const rows = new Map(
         (rowsBySource.get(sourceElementId) ?? []).map((row) => [row.stableBlockId, row]),
       );
@@ -376,7 +378,7 @@ export class BlockProcessingService {
           order: block.order,
           state,
           storedState: row?.state ?? null,
-          blockContentHash: row?.blockContentHash ?? null,
+          blockContentHash: row?.blockContentHash ?? currentHashes.get(block.stableBlockId) ?? null,
           outputElementIds,
           derivedFrom,
         };
@@ -556,18 +558,7 @@ export class BlockProcessingService {
   }
 
   private requireSourceElement(tx: DbClient, sourceElementId: ElementId): void {
-    const source = tx
-      .select({ id: elements.id })
-      .from(elements)
-      .where(
-        and(
-          eq(elements.id, sourceElementId),
-          inArray(elements.type, ["source", "topic"]),
-          isNull(elements.deletedAt),
-        ),
-      )
-      .get();
-    if (!source) {
+    if (!new SourceSectionRepository(tx).isProcessingSource(sourceElementId)) {
       throw new Error(`BlockProcessingService: source ${sourceElementId} not found`);
     }
   }

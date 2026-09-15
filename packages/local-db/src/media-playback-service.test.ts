@@ -100,7 +100,7 @@ it("persists exact coverage, derives whole segment read and shares all consumers
     firstDeferredBlockId: "media:segment:180000",
   });
   set(0, "ignored");
-  new SchedulerService(handle.db).rescheduleForAction(id, "processed", asOf);
+  new SchedulerService(handle.db).rescheduleForAction(id, "rewrite", asOf);
   const log = handle.db
     .select()
     .from(operationLog)

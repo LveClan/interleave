@@ -38,6 +38,7 @@ import { nowIso } from "./ids";
 import { rowToElement } from "./mappers";
 import { OperationLogRepository } from "./operation-log-repository";
 import { SettingsRepository } from "./settings-repository";
+import { SourceSectionRepository } from "./source-section-repository";
 import {
   emptyVisitCounters,
   SourceYieldQuery,
@@ -183,10 +184,9 @@ export class SchedulerService {
   ): Schedulable {
     const defaultTopicIntervalDays =
       element.type === "topic" ? this.settings.getAppSettings().defaultTopicIntervalDays : null;
-    const blockSummary =
-      element.type === "source" || element.type === "topic"
-        ? this.blockProcessing.getAttentionProcessingSummary(element.id)
-        : null;
+    const blockSummary = new SourceSectionRepository(this.db).isProcessingSource(element.id)
+      ? this.blockProcessing.getAttentionProcessingSummary(element.id)
+      : null;
     return {
       type: element.type,
       stage: element.stage,

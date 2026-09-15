@@ -58,8 +58,9 @@ let review!: ReviewRepository;
 let conceptsRepo!: ConceptRepository;
 
 function freshDb(): void {
-  if (handle) handle.sqlite.close();
-  handle = createInMemoryDb();
+  if (handle) handle.sqlite.exec("ROLLBACK TO property_world; RELEASE property_world");
+  else handle = createInMemoryDb();
+  handle.sqlite.exec("SAVEPOINT property_world");
   search = new SearchRepository(handle.db);
   sources = new SourceRepository(handle.db);
   documents = new DocumentRepository(handle.db);

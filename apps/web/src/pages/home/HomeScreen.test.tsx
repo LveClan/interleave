@@ -770,7 +770,11 @@ describe("HomeScreen", () => {
 
     // source → reader, extract → extract view (their own surfaces).
     fireEvent.click(rowFor("source-1"));
-    expect(h.navigateSpy).toHaveBeenCalledWith({ to: "/source/$id", params: { id: "source-1" } });
+    expect(h.navigateSpy).toHaveBeenCalledWith({
+      to: "/source/$id",
+      params: { id: "source-1" },
+      search: { entry: "queue" },
+    });
 
     fireEvent.click(rowFor("extract-1"));
     expect(h.navigateSpy).toHaveBeenCalledWith({ to: "/extract/$id", params: { id: "extract-1" } });

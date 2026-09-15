@@ -1128,9 +1128,13 @@ export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerCo
       SourcePendingListRequestSchema.parse(raw).sourceId as import("@interleave/core").ElementId,
     ),
   );
-  ipcMain.handle(IPC_CHANNELS.mediaPlaybackRecord, (_event, raw: unknown) =>
-    dbService.mediaPlaybackService.record(MediaPlaybackRecordRequestSchema.parse(raw)),
-  );
+  ipcMain.handle(IPC_CHANNELS.mediaPlaybackRecord, (_event, raw: unknown) => {
+    const { durationMs, ...request } = MediaPlaybackRecordRequestSchema.parse(raw);
+    return dbService.mediaPlaybackService.record({
+      ...request,
+      ...(durationMs === undefined ? {} : { durationMs }),
+    });
+  });
   ipcMain.handle(IPC_CHANNELS.sourcePendingResume, (_event, raw: unknown) => ({
     receipt: dbService.sourcePendingService.resume(SourcePendingResumeRequestSchema.parse(raw)),
   }));

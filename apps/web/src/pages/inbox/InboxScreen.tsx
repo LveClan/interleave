@@ -21,7 +21,7 @@
 
 import { buildSchema, SourceEditor } from "@interleave/editor";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BalanceBanner } from "../../components/BalanceBanner";
 import { ExternalUrlLink } from "../../components/ExternalUrlLink";
 import { Icon, type IconName } from "../../components/Icon";
@@ -440,7 +440,7 @@ export function InboxScreen() {
   }, [detail, revealInboxTriageActions, triageRegistrationTick]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset pending triage focus when the selected row changes.
-  useEffect(() => {
+  useLayoutEffect(() => {
     pendingTriageFocusRef.current = null;
   }, [selId]);
 

@@ -26,7 +26,7 @@
  * one summary read; design tokens only.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { SourceBlockProcessingSummaryPayload } from "../../lib/appApi";
 import {
   describeReverifyOutputs,
@@ -134,7 +134,7 @@ export function DoneIntentMenu({
   // is wrong under React StrictMode: the dev-only mount→unmount→remount cycle leaves a
   // `useRef(true)` permanently `false`, silently killing the post-await `mountedRef` guard
   // in `handleTrigger`. Mirrors the correct pattern in ReviewScreen.tsx.
-  useEffect(() => {
+  useLayoutEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;

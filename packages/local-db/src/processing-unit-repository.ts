@@ -119,7 +119,12 @@ export class ProcessingUnitRepository {
     const asset = this.db
       .select({ hash: assets.contentHash })
       .from(assets)
-      .where(and(eq(assets.owningElementId, sourceId), eq(assets.relativePath, source.snapshotKey)))
+      .where(
+        and(
+          eq(assets.owningElementId, sourceId),
+          eq(assets.relativePath, source.snapshotKey ?? ""),
+        ),
+      )
       .get();
     return [...pages]
       .sort(([a], [b]) => a - b)

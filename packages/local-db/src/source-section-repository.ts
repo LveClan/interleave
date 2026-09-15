@@ -17,6 +17,17 @@ export const rangeHash = (ids: readonly string[]) =>
   createHash("sha256").update(JSON.stringify(ids)).digest("hex");
 export class SourceSectionRepository {
   constructor(private readonly db: DbClient) {}
+  isProcessingSource(id: string): boolean {
+    const element = this.db.select().from(elements).where(eq(elements.id, id)).get();
+    if (!element || element.deletedAt) return false;
+    if (element.type === "source") return true;
+    return (
+      element.type === "topic" &&
+      (this.find(id) !== null ||
+        (element.parentId != null &&
+          this.epubChapters(element.parentId)?.some((c) => c.topic.id === id) === true))
+    );
+  }
   find(topicId: string) {
     return (
       this.db.select().from(sourceSections).where(eq(sourceSections.topicId, topicId)).get() ?? null

@@ -188,7 +188,7 @@ describe("SourcePendingService", () => {
     defer(1);
     new SchedulerService(handle.db).rescheduleForAction(
       id,
-      "processed",
+      "rewrite",
       "2026-09-16T00:00:00Z" as IsoTimestamp,
     );
     const op = logs()

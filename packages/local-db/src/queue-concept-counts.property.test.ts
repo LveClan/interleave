@@ -52,8 +52,9 @@ let repos!: Repositories;
 let queue!: QueueQuery;
 
 function freshDb(): void {
-  if (handle) handle.sqlite.close();
-  handle = createInMemoryDb();
+  if (handle) handle.sqlite.exec("ROLLBACK TO property_world; RELEASE property_world");
+  else handle = createInMemoryDb();
+  handle.sqlite.exec("SAVEPOINT property_world");
   repos = createRepositories(handle.db);
   queue = new QueueQuery(repos);
 }

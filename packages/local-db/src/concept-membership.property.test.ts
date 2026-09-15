@@ -29,18 +29,16 @@ import { createInMemoryDb } from "./test-db";
 // Deterministic fast-check config — fixed seed so a failure is reproducible in CI.
 const FC = { seed: 0x5eed_1234, numRuns: 200, verbose: false } as const;
 
-// Each fast-check RUN must get an isolated database: a property's predicate runs
-// many times within one `it`, so a shared `beforeEach` DB would leak state from
-// the previous run into the next (and the per-run oracle only knows the current
-// world). `buildWorld` opens a fresh in-memory DB per run and the open handle is
-// closed before the next run, so every run is hermetic.
+// Each generated world starts from the migrated empty DB. Rollback isolates runs
+// without rerunning every schema migration hundreds of times per property.
 let handle: DbHandle | null = null;
 let concepts!: ConceptRepository;
 let elementsRepo!: ElementRepository;
 
 function freshDb(): void {
-  if (handle) handle.sqlite.close();
-  handle = createInMemoryDb();
+  if (handle) handle.sqlite.exec("ROLLBACK TO property_world; RELEASE property_world");
+  else handle = createInMemoryDb();
+  handle.sqlite.exec("SAVEPOINT property_world");
   concepts = new ConceptRepository(handle.db);
   elementsRepo = new ElementRepository(handle.db);
 }

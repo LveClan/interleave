@@ -70,6 +70,7 @@ import {
   type LabelBlock,
 } from "./source-location-label";
 import { SourceRepository } from "./source-repository";
+import { SourceSectionRepository } from "./source-section-repository";
 
 // The starter `raw_extract +1..7d` interval math now lives ONCE in
 // `@interleave/scheduler` (T028); this re-export keeps the historical symbol
@@ -344,7 +345,7 @@ export class ExtractionService {
 
       if (
         locationSource === input.sourceElementId ||
-        this.elements.findById(locationSource)?.type === "topic"
+        new SourceSectionRepository(this.db).isProcessingSource(locationSource)
       ) {
         this.blockProcessing.deriveBlockStateFromExtractionWithin(tx, {
           sourceElementId: locationSource,

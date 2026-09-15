@@ -222,7 +222,7 @@ export function BrowseScreen() {
         select(r.id);
         void navigate({ to: "/synthesis/$id", params: { id: r.id } });
       } else {
-        openQueueItem({ item: r, navigate, select });
+        openQueueItem({ item: r, navigate, select, scheduledReturn: false });
       }
     },
     [navigate, select, setLibraryPanel],

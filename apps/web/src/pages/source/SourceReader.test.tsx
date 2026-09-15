@@ -521,9 +521,9 @@ describe("SourceReader", () => {
   });
 
   it("loads source metadata, selects the route element, and renders article controls", async () => {
-    const { getAllByTestId, getByTestId, findByTestId } = render(<SourceReader />);
+    const { getAllByTestId, getByTestId } = render(<SourceReader />);
 
-    expect(await findByTestId("reader-title")).toHaveTextContent("Reader source");
+    await waitFor(() => expect(getByTestId("reader-title")).toHaveTextContent("Reader source"));
     expect(h.select).toHaveBeenCalledWith("src-1");
     expect(h.getInspectorData).toHaveBeenCalledWith({ id: "src-1" });
     expect(getAllByTestId("reader-header")).toHaveLength(1);
@@ -842,7 +842,7 @@ describe("SourceReader", () => {
     const { getByTestId, queryByTestId, findByTestId } = render(<SourceReader />);
     await findByTestId("mock-source-editor");
 
-    fireEvent.click(getByTestId("reader-retirement-review"));
+    fireEvent.click(await findByTestId("reader-retirement-review"));
 
     await findByTestId("done-intent-pop");
     expect(getByTestId("done-intent-abandon")).toHaveTextContent("Suggested");
@@ -1115,7 +1115,7 @@ describe("SourceReader", () => {
     expect(h.selectionState.dismiss).toHaveBeenCalled();
   });
 
-  it("switches to the PDF reader and mirrors child page progress", async () => {
+  it("shows PDF page position separately from processing progress", async () => {
     h.documentState.sourceFormat = "pdf";
     const { getAllByTestId, getByTestId, findByTestId } = render(<SourceReader />);
 
@@ -1132,7 +1132,7 @@ describe("SourceReader", () => {
 
     fireEvent.click(getByTestId("mock-pdf-page-change"));
     expect(getByTestId("reader-pdf-progress")).toHaveTextContent("page 2 of 4");
-    expect(getByTestId("reader-pbar-fill")).toHaveStyle({ width: "50%" });
+    expect(document.querySelector('[data-testid="reader-pbar-fill"]')).toBeNull();
 
     fireEvent.click(getByTestId("mock-pdf-region"));
     expect(h.refreshInspector).toHaveBeenCalled();

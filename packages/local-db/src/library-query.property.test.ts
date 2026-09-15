@@ -37,17 +37,16 @@ import { createInMemoryDb } from "./test-db";
 
 const FC = { seed: 0x11b_2a17, numRuns: 200, verbose: false } as const;
 
-// Hermetic per fast-check RUN: a property predicate runs many times within one
-// `it`, so each generated world gets a fresh in-memory DB (a shared beforeEach DB
-// would leak the previous world into the next). The open handle is closed before
-// the next run.
+// Roll each generated world back to the empty migrated schema. Keep the original
+// random cases and isolation without repeating all migrations for every sample.
 let handle: DbHandle | null = null;
 let repos!: Repositories;
 let library!: LibraryQuery;
 
 function freshDb(): void {
-  if (handle) handle.sqlite.close();
-  handle = createInMemoryDb();
+  if (handle) handle.sqlite.exec("ROLLBACK TO property_world; RELEASE property_world");
+  else handle = createInMemoryDb();
+  handle.sqlite.exec("SAVEPOINT property_world");
   repos = createRepositories(handle.db);
   library = new LibraryQuery(handle.db, repos);
 }

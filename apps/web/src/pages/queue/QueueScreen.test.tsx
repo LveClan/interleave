@@ -482,6 +482,7 @@ import { QueueScreen } from "./QueueScreen";
 beforeEach(() => {
   vi.clearAllMocks();
   h.actOnQueueItem.mockReset();
+  h.getBlockProcessingSummary.mockReset();
   h.selectedId.current = null;
   h.useSearch.mockReturnValue({});
   h.listQueue.mockResolvedValue(h.result);

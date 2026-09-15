@@ -139,7 +139,7 @@ it("lazily persists page rows, keeps partial outputs unresolved, and shares prog
   ).toEqual(result.summary);
   new SchedulerService(handle.db).rescheduleForAction(
     id,
-    "processed",
+    "rewrite",
     "2030-01-01T00:00:00Z" as IsoTimestamp,
   );
   const op = handle.db
