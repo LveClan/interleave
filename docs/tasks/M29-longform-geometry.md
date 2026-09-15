@@ -566,7 +566,7 @@ T134 and other roadmap tasks were not started.
 # T134 — Structural skim pass
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[~]` 已实现并审查，统一验收待进行
+- **Status:** `[x]` Windows functional acceptance complete; commit `T134: 完成结构略读与章节调度验收`
 - **Depends on:** T067, T132
 - **Roadmap line:** long-form sources (PDF outline/TOC, EPUB chapters, long documents by
   heading) support a skim pass assigning per-section verdicts — extract-worthy / later /
@@ -611,7 +611,7 @@ value is instead of at page 1.
   the batch's component operations so it cannot undo only chapter scheduling or priority.
 
 These rules were recorded before building the skim UI. Final implementation/evidence follows
-below; standard acceptance is deferred only under the user's explicit limited-check policy.
+below; the earlier limited-check policy is superseded by the linked Windows acceptance.
 
 ## Context to load first
 
@@ -631,18 +631,18 @@ below; standard acceptance is deferred only under the user's explicit limited-ch
 
 ## Deliverables
 
-- [ ] Structure extraction: a per-source outline (PDF outline → page ranges; EPUB chapters;
+- [x] Structure extraction: a per-source outline (PDF outline → page ranges; EPUB chapters;
       document headings → block ranges), with a manual fallback (select a range → "make
       section").
-- [ ] Skim surface: outline view with per-section verdict chips — extract-worthy (priority +
+- [x] Skim surface: outline view with per-section verdict chips — extract-worthy (priority +
       schedule as child section-topic) / later (deferred section, returns via scheduling) /
       ignore (blocks/pages set ignored) — keyboard-first, one batch, one undo.
-- [ ] Per-section scheduling: verdict-created sections are attention-scheduled child elements
+- [x] Per-section scheduling: verdict-created sections are attention-scheduled child elements
       (priority inherited/adjustable), each with its own read-point; queue rows show
       "section of <source>"; parent/child surfacing rule implemented + tested.
-- [ ] Done-gate integration: section terminal actions route through the DoneIntentMenu with the
+- [x] Done-gate integration: section terminal actions route through the DoneIntentMenu with the
       section's own breakdown; the parent's breakdown aggregates sections.
-- [ ] Tests: unit (outline extraction per format, verdict batch semantics, surfacing rule);
+- [x] Tests: unit (outline extraction per format, verdict batch semantics, surfacing rule);
       e2e — import a fixture PDF with an outline, run a skim pass (mixed verdicts), queue
       surfaces the extract-worthy section first, ignored front matter never surfaces,
       restart-safe.
@@ -663,6 +663,14 @@ below; standard acceptance is deferred only under the user's explicit limited-ch
   parent-vs-section queue-surfacing rule in the spec BEFORE building UI.
 
 ## T134 Implementation And Basic Verification (2026-09-15)
+
+Final acceptance: [Windows evidence](./M29-windows-acceptance-2026-09-15.md).
+`structural-skim.spec.ts` covers PDF, EPUB and document/manual ranges, atomic
+overlap rejection, chapter/parent scheduling, batch undo, read-points, extraction
+lineage and restart. The 300-page/15-section mixed-verdict pass took 3533ms;
+final EPUB selection-action/extraction/restart rerun passed 1/1. Original
+independent review is retained; final fixes were self-reviewed under the user's
+single-agent instruction. Earlier deferred checks are now superseded.
 
 Local commit: `T134: add structural skim and chapter scheduling`.
 This is the user-authorized implementation/review checkpoint. T130-T133 remain `[~]`, and

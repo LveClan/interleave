@@ -231,6 +231,10 @@ export function SectionReader({
                   type="button"
                   className="btn btn--ghost btn--icon"
                   title={t("sourceReturn.resumeRead")}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   onClick={() => mark("read")}
                   disabled={busy}
                 >
@@ -240,6 +244,10 @@ export function SectionReader({
                   type="button"
                   className="btn btn--ghost btn--icon"
                   title={t("sourceReturn.skimLater")}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   onClick={() => mark("needs_later")}
                   disabled={busy}
                 >
@@ -249,6 +257,10 @@ export function SectionReader({
                   type="button"
                   className="btn btn--ghost btn--icon"
                   title={t("sourceReturn.skimIgnore")}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   onClick={() => mark("ignored")}
                   disabled={busy}
                 >
@@ -258,7 +270,10 @@ export function SectionReader({
                   type="button"
                   className="btn btn--ghost btn--icon"
                   title={t("sourceReturn.saveSectionPoint")}
-                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   onClick={savePoint}
                   disabled={busy}
                 >
@@ -267,7 +282,10 @@ export function SectionReader({
                 <button
                   type="button"
                   className="btn btn--ghost btn--sm"
-                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   onClick={extract}
                   disabled={busy || !selection.location}
                 >

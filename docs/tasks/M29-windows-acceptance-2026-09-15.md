@@ -129,7 +129,21 @@ and `.interleave/m29-results/`; Linux check logs are `/tmp/interleave-m29-*.log`
 These paths describe local evidence, not portable repository assets. The test
 files reproduce the acceptance using isolated data.
 
-## Limits
+## Acceptance Commits
+
+| Task | Local acceptance commit |
+| --- | --- |
+| T130 | `c5e0551` (`T130: 完成来源重返摘要的 Windows 验收`) |
+| T131 | `ef45f90` (`T131: 完成待处理段落的 Windows 验收`) |
+| T132 | `7556b4d` (`T132: 完成 PDF 处理状态与千页规模验收`) |
+| T133 | `e2286ee` (`T133: 完成媒体播放覆盖的 Windows 验收`) |
+| T134 | `T134: 完成结构略读与章节调度验收` (this commit) |
+
+All five task statuses and deliverable checklists reflect functional acceptance.
+The earlier implementation/basic-check notes retain their historical scope;
+their deferred checks are superseded by this record. Commits are local only.
+
+## Scope Limits
 
 This is functional acceptance of the native Windows desktop source build.
 Installer packaging, signing, publishing, external YouTube playback control and

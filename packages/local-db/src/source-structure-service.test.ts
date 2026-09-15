@@ -12,7 +12,7 @@ import {
   sources,
 } from "@interleave/db";
 import { eq } from "drizzle-orm";
-import { afterEach, beforeEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { BlockProcessingService } from "./block-processing-service";
 import { DocumentRepository } from "./document-repository";
 import { ElementRepository } from "./element-repository";
@@ -24,6 +24,7 @@ import { QueueRepository } from "./queue-repository";
 import { SourcePendingService } from "./source-pending-service";
 import { SourceRepository } from "./source-repository";
 import { SourceReturnBriefingQuery } from "./source-return-briefing-query";
+import { SourceSectionRepository } from "./source-section-repository";
 import { SourceStructureService } from "./source-structure-service";
 import { SourceYieldQuery } from "./source-yield-query";
 import { createInMemoryDb } from "./test-db";
@@ -62,6 +63,19 @@ beforeEach(() => {
   service = new SourceStructureService(handle.db);
 });
 afterEach(() => handle.sqlite.close());
+it("validates chapter ownership once per section while checking parent remainder", () => {
+  const ranges = service.list(id).ranges.filter((range) => range.depth === 0);
+  service.apply({
+    sourceId: id,
+    decisions: ranges.map((range) => ({ range, verdict: "later", priority: 0.5 })),
+  });
+  const repo = new SourceSectionRepository(handle.db);
+  const valid = vi.spyOn(repo, "valid");
+  const active = vi.spyOn(repo, "activeOwnership");
+  expect(repo.hasRemainder(id)).toBe(false);
+  expect(valid).toHaveBeenCalledTimes(ranges.length);
+  expect(active).toHaveBeenCalledTimes(ranges.length);
+});
 it("keeps manual ranges editable after reload and supplies section identity to the real queue projection", () => {
   const range = service.manual(id, id, "b2", "b3", "Manual");
   apply(range);

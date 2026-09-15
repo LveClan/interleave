@@ -109,6 +109,13 @@ export class SourceSectionRepository {
   hasRemainder(sourceId: string): boolean {
     const sections = this.list(sourceId);
     if (!sections.length) return true;
+    const owned = new Map<string, Set<string>>();
+    for (const { section } of sections) {
+      if (!this.valid(section) || !this.activeOwnership(section)) continue;
+      const ids = owned.get(section.documentId) ?? new Set<string>();
+      for (const id of JSON.parse(section.unitIds) as string[]) ids.add(id);
+      owned.set(section.documentId, ids);
+    }
     const chapters = this.epubChapters(sourceId);
     const documents = chapters ? chapters.map((c) => c.topic.id) : [sourceId];
     return documents.some((documentId) => {
@@ -124,17 +131,11 @@ export class SourceSectionRepository {
           .listLiveOutputs(documentId as ElementId)
           .map((row) => row.stableBlockId),
       );
-      return this.unitIds(documentId).some(
+      return liveIds.some(
         (id) =>
           !["ignored", "processed_without_output"].includes(states.get(id as BlockId) ?? "") &&
           !(outputs.has(id as BlockId) && states.get(id as BlockId) !== "stale_after_edit") &&
-          !sections.some(
-            ({ section }) =>
-              section.documentId === documentId &&
-              this.valid(section) &&
-              this.activeOwnership(section) &&
-              (JSON.parse(section.unitIds) as string[]).includes(id),
-          ),
+          !owned.get(documentId)?.has(id),
       );
     });
   }

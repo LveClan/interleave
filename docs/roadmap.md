@@ -521,9 +521,9 @@ Detailed specs: [`tasks/M29-longform-geometry.md`](./tasks/M29-longform-geometry
 - [x] **T133 — Media segment states** · _deps: T073, T074_ · commit: `T133: 完成媒体播放覆盖的 Windows 验收`
   Done when: audio/video sources track per-segment processed state (derived from playback and fragment extraction), feeding the same surfaces — "watched 40%, 2 segments deferred" is durable data, not memory.
   Windows acceptance passed: real VP8 video/MP3 playback, moving pixels, pause/seek gaps, segment decisions/undo, one cross-segment clip counted once, Done/scheduling/yield/briefing, process entry and restart. Fixed media protocol range reads, narrow player layout and an asynchronous provenance assertion. Playback, operation-log, foreign-key and source-location evidence is retained. Original independent implementation review and final single-agent self-review are recorded in [M29 acceptance](./tasks/M29-windows-acceptance-2026-09-15.md); root checks have final passing evidence. Embedded-player coverage remains explicitly unavailable.
-- [~] **T134 — Structural skim pass** · _deps: T067, T132_ · 已实现并审查，统一验收待进行
+- [x] **T134 — Structural skim pass** · _deps: T067, T132_ · commit: `T134: 完成结构略读与章节调度验收`
   Done when: long-form sources (PDF outline/TOC, EPUB chapters, long documents by heading) support a skim pass assigning per-section verdicts — extract-worthy / later / ignore — that bulk-set block states (one batch, one undo) and create per-section scheduling, so deep reading starts where the value is instead of at page 1.
-  Local commit: `T134: add structural skim and chapter scheduling`. Reuses T067 topic chapters and canonical page/block processing, with trusted structure/manual ranges, transactional verdicts and guarded batch undo, scoped chapter readers and Done actions. Chapters own disjoint ranges; parent scheduling covers only remaining work, and stale/replaced ranges cannot duplicate ownership. Independent review fixes and bounded repository/migration/simulated UI/IPC/i18n checks passed. Unified verification deferred; T130-T133 remain `[~]`. See [T134 implementation and basic verification](./tasks/M29-longform-geometry.md#t134-implementation-and-basic-verification-2026-09-15).
+  Windows acceptance passed: 300-page/15-section PDF mixed verdicts in 3533ms, independent chapter queues, parent remainder exclusion, whole-batch undo, section Done/read-points and restart. EPUB reuses chapter topics and preserves extract lineage; heading/manual ranges reject overlap atomically. Fixed repeated ownership scans and selection loss in chapter toolbar actions. Original independent implementation review and final single-agent self-review are recorded in [M29 acceptance](./tasks/M29-windows-acceptance-2026-09-15.md); root checks have final passing evidence. Completes M29.
 
 ## M30 — Lineage-aware deletion (T135)
 Detailed specs: [`plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md`](./plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md)
@@ -537,6 +537,8 @@ Detailed specs: [`plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md`](./p
 ---
 
 ## Progress log
+
+- **2026-09-15 — T134 Windows acceptance complete; M29 closed:** `T134: 完成结构略读与章节调度验收`. PDF, EPUB and document structural skim passed with independent scheduling, atomic overlap rejection, batch undo, provenance and restart. Parent remainder checks validate each section once; chapter toolbar actions preserve the selected passage. All T130-T134 now have committed functional acceptance. See [M29 acceptance](./tasks/M29-windows-acceptance-2026-09-15.md).
 
 - **2026-09-15 — T133 Windows acceptance complete:** `T133: 完成媒体播放覆盖的 Windows 验收`. Real local playback and seek-gap persistence passed for video and audio; shared consumer counts and clip lineage survive restart. Standard media URL semantics repair Windows range reads; the committed media fixture is reproducible without network access. See [M29 acceptance](./tasks/M29-windows-acceptance-2026-09-15.md) for checks and embedded-player limits.
 
