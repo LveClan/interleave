@@ -56,6 +56,18 @@ function harness() {
 }
 
 describe("openQueueItem", () => {
+  it("opens a section topic in its scoped reader", () => {
+    const h = harness();
+    openQueueItem({
+      item: queueItem({ id: "chapter", type: "topic", sectionSourceTitle: "Book" }),
+      ...h,
+    });
+    expect(h.navigate).toHaveBeenCalledWith({
+      to: "/source/$id",
+      params: { id: "chapter" },
+      search: { entry: "queue" },
+    });
+  });
   it("routes normal queue items to their work surfaces", () => {
     const h = harness();
     openQueueItem({ item: queueItem({ type: "source", id: "source-1" }), ...h });

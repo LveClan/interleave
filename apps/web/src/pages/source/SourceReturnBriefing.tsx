@@ -1,4 +1,5 @@
 import type { SourceReturnBriefing as Briefing } from "@interleave/core";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Icon } from "../../components/Icon";
 import { format, t, useLocale } from "../../i18n";
@@ -22,6 +23,7 @@ export function SourceReturnBriefing({
   onOpenPending?: () => void;
 }) {
   useLocale();
+  const navigate = useNavigate();
   const [result, setResult] = useState<{ sourceId: string; value: Briefing | null } | null>(null);
   const [dismissed, setDismissed] = useState(false);
   // Entry/search changes within this source do not start another visit.
@@ -155,7 +157,17 @@ export function SourceReturnBriefing({
           type="button"
           className="btn btn--ghost btn--sm"
           disabled={!canJump || !data.nextUnresolvedBlockId}
-          onClick={() => data.nextUnresolvedBlockId && onJump(data.nextUnresolvedBlockId)}
+          onClick={() =>
+            data.nextUnresolvedTopicId
+              ? void navigate({
+                  to: "/source/$id",
+                  params: { id: data.nextUnresolvedTopicId },
+                  search: data.nextUnresolvedBlockId?.startsWith("pdf:page:")
+                    ? { page: Number(data.nextUnresolvedBlockId.slice(9)) }
+                    : { block: data.nextUnresolvedBlockId },
+                })
+              : data.nextUnresolvedBlockId && onJump(data.nextUnresolvedBlockId)
+          }
         >
           <Icon name="arrowDown" size={13} />
           {t("sourceReturn.next")}
@@ -164,7 +176,17 @@ export function SourceReturnBriefing({
           type="button"
           className="btn btn--ghost btn--sm"
           disabled={!canJump || !data.firstDeferredBlockId}
-          onClick={() => data.firstDeferredBlockId && onJump(data.firstDeferredBlockId)}
+          onClick={() =>
+            data.firstDeferredTopicId
+              ? void navigate({
+                  to: "/source/$id",
+                  params: { id: data.firstDeferredTopicId },
+                  search: data.firstDeferredBlockId?.startsWith("pdf:page:")
+                    ? { page: Number(data.firstDeferredBlockId.slice(9)) }
+                    : { block: data.firstDeferredBlockId },
+                })
+              : data.firstDeferredBlockId && onJump(data.firstDeferredBlockId)
+          }
         >
           <Icon name="postpone" size={13} />
           {t("sourceReturn.firstDeferred")}

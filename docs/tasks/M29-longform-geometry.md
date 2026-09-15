@@ -535,7 +535,7 @@ T134 and other roadmap tasks were not started.
 # T134 — Structural skim pass
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[ ]` not started
+- **Status:** `[~]` 已实现并审查，统一验收待进行
 - **Depends on:** T067, T132
 - **Roadmap line:** long-form sources (PDF outline/TOC, EPUB chapters, long documents by
   heading) support a skim pass assigning per-section verdicts — extract-worthy / later /
@@ -549,6 +549,38 @@ long source is a pass over its STRUCTURE — triage the table of contents, kill 
 prioritize chapter 7, defer chapter 2 — implementing the "skim and triage" step the product's
 own concept doc has always named. Sections become the unit of intent; deep reading starts where
 value is instead of at page 1.
+
+## Implementation Rules (2026-09-15)
+
+- Reuse T067 chapter `topic` elements. A section row binds a topic to canonical source units;
+  PDF/document sections read live ranges rather than owning copied source text. EPUB sections
+  reuse the existing chapter topic/body and spine location. Media skim is excluded.
+- Queue ownership is by disjoint content ranges: an assigned live chapter owns its range even
+  when deferred or terminal; the parent schedules only uncovered/unassigned content. When no
+  unresolved remainder exists, parent due eligibility is suppressed without changing its
+  lifecycle to done. The parent remains a readable aggregate/outline. Unassigned EPUB chapters
+  remain reachable from that outline and count as parent remainder. Missing/invalidated ranges
+  release ownership to the parent and remain visibly unavailable until reselected.
+- Nested headings/bookmarks are displayed hierarchically. Selection of overlapping ranges in
+  one batch, or overlap with a different existing chapter, is rejected transactionally. Reapply
+  the same canonical range reuses its topic. Ranges include both boundary units; nested headings
+  end immediately before the next heading of equal or higher level. PDFs use whole pages,
+  including content before the first bookmark; fallback ranges and manual endpoints cover gaps.
+- Source processing is canonical: chapter progress/Done use only their units, parent totals
+  count each unit once, and existing extract/reverify anchors are retained. New/moved/removed
+  range geometry invalidates its stored range fingerprint; source content edits continue through
+  normal processing staleness. User decisions never clear output needs_reverify.
+- Reapplying a deleted chapter's range restores the same topic and anchors. A new decision
+  supersedes overlapping obsolete ownership permanently, including after source text restoration;
+  the old chapter stays visibly unavailable. Its range fingerprint is restored by batch undo.
+  Applying extract-worthy/later under a done, dismissed or suspended parent explicitly resumes
+  the parent so the requested chapter return is eligible; undo restores the prior parent state.
+- Batch changes carry one guarded receipt containing exact preimages and a post-apply
+  fingerprint, and restore the whole batch in one transaction. Existing global undo must skip
+  the batch's component operations so it cannot undo only chapter scheduling or priority.
+
+These rules were recorded before building the skim UI. Final implementation/evidence follows
+below; standard acceptance is deferred only under the user's explicit limited-check policy.
 
 ## Context to load first
 
@@ -598,3 +630,77 @@ value is instead of at page 1.
   documents". Do not ship two section concepts.
 - Surface-ownership lesson applies (the one reverted decision in `docs/solutions/`): settle the
   parent-vs-section queue-surfacing rule in the spec BEFORE building UI.
+
+## T134 Implementation And Basic Verification (2026-09-15)
+
+Local commit: `T134: add structural skim and chapter scheduling`.
+This is the user-authorized implementation/review checkpoint. T130-T133 remain `[~]`, and
+standard unified verification is explicitly deferred.
+
+- `SourceStructureService` resolves document heading ranges, T067 EPUB spine chapter topics,
+  and PDF bookmark pages supplied by trusted PDF.js extraction. Missing structure falls back
+  to 30-block or 20-page ranges. Manual inclusive endpoints create arbitrary valid ranges.
+  Nested headings/bookmarks retain depth; duplicate identical page ranges collapse and
+  overlapping selections are rejected before mutation. Initial unheaded content is retained.
+- Additive Drizzle migration `0045_ordinary_mentallo` binds existing topic Elements to source,
+  canonical document, ordered units, range fingerprint and verdict. It keeps original EPUB
+  chapter documents/locations and PDF/document source text, with no copied chapter text model.
+  Existing extraction anchors remain intact; chapter topics never count as knowledge outputs.
+- Extract-worthy schedules a chapter now, later schedules seven days ahead, and ignore marks
+  the range ignored and removes its scheduling pressure. Priority-only updates preserve prior
+  processing and due dates. Chapters own disjoint ranges; the parent retains uncovered work,
+  including invalidated/removed stale content. Fully owned parents leave the due queue without
+  being marked done. Terminal chapters release newly stale work back to the parent.
+- Each apply/finish batch includes chapter, relationship, processing and schedule writes plus
+  operation logs in one transaction. Guarded stored receipts restore the whole batch, including
+  a resumed parent or restored deleted topic. Later content, outputs, tags, marks, relations,
+  read-points and assets prevent undo from overwriting user work. Global undo skips component
+  operations of a skim batch. No source verification flag is cleared by a skim verdict.
+- The compact collapsible skim list uses native keyboard-operable selects and buttons, existing
+  tokens/icons and static i18n strings. Chapter readers support scoped PDF pages or document
+  blocks, extraction, independent read-points, deferred navigation and their own DoneIntentMenu.
+  Queue rows identify the parent and open the chapter reader. Explicit targets precede delayed
+  restore; source-keyed hosts discard old responses. Invalid ranges report unavailable.
+- Parent progress, Done, yield and attention pressure reuse canonical block/unit folds. Pending
+  passages and re-entry targets can open their chapter; EPUB deleted blocks remain counted but
+  unlocatable. Parent briefing history includes actual chapter reading/extraction evidence;
+  historical read-percentage delta remains unknown. Chinese remains disabled.
+- Independent actual-diff review found and verified fixes for priority-only resets, stale route
+  restoration, PDF reloads, undo guards, EPUB reuse/anchors, parent/child queue ownership,
+  terminal actions and receipt transport, terminal-parent returns, deleted-topic reuse,
+  obsolete-range reactivation, removed-block navigation and raw enum labels. Final incremental
+  review includes the EPUB briefing aggregation fix. No unresolved feature finding remains.
+
+Actual basic verification, using command-local Node 22.20.0 / pnpm 9.12.1 in WSL2 on `main`:
+
+- `pnpm exec vitest run packages/local-db/src/source-structure-service.test.ts
+  packages/db/src/migration-0045-source-sections.test.ts
+  apps/web/src/pages/source/StructuralSkim.test.tsx
+  apps/web/src/pages/source/SectionReader.test.tsx --maxWorkers=2`: **13 passed / 1 failed**.
+  The new EPUB deletion case omitted the normal save transaction's reconciliation call.
+  It now uses `upsertWithin` plus `reconcileSourceDocumentWithin`, matching `DbService`.
+- `pnpm exec vitest run packages/local-db/src/source-structure-service.test.ts
+  -t 'reuses EPUB chapter' --maxWorkers=2`: **1 passed / 10 not selected**, including the final
+  briefing assertions. Together with unchanged passed cases, all **11 repository cases** pass.
+  Coverage includes structure boundaries, repeat/soft-delete reuse, range restoration, mixed
+  batches, real due-queue projection, terminal-parent returns, guarded undo, operation-log
+  failure rollback, preserved lineage, and closing/reopening a file-backed SQLite database.
+- The migration case passes additive-DDL and enforced foreign-key checks. Schema/DDL also
+  declare the unique range index and JSON/verdict constraints; the test does not independently
+  claim to exercise every constraint. Both skim/section-reader simulated interaction cases pass.
+- `pnpm exec vitest run apps/web/src/pages/source/PdfReader.test.tsx
+  apps/web/src/pages/queue/openQueueItem.test.ts packages/i18n/src/resources.test.ts
+  --maxWorkers=2`: **17 passed**. Covers scoped pages, stable PDF refresh, independent read-point,
+  direct chapter opening, delayed navigation and static translation resources.
+- `pnpm exec vitest run apps/desktop/src/shared/contract.test.ts -t 'IPC channels'
+  --maxWorkers=2`: **2 passed / 289 not selected**. After adding the focused T134 schema case,
+  the same file with `-t 'bounds T134' --maxWorkers=2`: **1 passed / 291 not selected**.
+- `git ls-files --modified --others --exclude-standard -z | xargs -0 pnpm exec biome check
+  --write --files-ignore-unknown=true`: only task-modified files formatted/checked successfully.
+  Final check without `--write` and `git diff --check` also pass.
+
+Deferred: whole-workspace lint/typecheck/tests, Electron IPC and application restart, real PDF
+bookmark/EPUB import and extraction flows, light/dark GUI and keyboard ergonomics, 300-page
+triage timing and large-collection performance. Basic SQLite reopen is not an Electron restart.
+No application, development server, real player, Electron or full benchmark was started; no
+Windows switch, system configuration change, push, release or deployment was performed.

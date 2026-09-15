@@ -21,6 +21,7 @@ import { LapseClusterQuery, type LapseClusterQueryInput } from "./lapse-cluster-
 import { windowStart } from "./lapse-window";
 import { mediaProcessingData, parseClip } from "./media-processing-repository";
 import { ProcessingUnitRepository, pdfPageKey } from "./processing-unit-repository";
+import { SourceSectionRepository } from "./source-section-repository";
 import { SourceYieldQuery } from "./source-yield-query";
 import { retentionFor } from "./topic-knowledge-state-query";
 
@@ -46,12 +47,20 @@ export class SourceReturnBriefingQuery {
     const documents = new DocumentRepository(this.db);
     const blocks = documents.listBlocks(sourceId);
     const geometry = new ProcessingUnitRepository(this.db).views(sourceId);
-    // T130 owns document geometry only. PDF/media use their specialized readers.
+    const sections = new SourceSectionRepository(this.db);
+    const chapters = sections.epubChapters(sourceId);
+    const activityIds = [
+      ...new Set([
+        sourceId,
+        ...(chapters?.map((c) => c.topic.id) ?? []),
+        ...sections.list(sourceId).map(({ topic }) => topic.id),
+      ]),
+    ];
     if (
       !geometry &&
       (metadata?.mediaKind ||
         metadata?.snapshotKey?.toLowerCase().endsWith(".pdf") ||
-        blocks.length === 0 ||
+        (blocks.length === 0 && !chapters) ||
         blocks.some((block) => block.page != null || block.timestampMs != null))
     )
       return null;
@@ -61,7 +70,9 @@ export class SourceReturnBriefingQuery {
     const liveIds = new Set(
       geometry
         ? geometry.filter((v) => v.locatable).map((v) => v.stableBlockId)
-        : blocks.map((block) => block.stableBlockId),
+        : chapters
+          ? chapters.flatMap((chapter) => sections.unitIds(chapter.topic.id))
+          : blocks.map((block) => block.stableBlockId),
     );
     const views = processing
       .listBlockViews(sourceId)
@@ -79,7 +90,7 @@ export class SourceReturnBriefingQuery {
       .innerJoin(elements, eq(elements.id, sourceLocations.elementId))
       .where(
         and(
-          eq(sourceLocations.sourceElementId, sourceId),
+          inArray(sourceLocations.sourceElementId, activityIds),
           inArray(elements.type, ["extract", "media_fragment"]),
           isNull(elements.deletedAt),
         ),
@@ -113,7 +124,7 @@ export class SourceReturnBriefingQuery {
       .from(sourceBlockProcessing)
       .where(
         and(
-          eq(sourceBlockProcessing.sourceElementId, sourceId),
+          inArray(sourceBlockProcessing.sourceElementId, activityIds),
           inArray(sourceBlockProcessing.lastAction, [
             "mark_read",
             "mark_unread",
@@ -132,7 +143,7 @@ export class SourceReturnBriefingQuery {
       .from(operationLog)
       .where(
         and(
-          eq(operationLog.elementId, sourceId),
+          inArray(operationLog.elementId, activityIds),
           lte(operationLog.createdAt, asOf),
           sql`(${operationLog.opType} = 'set_read_point' OR
           (${operationLog.opType} = 'update_document' AND
@@ -180,6 +191,20 @@ export class SourceReturnBriefingQuery {
       visitEvidence: lastVisitAt ? "reading_activity" : "unknown",
       readPct: yieldRow?.readPct ?? 0,
       readPctKnown: mediaProcessingData(this.db, sourceId)?.durationMs !== null,
+      nextUnresolvedTopicId: (() => {
+        const v = views.find((v) => !isTerminalSourceBlockProcessingState(v.state));
+        return v
+          ? (sections.topicForUnit(sourceId, v.sourceElementId, v.stableBlockId) ??
+              (v.sourceElementId !== sourceId ? v.sourceElementId : null))
+          : null;
+      })(),
+      firstDeferredTopicId: (() => {
+        const v = views.find((v) => v.state === "needs_later");
+        return v
+          ? (sections.topicForUnit(sourceId, v.sourceElementId, v.stableBlockId) ??
+              (v.sourceElementId !== sourceId ? v.sourceElementId : null))
+          : null;
+      })(),
       readPctDelta: null,
       stateCounts: summary.stateCounts,
       unresolvedBlocks: summary.unresolvedBlocks,

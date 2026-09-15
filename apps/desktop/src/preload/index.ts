@@ -631,6 +631,15 @@ const appApi: AppApi = {
     start: (request) => ipcRenderer.invoke(IPC_CHANNELS.mediaPlaybackStart, request),
     record: (request) => ipcRenderer.invoke(IPC_CHANNELS.mediaPlaybackRecord, request),
   },
+  sourceStructure: {
+    list: (request) => ipcRenderer.invoke(IPC_CHANNELS.structureList, request),
+    manual: (request) => ipcRenderer.invoke(IPC_CHANNELS.structureManual, request),
+    apply: (request) => ipcRenderer.invoke(IPC_CHANNELS.structureApply, request),
+    undo: (request) => ipcRenderer.invoke(IPC_CHANNELS.structureUndo, request),
+    reader: (request) => ipcRenderer.invoke(IPC_CHANNELS.sectionReader, request),
+    setUnit: (request) => ipcRenderer.invoke(IPC_CHANNELS.sectionSetUnit, request),
+    finish: (request) => ipcRenderer.invoke(IPC_CHANNELS.sectionFinish, request),
+  },
   rereadProposals: {
     list: (request?: RereadProposalsListRequest) =>
       ipcRenderer.invoke(IPC_CHANNELS.rereadProposalsList, request),

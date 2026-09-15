@@ -24,5 +24,6 @@ export * from "./occlusion";
 export * from "./ocr";
 export * from "./organize";
 export * from "./relations";
+export * from "./source-sections";
 export * from "./sources";
 export * from "./system";

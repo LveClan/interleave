@@ -1,0 +1,63 @@
+.structural-skim {
+  border-bottom: 1px solid var(--border);
+  padding: var(--s-2) var(--s-4);
+  font-size: var(--t-sm);
+  flex-shrink: 0;
+}
+.structural-skim__rows {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-2) 0;
+  max-height: 320px;
+  overflow: auto;
+}
+.structural-skim__rows li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 36px;
+  border-top: 1px solid var(--border);
+}
+.structural-skim__title {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  white-space: normal;
+}
+.structural-skim__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+.structural-skim select,
+.structural-skim input {
+  max-width: 210px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: var(--s-1);
+}
+.section-reader {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.section-reader__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--border);
+}
+.section-reader__body {
+  overflow: auto;
+  flex: 1;
+  padding: var(--s-4);
+}
+.section-reader__body .reader {
+  max-width: var(--reader-text-measure);
+  margin: auto;
+}

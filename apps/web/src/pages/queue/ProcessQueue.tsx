@@ -872,7 +872,7 @@ export function ProcessQueue() {
    * render the honest per-state breakdown. A failed read aborts silently (returns null).
    */
   const getDoneIntentSummary = useCallback(async () => {
-    if (current?.type !== "source") return null;
+    if (current?.type !== "source" && !current?.sectionSourceTitle) return null;
     try {
       const res = await appApi.getBlockProcessingSummary({ sourceElementId: current.id });
       return res.summary;
@@ -1579,7 +1579,8 @@ export function ProcessQueue() {
         // or open the popover) by bumping its trigger signal — mirroring the Postpone menu.
         // Everything else (cards/extracts/topics) keeps the immediate, source-only-gate-free
         // markDone.
-        if (current?.type === "source") setDoneIntentSignal((n) => n + 1);
+        if (current?.type === "source" || current?.sectionSourceTitle)
+          setDoneIntentSignal((n) => n + 1);
         else void act("markDone");
       },
       dismiss: () => void act("dismiss"),
@@ -2863,7 +2864,7 @@ function ProcessCard({
           <Icon name="return" size={14} />
           Skip
         </button>
-        {isSource ? (
+        {isSource || item.sectionSourceTitle ? (
           // A SOURCE routes Done through the non-modal intent surface (0-unresolved fast
           // path → immediate markDone with no popover; otherwise Finished / Return later /
           // Abandon). The server done-gate stays authoritative; this only collects intent.

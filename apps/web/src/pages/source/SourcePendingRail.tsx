@@ -100,6 +100,17 @@ function SourcePendingRailVisit({
   const jump = useCallback(
     (entry: SourcePendingBlock) => {
       if (!canJump || !entry.locatable) return;
+      if (entry.topicId) {
+        void navigate({
+          to: "/source/$id",
+          params: { id: entry.topicId },
+          search:
+            entry.geometry?.kind === "pdf_page"
+              ? { page: entry.geometry.page }
+              : { block: entry.blockId },
+        });
+        return;
+      }
       setOpen(true);
       if (!onJump(entry.blockId)) {
         setError(t("sourceReturn.moved"));
@@ -109,7 +120,7 @@ function SourcePendingRailVisit({
       setActive(entry.blockId);
       setError(null);
     },
-    [canJump, onJump, reload],
+    [canJump, onJump, reload, navigate],
   );
   const step = useCallback(
     (direction: -1 | 1) => {

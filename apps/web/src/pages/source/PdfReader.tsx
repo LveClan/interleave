@@ -33,6 +33,7 @@ import "./pdf-reader.css";
 import { t } from "../../i18n";
 import { sourceReadingChanged } from "../../lib/sourceReadingEvents";
 import { ProcessingUnitControls } from "./ProcessingUnitControls";
+import { StructuralSkim } from "./StructuralSkim";
 
 GlobalWorkerOptions.workerSrc = PdfWorkerUrl;
 
@@ -56,6 +57,8 @@ export interface PdfReaderProps {
   /** The PDF source element id. */
   readonly elementId: string;
   readonly scheduledReturn?: boolean;
+  readonly readPointElementId?: string;
+  readonly sectionId?: string;
   /** The block→page map (stable block id → 1-based page) from `documents.get`. */
   readonly blockPages: Readonly<Record<string, number>>;
   /** Called when the active page changes (so the shell can show page N of M). */
@@ -97,6 +100,8 @@ interface PageState {
 export function PdfReader({
   elementId,
   scheduledReturn = false,
+  readPointElementId = elementId,
+  sectionId,
   blockPages,
   onActivePageChange,
   onRegionExtracted,
@@ -142,6 +147,9 @@ export function PdfReader({
   const [ocrLayerLoaded, setOcrLayerLoaded] = useState(false);
 
   const firstBlockByPage = useMemo(() => pageToFirstBlock(blockPages), [blockPages]);
+  const visiblePageSignature = sectionId
+    ? JSON.stringify([...firstBlockByPage.keys()].sort((a, b) => a - b))
+    : "";
 
   // Keep the active-page callback in a ref so the load effect does NOT depend on
   // its (per-render) identity — otherwise a fresh inline callback re-runs the load
@@ -175,8 +183,10 @@ export function PdfReader({
         }
         docRef.current = doc;
         const measured: PageState[] = [];
+        const visiblePages: number[] = visiblePageSignature ? JSON.parse(visiblePageSignature) : [];
         const scanned = new Set<number>();
         for (let n = 1; n <= doc.numPages; n++) {
+          if (sectionId && !visiblePages.includes(n)) continue;
           const page = await doc.getPage(n);
           const vp = page.getViewport({ scale: RENDER_SCALE });
           measured.push({ pageNumber: n, width: vp.width, height: vp.height });
@@ -189,7 +199,8 @@ export function PdfReader({
         setPages(measured);
         setTextFreePages(scanned);
         setStatus("ready");
-        onActivePageChangeRef.current?.(1, measured.length);
+        setActivePage(measured[0]?.pageNumber ?? 1);
+        onActivePageChangeRef.current?.(measured[0]?.pageNumber ?? 1, measured.length);
         // Load any existing OCR suggestions for the source, then open the lazy
         // auto-enqueue gate (so we never auto-OCR a page already handled before).
         void appApi.getOcr({ elementId }).then((r) => {
@@ -211,7 +222,7 @@ export function PdfReader({
       docRef.current = null;
       if (doc) void doc.destroy();
     };
-  }, [desktop, elementId]);
+  }, [desktop, elementId, sectionId, visiblePageSignature]);
 
   // Track the active page as the user scrolls (the page whose top is nearest the
   // viewport top), so the read-point + progress reflect where they are.
@@ -364,7 +375,7 @@ export function PdfReader({
     }
     try {
       await appApi.setReadPoint({
-        elementId,
+        elementId: readPointElementId,
         documentId: elementId,
         blockId: firstBlockId,
         offset: 0,
@@ -374,7 +385,7 @@ export function PdfReader({
     } catch {
       toast("Could not set read-point");
     }
-  }, [desktop, elementId, activePage, firstBlockByPage, pageOfNode, toast]);
+  }, [desktop, elementId, readPointElementId, activePage, firstBlockByPage, pageOfNode, toast]);
 
   // --- OCR (T066) ----------------------------------------------------------
 
@@ -558,7 +569,7 @@ export function PdfReader({
     if (status !== "ready" || jump) return;
     let cancelled = false;
     void appApi
-      .getReadPoint({ elementId })
+      .getReadPoint({ elementId: readPointElementId })
       .then(({ readPoint }) => {
         if (cancelled || activeJump.current || !readPoint) return;
         const page = blockPages[readPoint.blockId];
@@ -568,7 +579,7 @@ export function PdfReader({
     return () => {
       cancelled = true;
     };
-  }, [status, jump, elementId, blockPages, jumpUnit]);
+  }, [status, jump, readPointElementId, blockPages, jumpUnit]);
   useEffect(() => {
     if (status !== "ready" || !jump) return;
     const signature = JSON.stringify(jump);
@@ -606,6 +617,7 @@ export function PdfReader({
 
   return (
     <div className="pdf-reader" data-testid="pdf-reader">
+      {!sectionId && <StructuralSkim key={elementId} sourceId={elementId} />}
       <ProcessingUnitControls
         key={elementId}
         sourceId={elementId}
@@ -613,6 +625,7 @@ export function PdfReader({
         ready={status === "ready"}
         scheduledReturn={scheduledReturn}
         onJump={jumpUnit}
+        sectionId={sectionId}
       />
       <div className="pdf-reader-bar">
         <button

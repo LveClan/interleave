@@ -927,3 +927,5 @@ export function createRepositories(
 }
 export { MediaPlaybackService } from "./media-playback-service";
 export { ProcessingUnitService } from "./processing-unit-service";
+export { SourceSectionRepository } from "./source-section-repository";
+export { SourceStructureService } from "./source-structure-service";

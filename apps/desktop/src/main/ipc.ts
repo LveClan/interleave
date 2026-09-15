@@ -156,6 +156,9 @@ import {
   ReviewPreviewRequestSchema,
   ReviewSessionNextRequestSchema,
   SearchQueryRequestSchema,
+  SectionFinishSchema,
+  SectionReaderSchema,
+  SectionSetUnitSchema,
   SemanticContradictionsRequestSchema,
   SemanticDownloadModelRequestSchema,
   SemanticReindexRequestSchema,
@@ -190,6 +193,9 @@ import {
   SourcesRunOcrRequestSchema,
   SourcesUpdateReliabilityRequestSchema,
   SourceYieldListRequestSchema,
+  StructureApplySchema,
+  StructureManualSchema,
+  StructureUndoSchema,
   SynthesisCreateRequestSchema,
   SynthesisEditBodyRequestSchema,
   SynthesisGetRequestSchema,
@@ -1072,6 +1078,35 @@ export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerCo
   ipcMain.handle(IPC_CHANNELS.sourceReturnBriefing, (_event, rawRequest: unknown) =>
     dbService.getSourceReturnBriefing(SourceReturnBriefingRequestSchema.parse(rawRequest)),
   );
+  ipcMain.handle(IPC_CHANNELS.structureList, (_event, raw: unknown) =>
+    dbService.getSourceStructure(SourcePendingListRequestSchema.parse(raw).sourceId),
+  );
+  ipcMain.handle(IPC_CHANNELS.structureManual, (_event, raw: unknown) => {
+    const r = StructureManualSchema.parse(raw);
+    return dbService.sourceStructureService.manual(
+      r.sourceId,
+      r.documentId,
+      r.start,
+      r.end,
+      r.title,
+    );
+  });
+  ipcMain.handle(IPC_CHANNELS.structureApply, (_event, raw: unknown) =>
+    dbService.sourceStructureService.apply(StructureApplySchema.parse(raw)),
+  );
+  ipcMain.handle(IPC_CHANNELS.structureUndo, (_event, raw: unknown) => ({
+    undone: dbService.sourceStructureService.undo(StructureUndoSchema.parse(raw)),
+  }));
+  ipcMain.handle(IPC_CHANNELS.sectionReader, (_event, raw: unknown) =>
+    dbService.sourceStructureService.reader(SectionReaderSchema.parse(raw).topicId),
+  );
+  ipcMain.handle(IPC_CHANNELS.sectionSetUnit, (_event, raw: unknown) =>
+    dbService.sourceStructureService.setUnit(SectionSetUnitSchema.parse(raw)),
+  );
+  ipcMain.handle(IPC_CHANNELS.sectionFinish, (_event, raw: unknown) => {
+    const r = SectionFinishSchema.parse(raw);
+    return dbService.sourceStructureService.finish(r.topicId, r.intent);
+  });
   ipcMain.handle(IPC_CHANNELS.sourcePendingList, (_event, raw: unknown) => ({
     pending: dbService.sourcePendingService.list(
       SourcePendingListRequestSchema.parse(raw).sourceId as import("@interleave/core").ElementId,

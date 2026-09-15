@@ -14,13 +14,20 @@ import {
   isTerminalSourceBlockProcessingState,
   priorityToLabel,
 } from "@interleave/core";
-import { documentBlocks, documents, elements, type InterleaveDatabase } from "@interleave/db";
-import { and, eq, isNull } from "drizzle-orm";
+import {
+  documentBlocks,
+  documents,
+  elementReverifyProvenance,
+  elements,
+  type InterleaveDatabase,
+} from "@interleave/db";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { BlockProcessingRepository } from "./block-processing-repository";
 import { newRowId } from "./ids";
 import { mediaProcessingData } from "./media-processing-repository";
 import { ProcessingUnitRepository } from "./processing-unit-repository";
 import { ReverifyPropagationRepository } from "./reverify-propagation-repository";
+import { SourceSectionRepository } from "./source-section-repository";
 import type { DbClient } from "./types";
 
 interface PmNode {
@@ -209,7 +216,22 @@ export class BlockProcessingService {
     return view;
   }
 
-  listBlockViews(sourceElementId: ElementId): SourceBlockProcessingView[] {
+  listBlockViews(sourceElementId: ElementId, canonical = false): SourceBlockProcessingView[] {
+    const sections = new SourceSectionRepository(this.db);
+    if (!canonical) {
+      const section = sections.find(sourceElementId);
+      if (section && section.documentId !== sourceElementId) {
+        const ids = new Set<string>(JSON.parse(section.unitIds));
+        return this.listBlockViews(section.documentId as ElementId, true).filter((v) =>
+          ids.has(v.stableBlockId),
+        );
+      }
+      const chapters = sections.epubChapters(sourceElementId);
+      if (chapters)
+        return chapters.flatMap((chapter) =>
+          this.listBlockViews(chapter.topic.id as ElementId, true),
+        );
+    }
     this.requireSourceElement(this.db, sourceElementId);
     const units = new ProcessingUnitRepository(this.db).views(sourceElementId);
     if (units) return units;
@@ -253,7 +275,9 @@ export class BlockProcessingService {
         order: block.order,
         state,
         storedState: row?.state ?? null,
-        blockContentHash: row?.blockContentHash ?? null,
+        blockContentHash:
+          row?.blockContentHash ??
+          this.computeCurrentBlockHash(sourceElementId, block.stableBlockId),
         outputElementIds,
         derivedFrom,
       };
@@ -302,6 +326,11 @@ export class BlockProcessingService {
     const outputsBySource = this.repo.listLiveOutputsForMany(sourceIds);
 
     for (const sourceElementId of sourceIds) {
+      const sections = new SourceSectionRepository(this.db);
+      if (sections.find(sourceElementId) || sections.epubChapters(sourceElementId)) {
+        result.set(sourceElementId, this.listBlockViews(sourceElementId));
+        continue;
+      }
       const units = new ProcessingUnitRepository(this.db).views(sourceElementId);
       if (units) {
         result.set(sourceElementId, units);
@@ -404,6 +433,21 @@ export class BlockProcessingService {
     const priority = this.repo.sourcePriority(sourceElementId);
     return this.summarizeViews(sourceElementId, views, priority);
   }
+  getAttentionProcessingSummary(sourceElementId: ElementId): SourceBlockProcessingSummary {
+    const sections = new SourceSectionRepository(this.db);
+    const owned = new Set(
+      sections
+        .list(sourceElementId)
+        .filter(({ section }) => sections.valid(section) && sections.activeOwnership(section))
+        .flatMap(({ section }) =>
+          (JSON.parse(section.unitIds) as string[]).map((id) => `${section.documentId}:${id}`),
+        ),
+    );
+    const views = this.listBlockViews(sourceElementId).filter(
+      (view) => !owned.has(`${view.sourceElementId}:${view.stableBlockId}`),
+    );
+    return this.summarizeViews(sourceElementId, views, this.repo.sourcePriority(sourceElementId));
+  }
 
   /**
    * The shared {@link SourceBlockProcessingSummary} fold over a source's resolved
@@ -468,7 +512,33 @@ export class BlockProcessingService {
       // Provenance rows exist ONLY for currently-stale blocks (created on stale, deleted
       // on un-stale), so a source with zero stale blocks can have no reverify outputs —
       // skip the count query on the common clean-source summary read (a hot path).
-      needsReverifyOutputs: this.reverify.countLiveReverifyOutputs(sourceElementId),
+      needsReverifyOutputs: (() => {
+        const section = new SourceSectionRepository(this.db).find(sourceElementId);
+        const chapters = new SourceSectionRepository(this.db).epubChapters(sourceElementId);
+        if (!section && !chapters) return this.reverify.countLiveReverifyOutputs(sourceElementId);
+        const keys = new Set(views.map((v) => `${v.sourceElementId}:${v.stableBlockId}`));
+        const docs = [...new Set(views.map((v) => v.sourceElementId))];
+        if (!docs.length) return 0;
+        return new Set(
+          this.db
+            .select({
+              id: elementReverifyProvenance.elementId,
+              source: elementReverifyProvenance.sourceElementId,
+              block: elementReverifyProvenance.stableBlockId,
+            })
+            .from(elementReverifyProvenance)
+            .innerJoin(elements, eq(elements.id, elementReverifyProvenance.elementId))
+            .where(
+              and(
+                inArray(elementReverifyProvenance.sourceElementId, docs),
+                isNull(elements.deletedAt),
+              ),
+            )
+            .all()
+            .filter((row) => keys.has(`${row.source}:${row.block}`))
+            .map((row) => row.id),
+        ).size;
+      })(),
       legacyProjectedBlocks: 0,
       canMarkDoneWithoutConfirmation: unresolvedBlocks === 0,
       stateCounts,
@@ -492,7 +562,7 @@ export class BlockProcessingService {
       .where(
         and(
           eq(elements.id, sourceElementId),
-          eq(elements.type, "source"),
+          inArray(elements.type, ["source", "topic"]),
           isNull(elements.deletedAt),
         ),
       )

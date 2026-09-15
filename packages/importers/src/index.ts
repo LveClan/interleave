@@ -81,6 +81,7 @@ export {
   type RawOcrWord,
 } from "./ocr";
 export {
+  extractPdfOutline,
   extractPdfPages,
   extractPdfTitle,
   type PdfPage,

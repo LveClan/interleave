@@ -521,8 +521,9 @@ Detailed specs: [`tasks/M29-longform-geometry.md`](./tasks/M29-longform-geometry
 - [~] **T133 — Media segment states** · _deps: T073, T074_ · 已实现并审查，统一验收待进行
   Done when: audio/video sources track per-segment processed state (derived from playback and fragment extraction), feeding the same surfaces — "watched 40%, 2 segments deferred" is durable data, not memory.
   Local commit: `T133: persist media segment states and playback coverage`. Stable time segments reuse T132 state commands and remainder rules; additive playback storage records actual coverage through ordered typed IPC batches. Transcript-aware/fixed boundaries, unknown tails, live clip lineage, shared progress/Done/yield/scheduling/briefing/pending and compact segment controls implemented. Independent review fixes complete; core, 13 shared repository cases, migration, simulated player/control/retry tests, IPC and i18n checks passed. Unified acceptance remains deferred; T130-T132 retain `[~]`. See the T133 implementation record for exact evidence and embedded-player limitations.
-- [ ] **T134 — Structural skim pass** · _deps: T067, T132_
+- [~] **T134 — Structural skim pass** · _deps: T067, T132_ · 已实现并审查，统一验收待进行
   Done when: long-form sources (PDF outline/TOC, EPUB chapters, long documents by heading) support a skim pass assigning per-section verdicts — extract-worthy / later / ignore — that bulk-set block states (one batch, one undo) and create per-section scheduling, so deep reading starts where the value is instead of at page 1.
+  Local commit: `T134: add structural skim and chapter scheduling`. Reuses T067 topic chapters and canonical page/block processing, with trusted structure/manual ranges, transactional verdicts and guarded batch undo, scoped chapter readers and Done actions. Chapters own disjoint ranges; parent scheduling covers only remaining work, and stale/replaced ranges cannot duplicate ownership. Independent review fixes and bounded repository/migration/simulated UI/IPC/i18n checks passed. Unified verification deferred; T130-T133 remain `[~]`. See [T134 implementation and basic verification](./tasks/M29-longform-geometry.md#t134-implementation-and-basic-verification-2026-09-15).
 
 ## M30 — Lineage-aware deletion (T135)
 Detailed specs: [`plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md`](./plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md)
@@ -536,6 +537,8 @@ Detailed specs: [`plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md`](./p
 ---
 
 ## Progress log
+
+- **2026-09-15 — T134 implementation/review checkpoint:** `T134: add structural skim and chapter scheduling` (local only). PDF/book/document ranges, chapter returns and parent remainder ownership implemented with one-batch undo and canonical lineage/statistics. Final focused evidence: 11 repository cases, one migration case, two skim/reader cases, 17 PDF/queue/i18n checks and three selected IPC checks passed across bounded runs. Unified acceptance remains deferred; all M29 tasks retain `[~]`.
 
 - **2026-09-15 — T133 implementation/review checkpoint:** `T133: persist media segment states and playback coverage` (local only). Followed T132 `05996f0`; actual playback interval union, stable segment states and cross-format consumers verified with bounded focused tests. Both tasks remain `[~]`; no unified verification or T134 started.
 

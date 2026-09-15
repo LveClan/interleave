@@ -23,6 +23,7 @@ import { DocumentRepository } from "./document-repository";
 import { newRowId } from "./ids";
 import { ProcessingUnitRepository } from "./processing-unit-repository";
 import { ProcessingUnitService } from "./processing-unit-service";
+import { SourceSectionRepository } from "./source-section-repository";
 
 /** Document-only rail. Derived output verification is never resolved here. */
 export class SourcePendingService {
@@ -37,6 +38,32 @@ export class SourcePendingService {
       )
       .get();
     if (!source) return null;
+    const sections = new SourceSectionRepository(this.db);
+    if (sections.epubChapters(sourceId)) {
+      const service = new BlockProcessingService(this.db);
+      const views = service.listBlockViews(sourceId);
+      return {
+        sourceId,
+        summary: service.getSourceProcessingSummary(sourceId),
+        entries: views
+          .filter((v) => v.state === "needs_later" || v.state === "stale_after_edit")
+          .map((v) => {
+            const locatable = sections.unitIds(v.sourceElementId).includes(v.stableBlockId);
+            return {
+              blockId: v.stableBlockId,
+              order: locatable ? v.order : null,
+              state: v.state as "needs_later" | "stale_after_edit",
+              preview: "",
+              contentHash: v.blockContentHash,
+              locatable,
+              canResume: false,
+              topicId:
+                sections.topicForUnit(sourceId, v.sourceElementId, v.stableBlockId) ??
+                v.sourceElementId,
+            };
+          }),
+      };
+    }
     const geometry = new ProcessingUnitRepository(this.db).views(sourceId);
     if (geometry)
       return {

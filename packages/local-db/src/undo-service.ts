@@ -317,6 +317,7 @@ export class UndoService {
    * incoherent PARTIAL undo, so it is treated as non-invertible here too.
    */
   private isInvertible(op: ParsedOp): boolean {
+    if (op.payload.skimBatch) return false;
     if (!op.elementId) return false;
     if (op.payload.receiptRestore === true) return false;
     // T125 card re-stabilization demotions are a COMPOUND mutation (body edit + FSRS

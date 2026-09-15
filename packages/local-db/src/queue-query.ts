@@ -108,6 +108,7 @@ export interface QueueEligibilitySummary {
 
 /** A flat, JSON-serializable queue row crossing IPC to the renderer. */
 export interface QueueItemSummary {
+  readonly sectionSourceTitle?: string | null;
   readonly id: string;
   readonly type: string;
   readonly status: string;
@@ -982,8 +983,10 @@ export class QueueQuery {
       : batch
         ? false
         : (this.repos.review.findCardById(element.id)?.card.isRetired ?? false);
-    const queueEligibility =
-      batch && !inventory
+    const ownsRange = this.repos.queue.ownsReadingRange(element.id);
+    const queueEligibility = !ownsRange
+      ? { eligible: false, reason: "Reading is scheduled through chapter ranges" }
+      : batch && !inventory
         ? { eligible: true, reason: null }
         : queueEligibilityFor(element, dueAt, asOfMs, cardRetired);
     const fallow = inventory
@@ -1141,6 +1144,7 @@ export class QueueQuery {
       author: ctx ? ctx.author : null,
       concept,
       // Attention items never carry a sibling group (cards-only relation); `sourceId`
+      sectionSourceTitle: this.repos.queue.sectionSourceTitle(element.id),
       // is the owning source (or the element itself when it IS a source).
       siblingGroupId: null,
       sourceId: sourceId ?? null,

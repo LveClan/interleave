@@ -62,6 +62,44 @@ async function loadPdfJs(): Promise<PdfJsModule> {
   return await pdfjsPromise;
 }
 
+/** Bookmark destinations resolved without rendering pages or executing document actions. */
+export async function extractPdfOutline(
+  data: Uint8Array,
+): Promise<{ title: string; page: number; depth: number }[]> {
+  const pdfjs = await loadPdfJs();
+  const doc = await pdfjs.getDocument({ data, isEvalSupported: false }).promise;
+  try {
+    const result: { title: string; page: number; depth: number }[] = [];
+    type Entry = { title: string; dest: string | unknown[] | null; items: Entry[] };
+    const walk = async (entries: readonly Entry[], depth: number): Promise<void> => {
+      if (depth > 32) return;
+      for (const entry of entries) {
+        if (result.length >= 2000) return;
+        try {
+          const destination =
+            typeof entry.dest === "string" ? await doc.getDestination(entry.dest) : entry.dest;
+          const ref = destination?.[0];
+          const page =
+            typeof ref === "number"
+              ? ref + 1
+              : ref && typeof ref === "object" && "num" in ref && "gen" in ref
+                ? (await doc.getPageIndex(ref as { num: number; gen: number })) + 1
+                : null;
+          if (page != null && page > 0 && page <= doc.numPages)
+            result.push({ title: entry.title.slice(0, 300), page, depth });
+        } catch {
+          /* Broken bookmarks retain their usable children. */
+        }
+        await walk(entry.items ?? [], depth + 1);
+      }
+    };
+    await walk((await doc.getOutline()) ?? [], 0);
+    return result;
+  } finally {
+    await doc.destroy();
+  }
+}
+
 /** One extracted text line on a page, boxed in top-down PDF user space (scale 1). */
 export interface PdfTextLine {
   /** The line's visible text (a run of glyphs grouped by baseline). */

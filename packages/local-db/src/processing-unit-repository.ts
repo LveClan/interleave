@@ -16,7 +16,7 @@ import {
   sourceLocations,
   sources,
 } from "@interleave/db";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { BlockProcessingRepository } from "./block-processing-repository";
 import { newRowId } from "./ids";
 import { mediaProcessingData, parseClip } from "./media-processing-repository";
@@ -144,7 +144,13 @@ export class ProcessingUnitRepository {
       .select({ outputId: elements.id, page: sourceLocations.page, clip: sourceLocations.clip })
       .from(sourceLocations)
       .innerJoin(elements, eq(elements.id, sourceLocations.elementId))
-      .where(and(eq(sourceLocations.sourceElementId, sourceId), isNull(elements.deletedAt)))
+      .where(
+        and(
+          eq(sourceLocations.sourceElementId, sourceId),
+          isNull(elements.deletedAt),
+          inArray(elements.type, ["extract", "card", "media_fragment"]),
+        ),
+      )
       .all();
     const outputsFor = (geometry: ProcessingUnitGeometry) => [
       ...new Set(

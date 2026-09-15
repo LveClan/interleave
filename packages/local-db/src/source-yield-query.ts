@@ -87,6 +87,7 @@ import { DocumentRepository } from "./document-repository";
 import { inboxSourceDomain } from "./inbox-query";
 import { mediaProcessingData } from "./media-processing-repository";
 import { ProcessingUnitRepository } from "./processing-unit-repository";
+import { SourceSectionRepository } from "./source-section-repository";
 
 /** Default cap so a broad rollup can't return an unbounded list (like `LibraryQuery`). */
 export const DEFAULT_SOURCE_YIELD_LIMIT = 200;
@@ -1079,6 +1080,16 @@ export class SourceYieldQuery {
    * read-point or no blocks; **100%** when the read-point is at/after the last block.
    */
   private computeReadPct(elementId: ElementId): number {
+    if (
+      new SourceSectionRepository(this.db).epubChapters(elementId) ||
+      new SourceSectionRepository(this.db).list(elementId).length > 0
+    ) {
+      const views = this.blockProcessing.listBlockViews(elementId);
+      return views.length
+        ? views.filter((v) => ["read", "extracted", "processed_without_output"].includes(v.state))
+            .length / views.length
+        : 0;
+    }
     const media = mediaProcessingData(this.db, elementId);
     if (media)
       return media.durationMs
@@ -1156,7 +1167,11 @@ export class SourceYieldQuery {
     }
 
     for (const id of sourceIds) {
-      if (new ProcessingUnitRepository(this.db).units(id)) {
+      if (
+        new ProcessingUnitRepository(this.db).units(id) ||
+        new SourceSectionRepository(this.db).epubChapters(id) ||
+        new SourceSectionRepository(this.db).list(id).length > 0
+      ) {
         out.set(id, this.computeReadPct(id));
         continue;
       }

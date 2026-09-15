@@ -130,6 +130,8 @@ import {
   SessionPlanQuery,
   SourcePendingService,
   SourceReturnBriefingQuery,
+  SourceSectionRepository,
+  SourceStructureService,
   SourceYieldQuery,
   StandingAutoPostponeService,
   type SynthesisData,
@@ -1894,6 +1896,7 @@ export class DbService {
         ? {
             kind: result.undo.kind,
             previousStatus: result.undo.previousStatus,
+            ...(result.undo.skimReceipt ? { skimReceipt: result.undo.skimReceipt } : {}),
             ...(result.undo.previousDueAt !== undefined
               ? { previousDueAt: result.undo.previousDueAt }
               : {}),
@@ -1964,6 +1967,7 @@ export class DbService {
     this.queueActionService.undo(id, {
       kind: request.undo.kind,
       previousStatus: request.undo.previousStatus as ElementStatus,
+      ...(request.undo.skimReceipt ? { skimReceipt: request.undo.skimReceipt } : {}),
       ...(request.undo.previousDueAt !== undefined
         ? { previousDueAt: request.undo.previousDueAt as IsoTimestamp | null }
         : {}),
@@ -3928,7 +3932,7 @@ export class DbService {
             }
           : {}),
       });
-      if (element?.type === "source") {
+      if (element?.type === "source" || element?.type === "topic") {
         this.blockProcessingService.reconcileSourceDocumentWithin(
           tx,
           elementId,
@@ -4016,7 +4020,7 @@ export class DbService {
 
   private isLiveSource(sourceElementId: ElementId): boolean {
     const element = this.repos.elements.findById(sourceElementId);
-    return element?.type === "source" && element.deletedAt == null;
+    return (element?.type === "source" || element?.type === "topic") && element.deletedAt == null;
   }
 
   markBlockIgnored(request: BlockProcessingMarkBlockRequest): BlockProcessingMarkBlockResult {
@@ -6252,6 +6256,22 @@ export class DbService {
    * reserved for T021.
    */
   setReadPoint(request: ReadPointSetRequest): ReadPointSetResult {
+    const section = new SourceSectionRepository(this.require().db).find(request.elementId);
+    if (
+      section &&
+      (!new SourceSectionRepository(this.require().db).valid(section) ||
+        section.documentId !== request.documentId ||
+        (!JSON.parse(section.unitIds).includes(request.blockId) &&
+          !this.repos.documents
+            .listBlocks(request.documentId as ElementId)
+            .some(
+              (b) =>
+                b.stableBlockId === request.blockId &&
+                b.page != null &&
+                JSON.parse(section.unitIds).includes(`pdf:page:${b.page}`),
+            )))
+    )
+      throw new Error("Read point outside section");
     const saved = this.repos.documents.setReadPoint({
       elementId: request.elementId as ElementId,
       documentId: request.documentId as ElementId,
@@ -6691,6 +6711,23 @@ export class DbService {
   get processingUnitService(): ProcessingUnitService {
     if (!this.handle) throw new Error("Database is not open");
     return new ProcessingUnitService(this.handle.db);
+  }
+  get sourceStructureService(): SourceStructureService {
+    if (!this.handle) throw new Error("Database is not open");
+    return new SourceStructureService(this.handle.db);
+  }
+  async getSourceStructure(sourceId: string) {
+    const service = this.sourceStructureService;
+    const basic = service.list(sourceId);
+    if (basic.format !== "pdf") return basic;
+    const data = await this.getPdfData({ elementId: sourceId });
+    if (!data.bytes) return basic;
+    try {
+      const { extractPdfOutline } = await import("@interleave/importers");
+      return service.list(sourceId, await extractPdfOutline(new Uint8Array(data.bytes)));
+    } catch {
+      return service.list(sourceId);
+    }
   }
   get mediaPlaybackService(): MediaPlaybackService {
     if (!this.handle) throw new Error("Database is not open");

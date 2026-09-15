@@ -21,6 +21,7 @@ export function ProcessingUnitControls({
   onJump,
   currentMs,
   canJump = ready,
+  sectionId,
 }: {
   sourceId: string;
   activeId: string;
@@ -29,6 +30,7 @@ export function ProcessingUnitControls({
   onJump: (blockId: string) => boolean;
   currentMs?: number;
   canJump?: boolean;
+  sectionId?: string | undefined;
 }) {
   useLocale();
   const [blocks, setBlocks] = useState<readonly SourceBlockProcessingView[]>([]);
@@ -44,7 +46,10 @@ export function ProcessingUnitControls({
   const reload = useCallback(async () => {
     const request = ++version.current;
     try {
-      const result = await appApi.openProcessingUnits(sourceId);
+      const result = sectionId
+        ? await appApi.getSectionReader(sectionId)
+        : await appApi.openProcessingUnits(sourceId);
+      if (!result) return;
       if (mounted.current && request === version.current) {
         setBlocks(result.blocks);
         setResolved(result.summary.terminalBlocks);
@@ -54,7 +59,7 @@ export function ProcessingUnitControls({
     } catch {
       if (mounted.current && request === version.current) setError(true);
     }
-  }, [sourceId]);
+  }, [sourceId, sectionId]);
   useEffect(() => {
     mounted.current = true;
     void reload();
@@ -82,14 +87,23 @@ export function ProcessingUnitControls({
     setBusy(true);
     try {
       if (state && active?.blockContentHash) {
-        const result = await appApi.setProcessingUnit({
-          sourceId,
-          blockId: selectedId,
-          contentHash: active.blockContentHash,
-          expectedState: active.state,
-          state,
-        });
-        if (mounted.current) setReceipt(result.receipt);
+        if (sectionId) {
+          await appApi.setSectionUnit({
+            topicId: sectionId,
+            blockId: selectedId,
+            contentHash: active.blockContentHash,
+            state,
+          });
+        } else {
+          const result = await appApi.setProcessingUnit({
+            sourceId,
+            blockId: selectedId,
+            contentHash: active.blockContentHash,
+            expectedState: active.state,
+            state,
+          });
+          if (mounted.current) setReceipt(result.receipt);
+        }
       } else if (!state && receipt) {
         const result = await appApi.undoProcessingUnit(receipt);
         if (!result.undone) throw new Error("Unit changed");
@@ -126,21 +140,25 @@ export function ProcessingUnitControls({
   };
   return (
     <>
-      <SourceReturnBriefing
-        sourceId={sourceId}
-        scheduledReturn={scheduledReturn}
-        canJump={canJump}
-        onJump={(id) => {
-          if (!onJump(id)) setError(true);
-        }}
-        onOpenPending={() => setOpenSignal((n) => n + 1)}
-      />
-      <SourcePendingRail
-        sourceId={sourceId}
-        canJump={canJump}
-        onJump={onJump}
-        openSignal={openSignal}
-      />
+      {!sectionId && (
+        <SourceReturnBriefing
+          sourceId={sourceId}
+          scheduledReturn={scheduledReturn}
+          canJump={canJump}
+          onJump={(id) => {
+            if (!onJump(id)) setError(true);
+          }}
+          onOpenPending={() => setOpenSignal((n) => n + 1)}
+        />
+      )}
+      {!sectionId && (
+        <SourcePendingRail
+          sourceId={sourceId}
+          canJump={canJump}
+          onJump={onJump}
+          openSignal={openSignal}
+        />
+      )}
       <section className="processing-units" aria-label={t("sourceReturn.unitState")}>
         <span>
           {active?.geometry?.kind === "pdf_page"

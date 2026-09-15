@@ -39,6 +39,7 @@ import {
   count as sqlCount,
 } from "drizzle-orm";
 import { rowToElement, rowToReviewState } from "./mappers";
+import { SourceSectionRepository } from "./source-section-repository";
 
 /**
  * Lifecycle statuses that take a row OUT of the due queue, regardless of its
@@ -72,6 +73,12 @@ function attentionTypeCondition(types?: readonly ElementType[]) {
 
 export class QueueRepository {
   constructor(private readonly db: InterleaveDatabase) {}
+  ownsReadingRange(id: string): boolean {
+    return new SourceSectionRepository(this.db).isQueueOwner(id);
+  }
+  sectionSourceTitle(id: string): string | null {
+    return new SourceSectionRepository(this.db).titleForSection(id);
+  }
 
   /**
    * Cards due for FSRS review at or before `asOf`, soonest first. Joins
@@ -174,8 +181,9 @@ export class QueueRepository {
         ),
       )
       .orderBy(asc(elements.dueAt));
-    const rows = limit === undefined ? base.all() : base.limit(limit).all();
-    return rows.map(rowToElement);
+    const sections = new SourceSectionRepository(this.db);
+    const rows = base.all().filter((row) => sections.isQueueOwner(row.id));
+    return (limit === undefined ? rows : rows.slice(0, limit)).map(rowToElement);
   }
 
   /** Live elements of a type currently in the inbox (status `inbox`), newest first. */
@@ -230,22 +238,7 @@ export class QueueRepository {
     asOf: IsoTimestamp,
     options: { readonly types?: readonly ElementType[] } = {},
   ): number {
-    const typeCondition = attentionTypeCondition(options.types);
-    if (!typeCondition) return 0;
-    const row = this.db
-      .select({ n: sqlCount() })
-      .from(elements)
-      .where(
-        and(
-          typeCondition,
-          isNull(elements.deletedAt),
-          notInArray(elements.status, QUEUE_EXCLUDED_STATUSES as ElementStatus[]),
-          isNotNull(elements.dueAt),
-          lte(elements.dueAt, asOf),
-        ),
-      )
-      .get();
-    return row?.n ?? 0;
+    return this.dueAttentionItems(asOf, undefined, options).length;
   }
 
   /**

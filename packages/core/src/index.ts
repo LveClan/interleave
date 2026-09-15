@@ -428,6 +428,14 @@ export {
   type SourceReturnBriefing,
   shouldShowSourceReturnBriefing,
 } from "./source-return-briefing";
+export type {
+  ApplySkimRequest,
+  SectionReaderData,
+  SkimReceipt,
+  SkimVerdict,
+  SourceStructure,
+  StructureRange,
+} from "./source-structure";
 // Source-yield scoring — the pure, tunable per-source yield rank (T083, ./source-yield).
 export type { SourceYieldInputs, SourceYieldVerdict, YieldBand } from "./source-yield";
 export {

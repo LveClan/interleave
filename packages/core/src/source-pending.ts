@@ -1,6 +1,7 @@
 import type { ProcessingUnitGeometry, SourceBlockProcessingSummary } from "./source";
 
 export interface SourcePendingBlock {
+  readonly topicId?: string;
   readonly geometry?: ProcessingUnitGeometry;
   readonly blockId: string;
   readonly order: number | null;

@@ -676,6 +676,7 @@ export type QueueDueState = "overdue" | "today" | "soon";
 
 /** A flat queue row (due card or due attention item). */
 export interface QueueItemSummary {
+  readonly sectionSourceTitle?: string | null;
   readonly id: string;
   readonly type: string;
   readonly status: string;
@@ -1101,6 +1102,7 @@ export interface QueueActRequest {
 
 /** The undo recipe a removing action hands back for the snackbar. */
 export interface QueueActUndo {
+  readonly skimReceipt?: import("@interleave/core").SkimReceipt;
   /** `restore` → restore a soft-deleted row; `status` → re-set the prior status. */
   readonly kind: "restore" | "status";
   /** The status the row had BEFORE the action (the target the undo restores). */
@@ -5557,6 +5559,33 @@ export interface AppApi {
     start(request: { sourceId: string }): Promise<{ sessionId: string }>;
     record(request: import("@interleave/core").RecordPlaybackRequest): Promise<{ saved: boolean }>;
   };
+  readonly sourceStructure: {
+    list(request: { sourceId: string }): Promise<import("@interleave/core").SourceStructure>;
+    manual(request: {
+      sourceId: string;
+      documentId: string;
+      start: string;
+      end: string;
+      title: string;
+    }): Promise<import("@interleave/core").StructureRange>;
+    apply(
+      request: import("@interleave/core").ApplySkimRequest,
+    ): Promise<import("@interleave/core").SkimReceipt>;
+    undo(request: import("@interleave/core").SkimReceipt): Promise<{ undone: boolean }>;
+    reader(request: {
+      topicId: string;
+    }): Promise<import("@interleave/core").SectionReaderData | null>;
+    setUnit(request: {
+      topicId: string;
+      blockId: string;
+      contentHash: string;
+      state: "read" | "unread" | "ignored" | "needs_later" | "processed_without_output";
+    }): Promise<import("@interleave/core").SectionReaderData | null>;
+    finish(request: {
+      topicId: string;
+      intent: "finished" | "return_later" | "abandon";
+    }): Promise<import("@interleave/core").SkimReceipt>;
+  };
   readonly rereadProposals: {
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
     item(request: RereadProposalsItemRequest): Promise<RereadProposalsItemResult>;
@@ -6936,6 +6965,27 @@ export const appApi = {
   },
   openProcessingUnits(sourceId: string) {
     return requireAppApi().processingUnits.open({ sourceId });
+  },
+  getSourceStructure(sourceId: string) {
+    return requireAppApi().sourceStructure.list({ sourceId });
+  },
+  manualSourceSection(request: Parameters<AppApi["sourceStructure"]["manual"]>[0]) {
+    return requireAppApi().sourceStructure.manual(request);
+  },
+  applySourceSkim(request: import("@interleave/core").ApplySkimRequest) {
+    return requireAppApi().sourceStructure.apply(request);
+  },
+  undoSourceSkim(request: import("@interleave/core").SkimReceipt) {
+    return requireAppApi().sourceStructure.undo(request);
+  },
+  getSectionReader(topicId: string) {
+    return requireAppApi().sourceStructure.reader({ topicId });
+  },
+  setSectionUnit(request: Parameters<AppApi["sourceStructure"]["setUnit"]>[0]) {
+    return requireAppApi().sourceStructure.setUnit(request);
+  },
+  finishSection(request: Parameters<AppApi["sourceStructure"]["finish"]>[0]) {
+    return requireAppApi().sourceStructure.finish(request);
   },
   startMediaPlayback(sourceId: string) {
     return requireAppApi().mediaPlayback.start({ sourceId });

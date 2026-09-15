@@ -42,6 +42,8 @@ import { newRowId, nowIso } from "./ids";
 import { rowToElement } from "./mappers";
 import { ReviewRepository } from "./review-repository";
 import { SchedulerService } from "./scheduler-service";
+import { SourceSectionRepository } from "./source-section-repository";
+import { SourceStructureService } from "./source-structure-service";
 import type { DbClient } from "./types";
 
 /** The mutating queue actions (open is renderer-only navigation, never an IPC call). */
@@ -136,6 +138,7 @@ export interface QueueActionResult {
 
 /** The undo recipe for a destructive/removing action. */
 export interface QueueActionUndo {
+  readonly skimReceipt?: import("@interleave/core").SkimReceipt;
   /** `restore` → `ElementRepository.restore`; `status` → re-set the prior status. */
   readonly kind: "restore" | "status";
   /** The status to restore to (the row's status BEFORE the action). */
@@ -182,6 +185,31 @@ export class QueueActionService {
   ): QueueActionResult {
     const element = this.requireLive(id);
     this.rejectSystemTaskAction(element);
+    if (
+      new SourceSectionRepository(this.db).find(id) &&
+      ["markDone", "dismiss", "postpone"].includes(kind)
+    ) {
+      if (
+        kind === "markDone" &&
+        !options.confirmUnresolvedBlocks &&
+        !this.blockProcessing.getDoneGate(id).canMarkDone
+      )
+        throw new Error("Section has unresolved blocks");
+      const receipt = new SourceStructureService(this.db).finish(
+        id,
+        kind === "markDone" ? "finished" : kind === "dismiss" ? "abandon" : "return_later",
+      );
+      return {
+        element: this.requireLive(id),
+        removed: kind !== "postpone",
+        undo: {
+          kind: "status",
+          previousStatus: element.status,
+          previousDueAt: element.dueAt,
+          skimReceipt: receipt,
+        },
+      };
+    }
     switch (kind) {
       case "postpone":
         return this.postpone(element, now);
@@ -448,6 +476,11 @@ export class QueueActionService {
    * (`update_element`). The renderer drives this from the snackbar's "Undo".
    */
   undo(id: ElementId, undo: QueueActionUndo): Element {
+    if (undo.skimReceipt) {
+      if (!new SourceStructureService(this.db).undo(undo.skimReceipt))
+        throw new Error("Section changed after action");
+      return this.requireLive(id);
+    }
     if (undo.kind === "restore") {
       // A descendant-aware tombstone (T135) cleared the node's schedule and recorded a
       // preimage in the recipe; re-establish it so the restored row returns to its exact

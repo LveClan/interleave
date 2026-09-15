@@ -321,7 +321,7 @@ function QueueItem({
           // Return later / Abandon. Non-source rows (and every other action) keep the
           // plain icon-button. The trigger keeps the row icon-button look + the
           // `queue-action-markDone` testid so existing tests/e2e still find it.
-          a.kind === "markDone" && item.type === "source" ? (
+          a.kind === "markDone" && (item.type === "source" || item.sectionSourceTitle) ? (
             <DoneIntentMenu
               key={a.kind}
               getSummary={getDoneSummary}

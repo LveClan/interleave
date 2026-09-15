@@ -95,6 +95,7 @@ vi.mock("./ProcessingUnitControls", () => ({
     </button>
   ),
 }));
+vi.mock("./StructuralSkim", () => ({ StructuralSkim: () => null }));
 
 beforeEach(() => {
   h.desktop = true;
@@ -172,6 +173,31 @@ function renderReader() {
 }
 
 describe("PdfReader", () => {
+  it("restricts a section to its pages and retains the loaded PDF across equal-range refreshes", async () => {
+    const view = render(
+      <PdfReader
+        elementId="src-1"
+        sectionId="chapter"
+        readPointElementId="chapter"
+        blockPages={{ "blk-page-2": 2 }}
+        toast={h.toast}
+      />,
+    );
+    await waitFor(() => expect(view.getByTestId("pdf-page-indicator")).toHaveTextContent("Page 2"));
+    expect(view.container.querySelector('[data-pdf-page="1"]')).toBeNull();
+    const loads = h.getSourcePdfData.mock.calls.length;
+    view.rerender(
+      <PdfReader
+        elementId="src-1"
+        sectionId="chapter"
+        readPointElementId="chapter"
+        blockPages={{ "blk-page-2": 2 }}
+        toast={h.toast}
+      />,
+    );
+    expect(h.getSourcePdfData).toHaveBeenCalledTimes(loads);
+    expect(h.getReadPoint).toHaveBeenCalledWith({ elementId: "chapter" });
+  });
   it("keeps a pending-page jump ahead of late restore and identical route rerenders", async () => {
     let resolve: (value: unknown) => void = () => {};
     h.getReadPoint.mockReturnValue(

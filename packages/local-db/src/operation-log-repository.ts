@@ -27,6 +27,21 @@ export interface AppendOpInput {
   /** The element this op concerns; `null` if it targets no single element. */
   readonly elementId: string | null;
 }
+const operationContexts = new WeakMap<object, Record<string, unknown>>();
+export function withOperationContext<T>(
+  tx: DbClient,
+  context: Record<string, unknown>,
+  run: () => T,
+): T {
+  const previous = operationContexts.get(tx);
+  operationContexts.set(tx, { ...previous, ...context });
+  try {
+    return run();
+  } finally {
+    if (previous) operationContexts.set(tx, previous);
+    else operationContexts.delete(tx);
+  }
+}
 
 interface RawOpRow {
   id: string;
@@ -357,6 +372,9 @@ export class OperationLogRepository {
    * entry.
    */
   append(tx: DbClient, input: AppendOpInput): OperationLogEntry {
+    const context = operationContexts.get(tx);
+    if (context)
+      input = { ...input, payload: { ...(input.payload as Record<string, unknown>), ...context } };
     const id = newOperationId();
     const createdAt = nowIso();
     const payload = JSON.stringify(input.payload ?? null);

@@ -342,9 +342,12 @@ export class ExtractionService {
         });
       }
 
-      if (locationSource === input.sourceElementId) {
+      if (
+        locationSource === input.sourceElementId ||
+        this.elements.findById(locationSource)?.type === "topic"
+      ) {
         this.blockProcessing.deriveBlockStateFromExtractionWithin(tx, {
-          sourceElementId: input.sourceElementId,
+          sourceElementId: locationSource,
           outputElementId: element.id,
           outputType: "extract",
           sourceLocationId: location.id,

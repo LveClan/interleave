@@ -890,6 +890,7 @@ export type QueueDueState = "overdue" | "today" | "soon";
 
 /** A flat, JSON-serializable queue row. */
 export interface QueueItemSummary {
+  readonly sectionSourceTitle?: string | null;
   readonly id: string;
   readonly type: string;
   readonly status: string;
@@ -1156,6 +1157,7 @@ export type QueueActRequest = z.infer<typeof QueueActRequestSchema>;
 
 /** The undo recipe a removing action hands back for the snackbar. */
 export interface QueueActUndo {
+  readonly skimReceipt?: import("@interleave/core").SkimReceipt;
   /** `restore` → `ElementRepository.restore`; `status` → re-set the prior status. */
   readonly kind: "restore" | "status";
   /** The status the row had BEFORE the action (the target the undo restores). */
@@ -1249,6 +1251,10 @@ export const QueueUndoRequestSchema = z.object({
     previousStatus: z.enum(ELEMENT_STATUSES),
     previousDueAt: IsoTimestampInputSchema.nullable().optional(),
     previousReviewDueAt: IsoTimestampInputSchema.nullable().optional(),
+    skimReceipt: z
+      .object({ sourceId: ElementIdSchema, token: z.string().min(1).max(256) })
+      .strict()
+      .optional(),
   }),
 });
 export type QueueUndoRequest = z.infer<typeof QueueUndoRequestSchema>;
@@ -8514,6 +8520,33 @@ export interface AppApi {
     start(request: { sourceId: string }): Promise<{ sessionId: string }>;
     record(request: import("@interleave/core").RecordPlaybackRequest): Promise<{ saved: boolean }>;
   };
+  readonly sourceStructure: {
+    list(request: { sourceId: string }): Promise<import("@interleave/core").SourceStructure>;
+    manual(request: {
+      sourceId: string;
+      documentId: string;
+      start: string;
+      end: string;
+      title: string;
+    }): Promise<import("@interleave/core").StructureRange>;
+    apply(
+      request: import("@interleave/core").ApplySkimRequest,
+    ): Promise<import("@interleave/core").SkimReceipt>;
+    undo(request: import("@interleave/core").SkimReceipt): Promise<{ undone: boolean }>;
+    reader(request: {
+      topicId: string;
+    }): Promise<import("@interleave/core").SectionReaderData | null>;
+    setUnit(request: {
+      topicId: string;
+      blockId: string;
+      contentHash: string;
+      state: "read" | "unread" | "ignored" | "needs_later" | "processed_without_output";
+    }): Promise<import("@interleave/core").SectionReaderData | null>;
+    finish(request: {
+      topicId: string;
+      intent: "finished" | "return_later" | "abandon";
+    }): Promise<import("@interleave/core").SkimReceipt>;
+  };
   readonly rereadProposals: {
     /** Capped, dismissible re-read proposals (T129) — read-only, strongest-first. */
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
@@ -8695,6 +8728,61 @@ export interface SourceReturnBriefingResult {
 }
 
 export const SourcePendingListRequestSchema = z.object({ sourceId: ElementIdSchema }).strict();
+export const StructureManualSchema = z
+  .object({
+    sourceId: ElementIdSchema,
+    documentId: ElementIdSchema,
+    start: z.string().min(1).max(256),
+    end: z.string().min(1).max(256),
+    title: z.string().trim().min(1).max(300),
+  })
+  .strict();
+const StructureRangeSchema = z
+  .object({
+    key: z.string().min(1).max(1024),
+    title: z.string().min(1).max(300),
+    depth: z.number().int().min(0).max(32),
+    documentId: ElementIdSchema,
+    unitIds: z.array(z.string().min(1).max(256)).min(1).max(20000),
+    fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+    topicId: ElementIdSchema.nullable(),
+    verdict: z.enum(["extract_worthy", "later", "ignore"]).nullable(),
+    priority: z.number().min(0).max(1),
+    valid: z.boolean(),
+  })
+  .strict();
+export const StructureApplySchema = z
+  .object({
+    sourceId: ElementIdSchema,
+    decisions: z
+      .array(
+        z
+          .object({
+            range: StructureRangeSchema,
+            verdict: z.enum(["extract_worthy", "later", "ignore"]),
+            priority: z.number().min(0).max(1),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(2000),
+  })
+  .strict();
+export const StructureUndoSchema = z
+  .object({ sourceId: ElementIdSchema, token: z.string().min(1).max(256) })
+  .strict();
+export const SectionReaderSchema = z.object({ topicId: ElementIdSchema }).strict();
+export const SectionSetUnitSchema = z
+  .object({
+    topicId: ElementIdSchema,
+    blockId: z.string().min(1).max(256),
+    contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+    state: z.enum(["unread", "read", "ignored", "needs_later", "processed_without_output"]),
+  })
+  .strict();
+export const SectionFinishSchema = z
+  .object({ topicId: ElementIdSchema, intent: z.enum(["finished", "return_later", "abandon"]) })
+  .strict();
 export const MediaPlaybackRecordRequestSchema = z
   .object({
     sourceId: ElementIdSchema,

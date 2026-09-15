@@ -78,7 +78,10 @@ export function metaFor(item: QueueItemSummary): ReactElement | null {
   if (item.type === "topic") {
     return (
       <span className="qitem__sub">
-        <Icon name="layers" size={13} /> Topic
+        <Icon name="layers" size={13} />{" "}
+        {item.sectionSourceTitle
+          ? t("sourceReturn.sectionOf", { title: item.sectionSourceTitle })
+          : "Topic"}
       </span>
     );
   }
@@ -188,3 +191,5 @@ export function DueBadge({ item }: { item: QueueItemSummary }) {
     </span>
   );
 }
+
+import { t } from "../../i18n";

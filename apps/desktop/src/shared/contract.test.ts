@@ -123,6 +123,7 @@ import {
   ReviewSessionNextRequestSchema,
   SearchQueryRequestSchema,
   type SearchQueryResult,
+  SectionSetUnitSchema,
   SemanticContradictionsRequestSchema,
   SemanticReindexRequestSchema,
   SemanticRelatedRequestSchema,
@@ -164,6 +165,8 @@ import {
   type SourcesImportUrlResult,
   SourcesRunOcrRequestSchema,
   SourceYieldListRequestSchema,
+  StructureApplySchema,
+  StructureUndoSchema,
   SynthesisCreateRequestSchema,
   SynthesisEditBodyRequestSchema,
   SynthesisGetRequestSchema,
@@ -195,6 +198,35 @@ import {
 } from "./contract";
 
 describe("IPC channels", () => {
+  it("bounds T134 skim batches and rejects extra fields and invented processing states", () => {
+    const range = {
+      key: "doc:b1:b2",
+      title: "Chapter",
+      depth: 0,
+      documentId: "doc",
+      unitIds: ["b1", "b2"],
+      fingerprint: "a".repeat(64),
+      topicId: null,
+      verdict: null,
+      priority: 0.5,
+      valid: true,
+    };
+    const request = { sourceId: "source", decisions: [{ range, verdict: "later", priority: 0.5 }] };
+    expect(StructureApplySchema.safeParse(request).success).toBe(true);
+    expect(StructureApplySchema.safeParse({ ...request, decisions: [] }).success).toBe(false);
+    expect(StructureApplySchema.safeParse({ ...request, sql: "SELECT 1" }).success).toBe(false);
+    expect(
+      SectionSetUnitSchema.safeParse({
+        topicId: "topic",
+        blockId: "b1",
+        contentHash: "a".repeat(64),
+        state: "extracted",
+      }).success,
+    ).toBe(false);
+    expect(
+      StructureUndoSchema.safeParse({ sourceId: "source", token: "receipt", previous: {} }).success,
+    ).toBe(false);
+  });
   it("bounds the T131 read, resume preconditions and opaque undo receipt", () => {
     expect(
       SourcePendingListRequestSchema.safeParse({ sourceId: "source", sql: "select" }).success,
@@ -355,6 +387,13 @@ describe("IPC channels", () => {
         "processingUnits:undo",
         "mediaPlayback:start",
         "mediaPlayback:record",
+        "sourceStructure:list",
+        "sourceStructure:manual",
+        "sourceStructure:apply",
+        "sourceStructure:undo",
+        "sourceStructure:reader",
+        "sourceStructure:setUnit",
+        "sourceStructure:finish",
         "rereadProposals:list",
         "rereadProposals:item",
         "rereadProposals:accept",

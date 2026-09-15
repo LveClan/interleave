@@ -76,8 +76,10 @@ import { PdfReader } from "./PdfReader";
 import { ProcessedSpanButtons, type ProcessingFilter } from "./ProcessedSpanButtons";
 import { isPendingEditorSaved } from "./pendingEditor";
 import { RereadPanel } from "./RereadPanel";
+import { SectionReader } from "./SectionReader";
 import { SourcePendingRail } from "./SourcePendingRail";
 import { SourceReturnBriefing } from "./SourceReturnBriefing";
+import { StructuralSkim } from "./StructuralSkim";
 import { useDocument } from "./useDocument";
 import { useHighlights } from "./useHighlights";
 import { useProcessedSpans } from "./useProcessedSpans";
@@ -213,7 +215,29 @@ function SourceClusterIndicator({ sourceId }: { sourceId: string | null }) {
 
 export function SourceReader() {
   const { id } = useParams({ from: "/source/$id" });
-  return <SourceReaderVisit key={id} />;
+  return <ReaderKind key={id} id={id} />;
+}
+function ReaderKind({ id }: { id: string }) {
+  const [section, setSection] = useState<import("@interleave/core").SectionReaderData | null>(null);
+  const [loaded, setLoaded] = useState(!isDesktop());
+  useEffect(() => {
+    if (!isDesktop()) return;
+    let cancelled = false;
+    void Promise.resolve()
+      .then(() => appApi.getSectionReader(id))
+      .then((result) => {
+        if (!cancelled) setSection(result);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+  if (!loaded) return null;
+  return section ? <SectionReader initial={section} /> : <SourceReaderVisit key={id} />;
 }
 
 function SourceReaderVisit() {
@@ -1230,6 +1254,7 @@ function SourceReaderVisit() {
       <div className="reader-with-aside" data-has-aside={rereadItem ? "true" : "false"}>
         <div className="reader-main-column">
           <div className="reader-briefing-slot">
+            {inspector?.element.type === "source" && <StructuralSkim key={id} sourceId={id} />}
             <SourceReturnBriefing
               sourceId={id}
               scheduledReturn={search.entry === "queue" || rereadId !== null}

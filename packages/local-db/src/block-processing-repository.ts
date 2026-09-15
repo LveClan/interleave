@@ -293,6 +293,12 @@ export class BlockProcessingRepository {
       .all();
     const derived: LiveBlockOutput[] = [];
     for (const row of locationRows) {
+      if (
+        row.elementType !== "extract" &&
+        row.elementType !== "card" &&
+        row.elementType !== "media_fragment"
+      )
+        continue;
       let blockIds: string[] = [];
       try {
         blockIds = JSON.parse(row.blockIds) as string[];
@@ -541,6 +547,12 @@ export class BlockProcessingRepository {
         .where(and(inArray(sourceLocations.sourceElementId, chunk), isNull(elements.deletedAt)))
         .all();
       for (const row of locationRows) {
+        if (
+          row.elementType !== "extract" &&
+          row.elementType !== "card" &&
+          row.elementType !== "media_fragment"
+        )
+          continue;
         const sourceId = row.sourceElementId as ElementId;
         let blockIds: string[] = [];
         try {
