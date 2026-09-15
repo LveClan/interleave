@@ -19,7 +19,15 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
@@ -70,6 +78,31 @@ function main() {
 
   const storeDir = resolveStorePkgDir();
   const electronVersion = resolveElectronVersion();
+  const receiptFile = path.join(nativeDir, "better_sqlite3.json");
+  const receipt = {
+    platform: process.platform,
+    arch: process.arch,
+    electron: electronVersion,
+    sqlite: JSON.parse(readFileSync(path.join(storeDir, "package.json"), "utf8")).version,
+  };
+  if (existsSync(outBinding) && existsSync(receiptFile)) {
+    try {
+      if (
+        JSON.stringify(JSON.parse(readFileSync(receiptFile, "utf8"))) === JSON.stringify(receipt)
+      ) {
+        execFileSync(require("electron"), [path.join(here, "check-native.cjs"), "--electron"], {
+          env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+          stdio: "pipe",
+          timeout: 20_000,
+          windowsHide: true,
+        });
+        console.log(`[desktop] Electron ${electronVersion} SQLite verified; reusing ${outBinding}`);
+        return;
+      }
+    } catch {
+      console.warn("[desktop] Cached Electron SQLite is invalid; preparing a fresh copy.");
+    }
+  }
 
   const buildDir = mkdtempSync(path.join(os.tmpdir(), "interleave-bsqlite-electron-"));
   try {
@@ -125,6 +158,13 @@ function main() {
 
     mkdirSync(nativeDir, { recursive: true });
     cpSync(built, outBinding, { dereference: true });
+    execFileSync(require("electron"), [path.join(here, "check-native.cjs"), "--electron"], {
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+      stdio: "inherit",
+      timeout: 20_000,
+      windowsHide: true,
+    });
+    writeFileSync(receiptFile, `${JSON.stringify(receipt)}\n`);
     console.log(
       `[desktop] better_sqlite3.node rebuilt for Electron ${electronVersion} → ${outBinding}`,
     );

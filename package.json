@@ -16,7 +16,14 @@
     }
   },
   "scripts": {
-    "dev": "pnpm --filter @interleave/desktop dev",
+    "desktop:help": "node scripts/desktop.mjs help",
+    "doctor": "node scripts/desktop.mjs doctor",
+    "setup": "node scripts/desktop.mjs setup",
+    "build:desktop": "node scripts/desktop.mjs build",
+    "start": "node scripts/desktop.mjs start",
+    "smoke:desktop": "node scripts/desktop.mjs start --smoke",
+    "package:desktop": "node scripts/desktop.mjs package",
+    "dev": "node scripts/desktop.mjs dev",
     "dev:renderer": "pnpm --filter @interleave/web dev",
     "build": "turbo run build",
     "test": "vitest run",

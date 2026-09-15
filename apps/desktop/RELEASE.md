@@ -7,17 +7,15 @@ record below is historical macOS evidence, not Windows acceptance evidence.
 
 ## Windows x64
 
-Use a checkout on a Windows drive in native PowerShell or Command Prompt. Install
-Node `>=22.13.1 <23` and pnpm `9.12.1`. Keep its `node_modules`, `native`, and `dist`
-directories separate from any WSL/Linux checkout. A Windows Node installed outside
-the supported range also needs to be switched to Node 22 before installing.
+Use a checkout on a Windows drive in native PowerShell or Command Prompt. The
+[native development workflow](../../docs/windows-development.md) selects an installed
+Node matching `package.json` and prepares pinned project-local pnpm. Keep its
+`node_modules`, `native`, and `dist` separate from any WSL/Linux checkout.
 
 ```powershell
-node --version
-corepack enable pnpm
-corepack pnpm --version
-corepack pnpm install --frozen-lockfile
-corepack pnpm --filter @interleave/desktop dist:win
+node scripts/desktop.mjs doctor
+node scripts/desktop.mjs setup
+node scripts/desktop.mjs package --win
 ```
 
 The build downloads Electron and the pinned EmbeddingGemma model on first use;
@@ -26,8 +24,9 @@ GitHub releases, and Hugging Face is required for uncached assets. SQLite uses a
 upstream Electron prebuild when available; compiling it instead requires Python and
 Visual Studio Build Tools with the Desktop development with C++ workload.
 
-Enable the pnpm shim on PATH as shown above: electron-builder invokes `pnpm` itself
-to inspect dependencies. Windows model staging and the embedding worker preload the
+The repository entry provides pnpm's project-local shim on the child process PATH:
+electron-builder invokes `pnpm` itself to inspect dependencies. No global shim or
+execution-policy change is needed. Windows model staging and the embedding worker preload the
 matching ONNX DLL by absolute path using Koffi, before loading the ONNX Node binding.
 This avoids Windows' older system copy. System DLLs are never changed; macOS does not
 load or stage this Windows helper dependency.

@@ -8,8 +8,8 @@
   "scripts": {
     "build:bundle": "node build.mjs",
     "build": "node build.mjs",
-    "dev": "node scripts/dev.mjs",
-    "start": "node build.mjs && electron .",
+    "dev": "node ../../scripts/desktop.mjs dev",
+    "start": "node ../../scripts/desktop.mjs start",
     "test": "vitest run",
     "lint": "echo \"@interleave/desktop: linted at the workspace root via Biome\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",

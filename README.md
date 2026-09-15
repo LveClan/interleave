@@ -108,8 +108,23 @@ design/      the design kit (tokens, icon map, reference screens)
 The canonical app runs **natively with pnpm** (a native module + a real window + the app-data
 directory mean it can't live in a container):
 
+For Windows or machines with multiple Node versions, use the
+[native development workflow](docs/windows-development.md). Its repository commands select
+compatible installed Node and pinned project-local pnpm without permanent PATH changes:
+
+```powershell
+node scripts/desktop.mjs doctor
+node scripts/desktop.mjs setup
+node scripts/desktop.mjs build
+node scripts/desktop.mjs start --smoke
+node scripts/desktop.mjs dev
+```
+
+`make` is an optional thin wrapper over these commands. `start` runs existing local
+artifacts; `build` compiles without running tests or publishing.
+
 ```bash
-pnpm install      # installs deps and rebuilds better-sqlite3 for the Electron ABI
+pnpm run setup    # installs pinned deps and verifies separate Node/Electron SQLite copies
 pnpm dev          # launch the full Electron app (Vite + main/preload + Electron, hot reload)
 pnpm dev:renderer # bare Vite renderer only (no window.appApi / live data) — isolated UI work
 
