@@ -1,5 +1,11 @@
 export const sourceReturn = {
   title: "重返来源",
+  segment: "{{start}}-{{end}} 秒",
+  segments: "媒体时间段",
+  unknownEnd: "未知",
+  unknownRead: "已读比例未知",
+  coverageFailed: "无法保存播放进度",
+  playbackUnavailable: "此嵌入播放器不支持播放跟踪和定位",
   page: "第 {{number}} 页",
   unitState: "处理状态",
   ignoreUnit: "忽略剩余内容",

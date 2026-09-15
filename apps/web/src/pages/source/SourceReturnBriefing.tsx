@@ -94,7 +94,11 @@ export function SourceReturnBriefing({
         </button>
       </div>
       <div className="source-return__facts">
-        <span>{t("sourceReturn.read", { percent: percent(data.readPct) })}</span>
+        <span>
+          {data.readPctKnown === false
+            ? t("sourceReturn.unknownRead")
+            : t("sourceReturn.read", { percent: percent(data.readPct) })}
+        </span>
         <span>
           {data.readPctDelta === null
             ? t("sourceReturn.unknownDelta")

@@ -97,6 +97,7 @@ import {
   LibraryQuery,
   type LineageGetOptions,
   LineageQuery,
+  MediaPlaybackService,
   nowIso,
   OcclusionService,
   type OptimizationScope,
@@ -657,6 +658,7 @@ export class DbService {
   private inboxBulkTriageService: InboxBulkTriageService | null = null;
   private queueAction: QueueActionService | null = null;
   private blockProcessing: BlockProcessingService | null = null;
+  private mediaPlayback: MediaPlaybackService | null = null;
   /** The overload AUTO-POSTPONE apply seam (T077) — preview + apply, one `batchId` per sweep. */
   private autoPostpone: AutoPostponeService | null = null;
   /** The standing overload policy (T117) — once-per-local-day automatic materialization. */
@@ -1057,6 +1059,7 @@ export class DbService {
     this.library = null;
     this.queueAction = null;
     this.blockProcessing = null;
+    this.mediaPlayback = null;
     this.autoPostpone = null;
     this.standingAutoPostpone = null;
     this.extractAging = null;
@@ -6688,6 +6691,11 @@ export class DbService {
   get processingUnitService(): ProcessingUnitService {
     if (!this.handle) throw new Error("Database is not open");
     return new ProcessingUnitService(this.handle.db);
+  }
+  get mediaPlaybackService(): MediaPlaybackService {
+    if (!this.handle) throw new Error("Database is not open");
+    this.mediaPlayback ??= new MediaPlaybackService(this.handle.db);
+    return this.mediaPlayback;
   }
 
   /**

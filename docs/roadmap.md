@@ -518,8 +518,9 @@ Detailed specs: [`tasks/M29-longform-geometry.md`](./tasks/M29-longform-geometry
 - [~] **T132 — PDF block-state parity** · _deps: T064, T065_ · 已实现并审查，统一验收待进行
   Done when: PDF sources carry durable per-page/per-region processing state (the existing 7-state vocabulary + reconciliation), feeding source progress, Done-intent breakdowns, yield, and the scheduler exactly as document blocks do — the heaviest formats stop being invisible to honest completion.
   Local commit: `T132: persist PDF page processing states`. Stable page keys reuse the processing table; partial text/region outputs preserve unresolved remainder, with strict IPC, receipt undo, content/OCR reconciliation and source verification. Shared progress/Done/yield/scheduler/briefing/pending now consume PDF pages. Independent review fixes complete; seven focused repository cases, eight simulated UI cases, IPC and i18n checks passed. Unified checks deferred by user; see the T132 implementation record. T130/T131 remain `[~]`.
-- [ ] **T133 — Media segment states** · _deps: T073, T074_
+- [~] **T133 — Media segment states** · _deps: T073, T074_ · 已实现并审查，统一验收待进行
   Done when: audio/video sources track per-segment processed state (derived from playback and fragment extraction), feeding the same surfaces — "watched 40%, 2 segments deferred" is durable data, not memory.
+  Local commit: `T133: persist media segment states and playback coverage`. Stable time segments reuse T132 state commands and remainder rules; additive playback storage records actual coverage through ordered typed IPC batches. Transcript-aware/fixed boundaries, unknown tails, live clip lineage, shared progress/Done/yield/scheduling/briefing/pending and compact segment controls implemented. Independent review fixes complete; core, 13 shared repository cases, migration, simulated player/control/retry tests, IPC and i18n checks passed. Unified acceptance remains deferred; T130-T132 retain `[~]`. See the T133 implementation record for exact evidence and embedded-player limitations.
 - [ ] **T134 — Structural skim pass** · _deps: T067, T132_
   Done when: long-form sources (PDF outline/TOC, EPUB chapters, long documents by heading) support a skim pass assigning per-section verdicts — extract-worthy / later / ignore — that bulk-set block states (one batch, one undo) and create per-section scheduling, so deep reading starts where the value is instead of at page 1.
 
@@ -535,6 +536,8 @@ Detailed specs: [`plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md`](./p
 ---
 
 ## Progress log
+
+- **2026-09-15 — T133 implementation/review checkpoint:** `T133: persist media segment states and playback coverage` (local only). Followed T132 `05996f0`; actual playback interval union, stable segment states and cross-format consumers verified with bounded focused tests. Both tasks remain `[~]`; no unified verification or T134 started.
 
 - **2026-09-15 — T132 implementation/review checkpoint:** `T132: persist PDF page processing states` (local only). Basic verification passed under the user's limited scope; `[~]` until explicitly requested unified verification. T133 can reuse the geometry, remainder composition and receipt commands. No migration, source anchor rewrite, push or app launch.
 

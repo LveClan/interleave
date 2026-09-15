@@ -490,6 +490,7 @@ export interface SchedulerSignals {
 
 /** The per-source yield summary the inspector "yield" chip shows (T083). */
 export interface SourceYieldSignals {
+  readonly readPctKnown?: boolean;
   /** How far the source has been read, in `[0, 1]`. */
   readonly readPct: number;
   /** Live `extract` descendants created from the source. */
@@ -7167,6 +7168,7 @@ export interface SourceYieldSourceRef {
 
 /** One source's complete yield rollup (flat, JSON-serializable). */
 export interface SourceYieldRow {
+  readonly readPctKnown?: boolean;
   readonly source: SourceYieldSourceRef;
   /** How far the source has been read, in `[0, 1]`. */
   readonly readPct: number;
@@ -8508,6 +8510,10 @@ export interface AppApi {
     ): Promise<{ receipt: ResumeSourceBlockReceipt }>;
     undo(request: ResumeSourceBlockReceipt): Promise<{ undone: boolean }>;
   };
+  readonly mediaPlayback: {
+    start(request: { sourceId: string }): Promise<{ sessionId: string }>;
+    record(request: import("@interleave/core").RecordPlaybackRequest): Promise<{ saved: boolean }>;
+  };
   readonly rereadProposals: {
     /** Capped, dismissible re-read proposals (T129) — read-only, strongest-first. */
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
@@ -8689,6 +8695,35 @@ export interface SourceReturnBriefingResult {
 }
 
 export const SourcePendingListRequestSchema = z.object({ sourceId: ElementIdSchema }).strict();
+export const MediaPlaybackRecordRequestSchema = z
+  .object({
+    sourceId: ElementIdSchema,
+    sessionId: z.string().min(1).max(256),
+    sequence: z.number().int().positive(),
+    durationMs: z.number().int().positive().max(604_800_000).optional(),
+    events: z
+      .array(
+        z
+          .object({
+            kind: z.enum([
+              "playing",
+              "sample",
+              "pause",
+              "seeking",
+              "seeked",
+              "waiting",
+              "ended",
+              "ratechange",
+            ]),
+            positionMs: z.number().finite().min(0).max(604_800_000),
+            clockMs: z.number().finite().min(0),
+            rate: z.number().finite().min(0.1).max(16),
+          })
+          .strict(),
+      )
+      .max(512),
+  })
+  .strict();
 export const ProcessingUnitSetRequestSchema = z
   .object({
     sourceId: ElementIdSchema,

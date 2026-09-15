@@ -9,11 +9,16 @@ import type {
   SourceBlockProcessingView,
   SourceBlockReconcileReport,
 } from "@interleave/core";
-import { isTerminalSourceBlockProcessingState, priorityToLabel } from "@interleave/core";
+import {
+  coveredTime,
+  isTerminalSourceBlockProcessingState,
+  priorityToLabel,
+} from "@interleave/core";
 import { documentBlocks, documents, elements, type InterleaveDatabase } from "@interleave/db";
 import { and, eq, isNull } from "drizzle-orm";
 import { BlockProcessingRepository } from "./block-processing-repository";
 import { newRowId } from "./ids";
+import { mediaProcessingData } from "./media-processing-repository";
 import { ProcessingUnitRepository } from "./processing-unit-repository";
 import { ReverifyPropagationRepository } from "./reverify-propagation-repository";
 import type { DbClient } from "./types";
@@ -435,7 +440,19 @@ export class BlockProcessingService {
     const totalBlocks = views.length;
     const ignoredBlocks = stateCounts.ignored;
     const extractedBlockCount = views.filter((view) => view.outputElementIds.length > 0).length;
+    const media = mediaProcessingData(this.db, sourceElementId);
+    if (views.some((view) => view.geometry))
+      extractedOutputCount = new Set(views.flatMap((view) => view.outputElementIds)).size;
     return {
+      ...(media
+        ? {
+            playbackReadPct:
+              media.durationMs == null
+                ? null
+                : coveredTime(media.coverage, { startMs: 0, endMs: media.durationMs }) /
+                  media.durationMs,
+          }
+        : {}),
       sourceElementId,
       totalBlocks,
       processedBlocks: terminalBlocks,

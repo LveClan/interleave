@@ -149,7 +149,16 @@ export class BlockProcessingRepository {
         ),
       )
       .get();
-    const metadata = input.metadata == null ? null : JSON.stringify(input.metadata);
+    const unitGeometry = parseMetadata(existing?.metadata ?? null)?.unitGeometry;
+    const contentVersion = parseMetadata(existing?.metadata ?? null)?.contentVersion;
+    const metadata =
+      unitGeometry || input.metadata
+        ? JSON.stringify({
+            ...(unitGeometry ? { unitGeometry } : {}),
+            ...(contentVersion ? { contentVersion } : {}),
+            ...input.metadata,
+          })
+        : null;
     // T123 — `pre_stale_hash` is only meaningful while a row is `stale_after_edit`
     // (it records the last-processed hash so restoration is recognizable). Any
     // transition to a non-stale state clears it; entering/staying stale writes the
@@ -602,7 +611,8 @@ export class BlockProcessingRepository {
     for (const row of rows) {
       const blockId = row.stableBlockId as BlockId;
       if (onlyIds && !onlyIds.has(blockId)) continue;
-      if (!onlyIds && blockId.startsWith("pdf:page:")) continue;
+      if (!onlyIds && (blockId.startsWith("pdf:page:") || blockId.startsWith("media:segment:")))
+        continue;
       const nextHash = blockHashes.get(blockId);
 
       // Un-stale arm (NEW in T123): a row already in `stale_after_edit` is restored

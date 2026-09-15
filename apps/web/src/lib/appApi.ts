@@ -302,6 +302,7 @@ export interface SchedulerSignals {
 
 /** The per-source yield summary the inspector "yield" chip shows (T083). */
 export interface SourceYieldSignals {
+  readonly readPctKnown?: boolean;
   /** How far the source has been read, in `[0, 1]`. */
   readonly readPct: number;
   readonly extractsCreated: number;
@@ -4929,6 +4930,7 @@ export interface SourceYieldSourceRef {
 
 /** One source's complete yield rollup the ranked "Source yield" view renders. */
 export interface SourceYieldRow {
+  readonly readPctKnown?: boolean;
   readonly source: SourceYieldSourceRef;
   /** How far the source has been read, in `[0, 1]`. */
   readonly readPct: number;
@@ -5550,6 +5552,10 @@ export interface AppApi {
       request: import("@interleave/core").SetProcessingUnitRequest,
     ): Promise<{ receipt: ResumeSourceBlockReceipt }>;
     undo(request: ResumeSourceBlockReceipt): Promise<{ undone: boolean }>;
+  };
+  readonly mediaPlayback: {
+    start(request: { sourceId: string }): Promise<{ sessionId: string }>;
+    record(request: import("@interleave/core").RecordPlaybackRequest): Promise<{ saved: boolean }>;
   };
   readonly rereadProposals: {
     list(request?: RereadProposalsListRequest): Promise<RereadProposalsListResult>;
@@ -6930,6 +6936,12 @@ export const appApi = {
   },
   openProcessingUnits(sourceId: string) {
     return requireAppApi().processingUnits.open({ sourceId });
+  },
+  startMediaPlayback(sourceId: string) {
+    return requireAppApi().mediaPlayback.start({ sourceId });
+  },
+  recordMediaPlayback(request: import("@interleave/core").RecordPlaybackRequest) {
+    return requireAppApi().mediaPlayback.record(request);
   },
   setProcessingUnit(request: import("@interleave/core").SetProcessingUnitRequest) {
     return requireAppApi().processingUnits.set(request);

@@ -117,6 +117,7 @@ import {
   MaintenanceParkedResurfacingRequestSchema,
   MaintenanceReportRequestSchema,
   MaintenanceSchedulerConsistencyRequestSchema,
+  MediaPlaybackRecordRequestSchema,
   OptimizationApplyRequestSchema,
   OptimizationSuggestRequestSchema,
   PickImportFileRequestSchema,
@@ -1087,6 +1088,14 @@ export function registerIpcHandlers(dbService: DbService, context?: IpcHandlerCo
   ipcMain.handle(IPC_CHANNELS.processingUnitsUndo, (_event, raw: unknown) => ({
     undone: dbService.processingUnitService.undo(SourcePendingUndoRequestSchema.parse(raw)),
   }));
+  ipcMain.handle(IPC_CHANNELS.mediaPlaybackStart, (_event, raw: unknown) =>
+    dbService.mediaPlaybackService.start(
+      SourcePendingListRequestSchema.parse(raw).sourceId as import("@interleave/core").ElementId,
+    ),
+  );
+  ipcMain.handle(IPC_CHANNELS.mediaPlaybackRecord, (_event, raw: unknown) =>
+    dbService.mediaPlaybackService.record(MediaPlaybackRecordRequestSchema.parse(raw)),
+  );
   ipcMain.handle(IPC_CHANNELS.sourcePendingResume, (_event, raw: unknown) => ({
     receipt: dbService.sourcePendingService.resume(SourcePendingResumeRequestSchema.parse(raw)),
   }));

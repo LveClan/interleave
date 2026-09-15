@@ -30,6 +30,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../../components/Icon";
 import { appApi, isDesktop, type SourcesGetMediaDataResult } from "../../lib/appApi";
 import "./media-reader.css";
+import { t } from "../../i18n";
+import { sourceReadingChanged } from "../../lib/sourceReadingEvents";
+import { ProcessingUnitControls } from "./ProcessingUnitControls";
+import { useMediaCoverage } from "./useMediaCoverage";
 
 /** One transcript cue derived from the body + `blockTimestamps`. */
 interface Cue {
@@ -44,6 +48,7 @@ interface Cue {
 export interface MediaReaderProps {
   /** The media source element id. */
   readonly elementId: string;
+  readonly scheduledReturn?: boolean;
   /** The loaded ProseMirror body JSON (the transcript heading + cue paragraphs). */
   readonly prosemirrorJson: unknown;
   /** The block→time map (stable block id → cue start ms) from `documents.get`. */
@@ -113,6 +118,7 @@ function fmtTime(ms: number): string {
 
 export function MediaReader({
   elementId,
+  scheduledReturn = false,
   prosemirrorJson,
   blockTimestamps,
   seekToMs,
@@ -124,6 +130,41 @@ export function MediaReader({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [currentMs, setCurrentMs] = useState(0);
   const mediaElRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
+  const [playerReady, setPlayerReady] = useState(false);
+  const [invalidRoute, setInvalidRoute] = useState<number | null>(null);
+  const activeJump = useRef(false);
+  const record = useMediaCoverage(elementId, desktop && media?.mediaSource === "local", () =>
+    toast(t("sourceReturn.coverageFailed")),
+  );
+  const playerEvents = {
+    onPlaying: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+      activeJump.current = true;
+      record("playing", e.currentTarget);
+    },
+    onPause: (e: React.SyntheticEvent<HTMLMediaElement>) => record("pause", e.currentTarget),
+    onSeeking: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+      activeJump.current = true;
+      record("seeking", e.currentTarget);
+    },
+    onSeeked: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+      record("seeked", e.currentTarget);
+      if (!e.currentTarget.paused) record("playing", e.currentTarget);
+    },
+    onWaiting: (e: React.SyntheticEvent<HTMLMediaElement>) => record("waiting", e.currentTarget),
+    onEnded: (e: React.SyntheticEvent<HTMLMediaElement>) => record("ended", e.currentTarget),
+    onRateChange: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+      record("ratechange", e.currentTarget);
+      if (!e.currentTarget.paused) record("playing", e.currentTarget);
+    },
+    onTimeUpdate: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+      setCurrentMs(e.currentTarget.currentTime * 1000);
+      record("sample", e.currentTarget);
+    },
+    onLoadedMetadata: (e: React.SyntheticEvent<HTMLMediaElement>) => {
+      setPlayerReady(true);
+      record("sample", e.currentTarget);
+    },
+  };
 
   // Clip-select state (T074): an in-point / out-point pair the user sets on the
   // player, a busy flag while the clip is created, and an editable caption.
@@ -169,24 +210,46 @@ export function MediaReader({
   }, [cues, currentMs]);
 
   /** Seek the local player to a millisecond offset. */
-  const seekTo = useCallback((ms: number) => {
-    const el = mediaElRef.current;
-    if (el) {
-      el.currentTime = ms / 1000;
-      void el.play?.().catch(() => {});
-    }
-  }, []);
+  const seekTo = useCallback(
+    (ms: number) => {
+      const el = mediaElRef.current;
+      if (
+        el &&
+        Number.isFinite(ms) &&
+        ms >= 0 &&
+        (!Number.isFinite(el.duration) || ms <= el.duration * 1000)
+      ) {
+        activeJump.current = true;
+        record("seeking", el);
+        el.currentTime = ms / 1000;
+        setCurrentMs(ms);
+        return true;
+      }
+      toast(t("sourceReturn.moved"));
+      return false;
+    },
+    [record, toast],
+  );
 
   // Resume from the saved read-point once the media + cues are known.
   const resumedRef = useRef(false);
   useEffect(() => {
-    if (!desktop || resumedRef.current) return;
+    if (
+      !desktop ||
+      resumedRef.current ||
+      !playerReady ||
+      (seekToMs != null && seekToMs !== invalidRoute) ||
+      activeJump.current
+    )
+      return;
     // Only resume the LOCAL player (the YouTube IFrame has no seek without the API).
     if (media?.mediaSource !== "local") return;
     resumedRef.current = true;
+    let cancelled = false;
     void appApi
       .getReadPoint({ elementId })
       .then((result) => {
+        if (cancelled || activeJump.current) return;
         const rp = result.readPoint;
         if (!rp) return;
         // Transcript-backed: the block id is a cue → resume at the cue's timestamp.
@@ -201,7 +264,20 @@ export function MediaReader({
         }
       })
       .catch(() => {});
-  }, [desktop, media?.mediaSource, elementId, cues, titleBlockId, seekTo]);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    desktop,
+    media?.mediaSource,
+    elementId,
+    cues,
+    titleBlockId,
+    seekTo,
+    playerReady,
+    seekToMs,
+    invalidRoute,
+  ]);
 
   /**
    * Persist the timestamp read-point. Transcript-backed → the ACTIVE cue's block id
@@ -225,6 +301,7 @@ export function MediaReader({
         return;
       }
       await appApi.setReadPoint({ elementId, documentId: elementId, blockId, offset });
+      sourceReadingChanged(elementId);
       toast(
         hasTranscript
           ? "Read-point set at the current cue."
@@ -236,14 +313,35 @@ export function MediaReader({
   }, [hasTranscript, activeCueIndex, cues, titleBlockId, currentMs, elementId, toast]);
 
   // Seek to the clip-start target once (T074 — a clip's "open source" passes `?t=`).
-  const seekedRef = useRef(false);
+  const seekedRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!desktop || seekedRef.current) return;
+    if (!desktop || !playerReady || seekedRef.current === seekToMs) return;
     if (typeof seekToMs !== "number" || seekToMs < 0) return;
     if (media?.mediaSource !== "local") return;
-    seekedRef.current = true;
-    seekTo(seekToMs);
-  }, [desktop, seekToMs, media?.mediaSource, seekTo]);
+    seekedRef.current = seekToMs;
+    if (!seekTo(seekToMs)) setInvalidRoute(seekToMs);
+  }, [desktop, seekToMs, media?.mediaSource, seekTo, playerReady]);
+  const jumpUnit = useCallback(
+    (id: string) => {
+      const startMs = Number(id.replace(/^media:segment:/, ""));
+      if (
+        !playerReady ||
+        media?.mediaSource !== "local" ||
+        !Number.isFinite(startMs) ||
+        startMs < 0
+      )
+        return false;
+      if (
+        mediaElRef.current &&
+        Number.isFinite(mediaElRef.current.duration) &&
+        startMs > mediaElRef.current.duration * 1000
+      )
+        return false;
+      seekTo(startMs);
+      return true;
+    },
+    [playerReady, media?.mediaSource, seekTo],
+  );
 
   /** Mark the current playback time as the clip IN-point (`[`). */
   const setClipIn = useCallback(() => {
@@ -316,6 +414,7 @@ export function MediaReader({
       toast(`Clip ${fmtTime(pendingClip.startMs)}–${fmtTime(pendingClip.endMs)} saved as a topic.`);
       clearClip();
       onClipExtracted?.();
+      sourceReadingChanged(elementId);
     } catch (e) {
       toast(e instanceof Error ? e.message : "Could not create the clip.");
     } finally {
@@ -368,6 +467,19 @@ export function MediaReader({
 
   return (
     <div className="media-reader" data-testid="media-reader">
+      <ProcessingUnitControls
+        key={elementId}
+        sourceId={elementId}
+        activeId=""
+        currentMs={currentMs}
+        ready={media != null}
+        canJump={playerReady && media?.mediaSource === "local"}
+        scheduledReturn={scheduledReturn}
+        onJump={jumpUnit}
+      />
+      {media?.mediaSource === "youtube" && (
+        <p className="media-reader-loading">{t("sourceReturn.playbackUnavailable")}</p>
+      )}
       <div className="media-reader-bar">
         <button
           type="button"
@@ -462,24 +574,22 @@ export function MediaReader({
               allowFullScreen
             />
           ) : media.mediaSource === "local" && media.mediaUrl && media.mediaKind === "audio" ? (
-            // biome-ignore lint/a11y/useMediaCaption: captions render in the transcript pane (T073)
             <audio
               ref={mediaElRef as React.RefObject<HTMLAudioElement>}
               className="media-reader-audio"
               data-testid="media-reader-audio"
               src={media.mediaUrl}
               controls
-              onTimeUpdate={(e) => setCurrentMs(e.currentTarget.currentTime * 1000)}
+              {...playerEvents}
             />
           ) : media.mediaSource === "local" && media.mediaUrl ? (
-            // biome-ignore lint/a11y/useMediaCaption: captions render in the transcript pane (T073)
             <video
               ref={mediaElRef as React.RefObject<HTMLVideoElement>}
               className="media-reader-video"
               data-testid="media-reader-video"
               src={media.mediaUrl}
               controls
-              onTimeUpdate={(e) => setCurrentMs(e.currentTarget.currentTime * 1000)}
+              {...playerEvents}
             />
           ) : (
             <div className="media-reader-loading" data-testid="media-reader-unplayable">

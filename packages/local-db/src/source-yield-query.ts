@@ -59,6 +59,7 @@
 
 import {
   authorDomainYieldBand,
+  coveredTime,
   type ElementId,
   type ExtractFate,
   type IsoTimestamp,
@@ -84,6 +85,7 @@ import { BlockProcessingService } from "./block-processing-service";
 import { chunkIds } from "./chunk-in-array";
 import { DocumentRepository } from "./document-repository";
 import { inboxSourceDomain } from "./inbox-query";
+import { mediaProcessingData } from "./media-processing-repository";
 import { ProcessingUnitRepository } from "./processing-unit-repository";
 
 /** Default cap so a broad rollup can't return an unbounded list (like `LibraryQuery`). */
@@ -107,6 +109,7 @@ export interface SourceYieldRow {
   readonly source: SourceYieldSourceRef;
   /** How far the source has been read, in `[0, 1]` (read-point position / block count). */
   readonly readPct: number;
+  readonly readPctKnown?: boolean;
   /** Live `extract` descendants created from the source. */
   readonly extractsCreated: number;
   /** Live fated/reference extracts plus synthesis-referenced extracts, de-duplicated. */
@@ -738,6 +741,7 @@ export class SourceYieldQuery {
         url,
       },
       readPct,
+      readPctKnown: mediaProcessingData(this.db, source.id as ElementId)?.durationMs !== null,
       extractsCreated,
       productiveExtracts,
       referenceExtracts: t.referenceExtracts,
@@ -1075,6 +1079,11 @@ export class SourceYieldQuery {
    * read-point or no blocks; **100%** when the read-point is at/after the last block.
    */
   private computeReadPct(elementId: ElementId): number {
+    const media = mediaProcessingData(this.db, elementId);
+    if (media)
+      return media.durationMs
+        ? coveredTime(media.coverage, { startMs: 0, endMs: media.durationMs }) / media.durationMs
+        : 0;
     const units = new ProcessingUnitRepository(this.db).views(elementId);
     if (units)
       return units.length === 0

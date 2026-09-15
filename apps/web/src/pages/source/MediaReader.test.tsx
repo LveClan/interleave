@@ -14,6 +14,7 @@
  * driven with a synthetic `timeUpdate` to advance `currentMs`. No SQLite/IPC/fs.
  */
 
+import type { RecordPlaybackRequest } from "@interleave/core";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -23,6 +24,8 @@ const h = vi.hoisted(() => ({
   extractClip: vi.fn(),
   toast: vi.fn(),
   onClipExtracted: vi.fn(),
+  startMediaPlayback: vi.fn(async () => ({ sessionId: "session" })),
+  recordMediaPlayback: vi.fn(async (_request: RecordPlaybackRequest) => ({ saved: true })),
 }));
 
 vi.mock("../../lib/appApi", async () => {
@@ -34,11 +37,21 @@ vi.mock("../../lib/appApi", async () => {
       getMediaData: h.getMediaData,
       getReadPoint: h.getReadPoint,
       extractClip: h.extractClip,
+      startMediaPlayback: h.startMediaPlayback,
+      recordMediaPlayback: h.recordMediaPlayback,
     },
   };
 });
 
 import { MediaReader } from "./MediaReader";
+
+vi.mock("./ProcessingUnitControls", () => ({
+  ProcessingUnitControls: ({ onJump }: { onJump: (id: string) => boolean }) => (
+    <button type="button" onClick={() => onJump("media:segment:30000")}>
+      Jump segment
+    </button>
+  ),
+}));
 
 const TITLE_BLOCK = "mblk-title";
 const PLACEHOLDER_BLOCK = "mblk-ph";
@@ -87,6 +100,52 @@ function renderReader() {
 }
 
 describe("MediaReader transcript-less clip anchor (T074)", () => {
+  it("reports an unavailable route timestamp and restores a valid recorded position", async () => {
+    h.getReadPoint.mockResolvedValue({ readPoint: { blockId: TITLE_BLOCK, offset: 4 } });
+    render(
+      <MediaReader
+        elementId="src_1"
+        prosemirrorJson={TRANSCRIPTLESS_DOC}
+        blockTimestamps={{}}
+        seekToMs={90_000}
+        toast={h.toast}
+      />,
+    );
+    const player = (await screen.findByTestId("media-reader-video")) as HTMLVideoElement;
+    Object.defineProperty(player, "duration", { configurable: true, value: 60 });
+    fireEvent.loadedMetadata(player);
+    await waitFor(() => expect(player.currentTime).toBe(4));
+    expect(h.toast).toHaveBeenCalledWith("Source location moved");
+  });
+  it("sends playback boundaries and protects explicit segment jumps against late restore", async () => {
+    let resolve: (value: unknown) => void = () => {};
+    h.getReadPoint.mockReturnValue(
+      new Promise((done) => {
+        resolve = done;
+      }),
+    );
+    const view = renderReader();
+    await screen.findByTestId("media-reader-video");
+    const player = screen.getByTestId("media-reader-video") as HTMLVideoElement;
+    Object.defineProperty(player, "duration", { configurable: true, value: 60 });
+    fireEvent.loadedMetadata(player);
+    fireEvent.playing(player);
+    fireEvent.timeUpdate(player, { target: { currentTime: 1 } });
+    fireEvent.seeking(player, { target: { currentTime: 20 } });
+    fireEvent.seeked(player);
+    fireEvent.pause(player);
+    fireEvent.click(screen.getByText("Jump segment"));
+    await act(async () => resolve({ readPoint: { blockId: TITLE_BLOCK, offset: 4 } }));
+    expect(player.currentTime).toBe(30);
+    await waitFor(() => expect(h.recordMediaPlayback).toHaveBeenCalled());
+    const batch = h.recordMediaPlayback.mock.calls[0]?.[0] as unknown as {
+      events: { kind: string }[];
+    };
+    expect(batch.events.map((event) => event.kind)).toEqual(
+      expect.arrayContaining(["playing", "sample", "seeking", "seeked", "pause"]),
+    );
+    view.unmount();
+  });
   it("anchors a transcript-less clip to the placeholder block id, not the title heading", async () => {
     renderReader();
 

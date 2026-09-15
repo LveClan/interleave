@@ -58,3 +58,35 @@ it("uses trusted summary and expected state for the active page, and offers rece
     }),
   );
 });
+it("shows unknown media progress, segment navigation, and prevents marking an open tail complete", async () => {
+  h.open.mockResolvedValue({
+    blocks: [
+      {
+        stableBlockId: "media:segment:0",
+        order: 0,
+        geometry: { kind: "media_segment", startMs: 0, endMs: null },
+        state: "needs_later",
+        blockContentHash: "abc",
+        outputElementIds: [],
+        locatable: true,
+      },
+    ],
+    summary: { terminalBlocks: 0, playbackReadPct: null },
+  });
+  const jump = vi.fn(() => true);
+  const { getByRole, getByText, queryByRole } = render(
+    <ProcessingUnitControls
+      sourceId="media"
+      activeId=""
+      currentMs={0}
+      ready
+      scheduledReturn={false}
+      onJump={jump}
+    />,
+  );
+  await waitFor(() => expect(getByText(/Read percentage unknown/)).toBeTruthy());
+  expect(getByRole("button", { name: "Finish remaining content" })).toBeDisabled();
+  expect(queryByRole("button", { name: "Mark read (still unresolved)" })).toBeNull();
+  fireEvent.click(getByRole("button", { name: "1: Deferred" }));
+  expect(jump).toHaveBeenCalledWith("media:segment:0");
+});

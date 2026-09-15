@@ -25,16 +25,23 @@
  *    flags; the clear path is re-reconciliation.
  */
 
-import type { BlockId, ElementId, SourceBlockReconcileReport } from "@interleave/core";
+import type {
+  BlockId,
+  ElementId,
+  ProcessingUnitGeometry,
+  SourceBlockReconcileReport,
+} from "@interleave/core";
 import {
   elementDetachSnapshot,
   elementReverifyProvenance,
   elements,
+  sourceBlockProcessing,
   sourceLocations,
 } from "@interleave/db";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { liveDescendantsWithin } from "./descendant-query";
 import { newRowId, nowIso } from "./ids";
+import { parseClip } from "./media-processing-repository";
 import { OperationLogRepository } from "./operation-log-repository";
 import type { DbClient } from "./types";
 
@@ -67,6 +74,7 @@ export class ReverifyPropagationRepository {
     sourceElementId: ElementId,
     report: SourceBlockReconcileReport,
     batchId: string,
+    currentGeometry?: ReadonlyMap<BlockId, ProcessingUnitGeometry>,
   ): void {
     if (report.staled.length === 0 && report.unStaled.length === 0) return;
     const touched = new Set<ElementId>();
@@ -74,7 +82,12 @@ export class ReverifyPropagationRepository {
     // Staled blocks → record provenance for each live anchored element AND its live
     // transitive descendants (extract → statement → card).
     if (report.staled.length > 0) {
-      const anchorsByBlock = this.liveAnchorsByBlock(tx, sourceElementId, new Set(report.staled));
+      const anchorsByBlock = this.liveAnchorsByBlock(
+        tx,
+        sourceElementId,
+        new Set(report.staled),
+        currentGeometry,
+      );
       for (const blockId of report.staled) {
         const anchors = anchorsByBlock.get(blockId);
         if (!anchors) continue;
@@ -154,12 +167,14 @@ export class ReverifyPropagationRepository {
     tx: DbClient,
     sourceElementId: ElementId,
     blocks: ReadonlySet<BlockId>,
+    currentGeometry?: ReadonlyMap<BlockId, ProcessingUnitGeometry>,
   ): Map<BlockId, Set<ElementId>> {
     const rows = tx
       .select({
         elementId: sourceLocations.elementId,
         blockIds: sourceLocations.blockIds,
         page: sourceLocations.page,
+        clip: sourceLocations.clip,
         type: elements.type,
       })
       .from(sourceLocations)
@@ -167,6 +182,12 @@ export class ReverifyPropagationRepository {
       .where(and(eq(sourceLocations.sourceElementId, sourceElementId), isNull(elements.deletedAt)))
       .all();
     const out = new Map<BlockId, Set<ElementId>>();
+    const segments = tx
+      .select()
+      .from(sourceBlockProcessing)
+      .where(eq(sourceBlockProcessing.sourceElementId, sourceElementId))
+      .all()
+      .filter((row) => row.stableBlockId.startsWith("media:segment:"));
     for (const row of rows) {
       // Only flaggable derived types can carry needs_reverify (see REVERIFY_FLAGGABLE_TYPES).
       if (!REVERIFY_FLAGGABLE_TYPES.has(row.type)) continue;
@@ -177,6 +198,22 @@ export class ReverifyPropagationRepository {
         blockIds = [];
       }
       if (row.page != null) blockIds = [...blockIds, `pdf:page:${row.page}`];
+      const clip = parseClip(row.clip);
+      if (clip)
+        for (const segment of segments) {
+          const geometry = JSON.parse(segment.metadata ?? "{}").unitGeometry as
+            | { startMs?: number; endMs?: number | null }
+            | undefined;
+          const startMs = geometry?.startMs ?? Number(segment.stableBlockId.slice(14));
+          const endMs = geometry?.endMs ?? Infinity;
+          const current = currentGeometry?.get(segment.stableBlockId as BlockId);
+          const currentOverlap =
+            current?.kind === "media_segment" &&
+            clip.endMs > current.startMs &&
+            (current.endMs == null || clip.startMs < current.endMs);
+          if ((clip.endMs > startMs && clip.startMs < endMs) || currentOverlap)
+            blockIds.push(segment.stableBlockId);
+        }
       for (const raw of blockIds) {
         const blockId = raw as BlockId;
         if (!blocks.has(blockId)) continue;

@@ -4,6 +4,7 @@ import type {
   ResumeSourceBlockReceipt,
   SetProcessingUnitRequest,
 } from "@interleave/core";
+import { coveredTime } from "@interleave/core";
 import { elements, type InterleaveDatabase } from "@interleave/db";
 import { and, eq, isNull } from "drizzle-orm";
 import {
@@ -12,6 +13,7 @@ import {
 } from "./block-processing-repository";
 import { BlockProcessingService } from "./block-processing-service";
 import { newRowId } from "./ids";
+import { mediaProcessingData } from "./media-processing-repository";
 import { ProcessingUnitRepository } from "./processing-unit-repository";
 
 export class ProcessingUnitService {
@@ -47,6 +49,7 @@ export class ProcessingUnitService {
       const sourceId = input.sourceId as ElementId;
       this.requireSource(sourceId);
       const geometry = new ProcessingUnitRepository(tx);
+      const unit = geometry.units(sourceId)?.find((row) => row.id === input.blockId);
       const view = geometry.views(sourceId)?.find((row) => row.stableBlockId === input.blockId);
       if (
         !view?.locatable ||
@@ -55,6 +58,21 @@ export class ProcessingUnitService {
       )
         throw new Error("Processing unit changed or is unavailable");
       const repo = new BlockProcessingRepository(tx);
+      if (view.geometry?.kind === "media_segment") {
+        const segment = view.geometry;
+        if (segment.endMs == null && input.state !== "unread" && input.state !== "needs_later")
+          throw new Error("Duration unknown; cannot finish an open segment");
+        if (
+          input.state === "read" &&
+          (segment.endMs == null ||
+            coveredTime(mediaProcessingData(tx, sourceId)?.coverage ?? [], {
+              startMs: segment.startMs,
+              endMs: segment.endMs,
+            }) <
+              segment.endMs - segment.startMs)
+        )
+          throw new Error("Segment has not been played completely");
+      }
       const previous = repo.findRow(sourceId, view.stableBlockId);
       const receipt = { sourceId, blockId: input.blockId, token: newRowId() };
       repo.upsertStateWithin(tx, {
@@ -66,7 +84,11 @@ export class ProcessingUnitService {
             ? "mark_processed_without_output"
             : `mark_${input.state}`,
         blockContentHash: view.blockContentHash,
-        metadata: { unitUndo: { token: receipt.token, previous, outputs: view.outputElementIds } },
+        metadata: {
+          ...(unit?.contentVersion ? { contentVersion: unit.contentVersion } : {}),
+          unitGeometry: view.geometry,
+          unitUndo: { token: receipt.token, previous, outputs: view.outputElementIds },
+        },
       });
       return receipt;
     });
@@ -96,9 +118,9 @@ export class ProcessingUnitService {
         sourceElementId: sourceId,
         stableBlockId: current.stableBlockId,
         state: marker.previous?.state ?? "unread",
-        action: "mark_unread",
+        action: marker.previous?.lastAction ?? "reconcile_document_blocks",
         blockContentHash: current.blockContentHash,
-        preStaleHash: marker.previous?.preStaleHash,
+        preStaleHash: marker.previous?.preStaleHash ?? null,
         metadata: marker.previous?.metadata ?? null,
       });
       return true;

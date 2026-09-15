@@ -19,6 +19,7 @@ import { BlockProcessingService } from "./block-processing-service";
 import { DocumentRepository } from "./document-repository";
 import { LapseClusterQuery, type LapseClusterQueryInput } from "./lapse-cluster-query";
 import { windowStart } from "./lapse-window";
+import { mediaProcessingData, parseClip } from "./media-processing-repository";
 import { ProcessingUnitRepository, pdfPageKey } from "./processing-unit-repository";
 import { SourceYieldQuery } from "./source-yield-query";
 import { retentionFor } from "./topic-knowledge-state-query";
@@ -72,6 +73,7 @@ export class SourceReturnBriefingQuery {
         label: sourceLocations.label,
         blockIds: sourceLocations.blockIds,
         page: sourceLocations.page,
+        clip: sourceLocations.clip,
       })
       .from(sourceLocations)
       .innerJoin(elements, eq(elements.id, sourceLocations.elementId))
@@ -95,6 +97,16 @@ export class SourceReturnBriefingQuery {
       }
       if (geometry && lastExtraction.page != null && liveIds.has(pdfPageKey(lastExtraction.page)))
         extractionBlockId = pdfPageKey(lastExtraction.page);
+      const clip = parseClip(lastExtraction.clip);
+      if (geometry && clip)
+        extractionBlockId =
+          geometry.find(
+            (v) =>
+              v.locatable &&
+              v.geometry?.kind === "media_segment" &&
+              clip.startMs >= v.geometry.startMs &&
+              (v.geometry.endMs == null || clip.startMs < v.geometry.endMs),
+          )?.stableBlockId ?? null;
     }
     const actions = this.db
       .select({ at: sourceBlockProcessing.lastActionAt })
@@ -125,7 +137,8 @@ export class SourceReturnBriefingQuery {
           sql`(${operationLog.opType} = 'set_read_point' OR
           (${operationLog.opType} = 'update_document' AND
            CASE WHEN json_valid(${operationLog.payload}) THEN json_extract(${operationLog.payload}, '$.blockProcessing.action') END
-           IN ('mark_read', 'mark_processed_without_output', 'mark_ignored', 'mark_needs_later', 'mark_unread', 'mark_extracted')))`,
+           IN ('mark_read', 'mark_processed_without_output', 'mark_ignored', 'mark_needs_later', 'mark_unread', 'mark_extracted')) OR
+          (${operationLog.opType} = 'update_document' AND CASE WHEN json_valid(${operationLog.payload}) THEN json_array_length(json_extract(${operationLog.payload}, '$.mediaPlayback.ranges')) END > 0))`,
         ),
       )
       .orderBy(desc(operationLog.createdAt), desc(operationLog.id))
@@ -166,6 +179,7 @@ export class SourceReturnBriefingQuery {
       lastVisitAt,
       visitEvidence: lastVisitAt ? "reading_activity" : "unknown",
       readPct: yieldRow?.readPct ?? 0,
+      readPctKnown: mediaProcessingData(this.db, sourceId)?.durationMs !== null,
       readPctDelta: null,
       stateCounts: summary.stateCounts,
       unresolvedBlocks: summary.unresolvedBlocks,

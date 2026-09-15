@@ -1092,7 +1092,9 @@ function SourceReaderVisit() {
           }
         />
         <MediaReader
+          key={id}
           elementId={id}
+          scheduledReturn={search.entry === "queue" || rereadId !== null}
           prosemirrorJson={doc.currentDoc}
           blockTimestamps={doc.blockTimestamps}
           seekToMs={jumpMs}

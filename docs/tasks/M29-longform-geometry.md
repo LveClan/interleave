@@ -396,7 +396,7 @@ Electron, Windows switch, system configuration change, push or deployment was pe
 # T133 — Media segment states
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[ ]` not started
+- **Status:** `[~]` 已实现并审查，统一验收待进行
 - **Depends on:** T073, T074
 - **Roadmap line:** audio/video sources track per-segment processed state (derived from
   playback and fragment extraction), feeding the same surfaces — "watched 40%, 2 segments
@@ -443,6 +443,92 @@ progress, Done breakdowns, yield, and scheduling.
 
 - Coverage writes are high-frequency — batch/debounce persistence (the read-point pattern
   already solves this; reuse its cadence).
+
+---
+
+## T133 Implementation And Basic Verification (2026-09-15)
+
+Local commit: `T133: persist media segment states and playback coverage`.
+Built after local T132 commit `05996f0`; all four M29 implementation checkpoints T130-T133
+retain `[~]` pending the user's explicitly requested later unified verification.
+
+- `media:segment:<startMs>` keys reuse T132's processing table, remainder composition, trusted
+  commands and guarded receipt undo. Additive generated migration `0044_vengeful_mach_iv`
+  adds only `source_media_playback`, with source FK, nullable duration, asset identity and a
+  compact JSON union of actual played ranges. It does not rebuild existing tables or anchors.
+- Current import code stores subtitle **starts only**, not cue ends. Segments begin at zero,
+  target three minutes, and snap forward to the first subtitle start between three and five
+  minutes after the prior boundary. Without such a cue, use three-minute windows. Boundaries
+  are stable start-time keys; known duration clips the last segment without an empty trailing
+  segment. Unknown duration expands only to observed coverage/cue starts and leaves one open
+  tail. The open tail is unresolved and cannot be marked read, ignored or finished. Duration
+  discovery closes it without claiming content changed; expansion reopens formerly read or
+  terminal remainder. A deferral survives; shrinking preserves an explicit unread override.
+- Local audio/video events are batched every two seconds (bounded 256-event batches), flushed
+  on pause/end/unmount, and interpreted main-side by the pure `PlaybackCoverage` domain class.
+  It accepts continuous movement bounded by elapsed monotonic time and playback rate, resets
+  at seek/rate-change, and stops at pause/wait/end. Silent seek jumps, paused samples and long
+  gaps contribute no coverage. Exact interval union preserves gaps and de-duplicates replay.
+  Source/version-scoped opaque sessions enforce ordered, idempotent batches; transaction
+  failure preserves both the durable union and event cursor for retry. Writes append
+  `mediaPlayback.record_coverage` evidence inside an `update_document` operation transaction.
+- A finite segment becomes read only after complete actual coverage. Explicit mark-read is
+  also checked main-side; pending actions disable it before coverage exists. Read remains
+  unresolved. Clip locations derive live output relationships by interval overlap, with the
+  same conservative partial-output remainder rule as PDF. Source output totals de-duplicate
+  clips spanning multiple segments so geometry changes cannot invent yield increments.
+- Transcript and asset changes reconcile segment hashes, preserve original block/timestamp/
+  clip anchors, and propagate needs_reverify across old and current segment ranges. Current
+  geometry/version metadata is refreshed after propagation; user segment actions never clear
+  output verification. New asset identity invalidates old playback coverage and live sessions.
+- Trusted summary, Done gate, scheduler pressure, yield, T130 briefing and T131 pending rail
+  consume media segments. Actual time coverage provides read%; unknown duration carries an
+  explicit unknown indicator in the reader, briefing, yield table and inspector. Historical
+  delta remains null. Compact token-colored segment buttons provide state and seek targets.
+- Reader/source instances are keyed; explicit source/segment/cue jumps and playback win over
+  delayed restore. Seeking does not force autoplay. An out-of-range route reports unavailable
+  and falls back to a valid recorded position. The existing YouTube iframe has no player-event
+  API: it explicitly reports tracking/seeking unavailable, records no invented coverage, and
+  retains clip lineage and conservative segment/deferral data. No new remote player API or
+  download integration was added. Chinese resources were updated without enabling Chinese.
+- Independent review passed after fixes for automatic-read undo, cross-segment double counts,
+  growing tails inheriting old read/terminal state, explicit-unread preservation, subtitle
+  metadata/range reconciliation and unavailable route fallback. No remaining feature finding.
+
+Actual basic checks (Node 22.20.0 / pnpm 9.12.1; Vitest always `--maxWorkers=2`):
+
+- `pnpm db:generate`: generated the additive SQL, snapshot and journal entry.
+- `pnpm exec vitest run packages/core/src/media-processing.test.ts
+  packages/local-db/src/media-playback-service.test.ts --maxWorkers=2`: initial **6 passed**.
+  Core's three cases cover exact union, playback discontinuities and segmentation.
+- `pnpm exec vitest run packages/local-db/src/media-playback-service.test.ts
+  packages/local-db/src/processing-unit-service.test.ts --maxWorkers=2`: final **13 passed**
+  after shared reconciliation fixes (6 media + 7 PDF). Coverage includes source relations,
+  complete-playback states, scheduler/Done/yield/briefing/pending, unknown tails, cross-boundary
+  clips, subtitle edits, undo, forced log failure, retries and SQLite close/reopen.
+- `pnpm exec vitest run packages/db/src/migration-0044-media-playback.test.ts
+  apps/web/src/pages/source/MediaReader.test.tsx --maxWorkers=2`: **3 passed** at that stage.
+  Migration asserts additive DDL, source FK, coverage JSON and duration constraints.
+- `pnpm exec vitest run packages/local-db/src/media-playback-service.test.ts
+  apps/web/src/pages/source/useMediaCoverage.test.tsx apps/desktop/src/shared/contract.test.ts
+  packages/i18n/src/resources.test.ts --maxWorkers=2`: **298 passed**. IPC allowlist, static
+  translations and failed-batch retry/unmount flushing verified; later repository edits are
+  covered by the 13-case run above.
+- Final MediaReader **3 passed**, including clip creation, playback boundary events,
+  delayed-restore protection and unavailable route fallback. ProcessingUnitControls **2 passed**
+  across focused runs (page commands/undo; unknown media progress, seek and open-tail guards).
+  The added media-control test initially had a missing fixture order and exact text assertion
+  including a separator; both test issues were corrected, with no production behavior change.
+- Biome check/format on task-modified code files only and `git diff --check`: passed.
+  After final optional-field cleanup, `pnpm exec vitest run
+  packages/local-db/src/media-playback-service.test.ts -t 'persists exact coverage|closes a discovered tail'
+  --maxWorkers=2` passed **2 / 4 not selected**; the three affected files passed Biome again.
+
+Deferred by user: full unit suite/workspace typecheck/lint, Electron IPC and app restart,
+real player/PDF/OCR interaction and timing, light/dark desktop layouts, large-collection and
+long-session performance. No application, development server, Electron or real player was
+started; no Windows switch, system configuration change, push, release or deployment.
+T134 and other roadmap tasks were not started.
 
 ---
 

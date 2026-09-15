@@ -353,6 +353,8 @@ describe("IPC channels", () => {
         "processingUnits:open",
         "processingUnits:set",
         "processingUnits:undo",
+        "mediaPlayback:start",
+        "mediaPlayback:record",
         "rereadProposals:list",
         "rereadProposals:item",
         "rereadProposals:accept",

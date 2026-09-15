@@ -1,5 +1,11 @@
 export const sourceReturn = {
   title: "Returning to this source",
+  segment: "{{start}}-{{end}} s",
+  segments: "Media segments",
+  unknownEnd: "unknown",
+  unknownRead: "Read percentage unknown",
+  coverageFailed: "Playback progress could not be saved",
+  playbackUnavailable: "Playback tracking and seeking unavailable for this embedded player",
   page: "Page {{number}}",
   unitState: "Processing state",
   ignoreUnit: "Ignore remaining content",

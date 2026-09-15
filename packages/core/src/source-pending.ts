@@ -9,6 +9,7 @@ export interface SourcePendingBlock {
   readonly contentHash: string | null;
   readonly locatable: boolean;
   readonly canResume: boolean;
+  readonly canResumeRead?: boolean;
 }
 
 export interface SourcePendingBlocks {

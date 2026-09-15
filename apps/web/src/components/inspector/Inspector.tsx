@@ -2168,7 +2168,9 @@ function AttentionSummary({
       {scheduler.yield ? (
         <div className="attention-summary__yield" data-testid="inspector-yield">
           <span data-testid="inspector-yield-read">
-            {Math.round(scheduler.yield.readPct * 100)}% read
+            {scheduler.yield.readPctKnown === false
+              ? t("sourceReturn.unknownRead")
+              : `${Math.round(scheduler.yield.readPct * 100)}% read`}
           </span>
           <span>
             {scheduler.yield.extractsCreated} extract
@@ -3163,3 +3165,5 @@ export function Inspector() {
     </aside>
   );
 }
+
+import { t } from "../../i18n";

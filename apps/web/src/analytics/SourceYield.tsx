@@ -209,7 +209,11 @@ export function SourceYield() {
                         style={{ width: `${Math.round(row.readPct * 100)}%` }}
                       />
                     </span>
-                    <span className="sy-read__pct">{formatPct(row.readPct)}</span>
+                    <span className="sy-read__pct">
+                      {row.readPctKnown === false
+                        ? t("sourceReturn.unknownEnd")
+                        : formatPct(row.readPct)}
+                    </span>
                   </span>
 
                   <span className="sy-cell sy-cell--blocks">
@@ -270,3 +274,5 @@ export function SourceYield() {
     </div>
   );
 }
+
+import { t } from "../i18n";

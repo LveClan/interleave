@@ -231,6 +231,13 @@ export type {
 } from "./ids";
 // Background-runner job model — local infra, not an element (./job).
 export type { Job, JobJsonValue, JobProgress } from "./job";
+export type {
+  MediaSegment,
+  PlaybackEvent,
+  RecordPlaybackRequest,
+  TimeRange,
+} from "./media-processing";
+export { coveredTime, mediaSegments, mergeTimeRanges, PlaybackCoverage } from "./media-processing";
 // Audio-card presentation carrier — the `cards.media_ref` clip pointer (./media-ref).
 export type { MediaRef, MediaRefFace } from "./media-ref";
 export { isMediaRefFace, MEDIA_REF_FACES, parseMediaRef } from "./media-ref";

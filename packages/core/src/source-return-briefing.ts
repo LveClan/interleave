@@ -9,6 +9,7 @@ export interface SourceReturnBriefing {
   readonly lastVisitAt: string | null;
   readonly visitEvidence: "reading_activity" | "unknown";
   readonly readPct: number;
+  readonly readPctKnown?: boolean;
   /** No existing visit snapshot records the historical denominator. */
   readonly readPctDelta: number | null;
   readonly stateCounts: Readonly<Record<SourceBlockProcessingState, number>>;

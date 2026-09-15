@@ -14,3 +14,39 @@
 .processing-units [role="alert"] {
   color: var(--danger);
 }
+.processing-segments {
+  display: flex;
+  gap: var(--s-1);
+  overflow-x: auto;
+  padding: var(--s-2) var(--s-4);
+  flex-shrink: 0;
+}
+.processing-segments__unit {
+  min-width: 32px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-bottom: 3px solid var(--text-3);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--t-xs);
+}
+.processing-segments__unit[data-state="read"] {
+  border-bottom-color: var(--accent);
+}
+.processing-segments__unit[data-state="needs_later"] {
+  border-bottom-color: var(--prio-b);
+}
+.processing-segments__unit[data-state="stale_after_edit"] {
+  border-bottom-color: var(--danger);
+}
+.processing-segments__unit[data-state="extracted"],
+.processing-segments__unit[data-state="processed_without_output"] {
+  border-bottom-color: var(--el-extract);
+}
+.processing-segments__unit[data-state="ignored"] {
+  opacity: 0.6;
+}
+.processing-segments__unit[aria-current="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

@@ -19,6 +19,7 @@ export * from "./documents";
 export * from "./elements";
 export * from "./embeddings";
 export * from "./jobs";
+export * from "./media-processing";
 export * from "./occlusion";
 export * from "./ocr";
 export * from "./organize";

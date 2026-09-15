@@ -19,12 +19,16 @@ export function ProcessingUnitControls({
   ready,
   scheduledReturn,
   onJump,
+  currentMs,
+  canJump = ready,
 }: {
   sourceId: string;
   activeId: string;
   ready: boolean;
   scheduledReturn: boolean;
   onJump: (blockId: string) => boolean;
+  currentMs?: number;
+  canJump?: boolean;
 }) {
   useLocale();
   const [blocks, setBlocks] = useState<readonly SourceBlockProcessingView[]>([]);
@@ -33,6 +37,7 @@ export function ProcessingUnitControls({
   const [error, setError] = useState(false);
   const [openSignal, setOpenSignal] = useState(0);
   const [resolved, setResolved] = useState(0);
+  const [playbackReadPct, setPlaybackReadPct] = useState<number | null | undefined>();
   const mounted = useRef(false);
   const version = useRef(0);
   const locked = useRef(false);
@@ -43,6 +48,7 @@ export function ProcessingUnitControls({
       if (mounted.current && request === version.current) {
         setBlocks(result.blocks);
         setResolved(result.summary.terminalBlocks);
+        setPlaybackReadPct(result.summary.playbackReadPct);
         setError(false);
       }
     } catch {
@@ -59,7 +65,17 @@ export function ProcessingUnitControls({
       unlisten();
     };
   }, [sourceId, reload]);
-  const active = blocks.find((block) => block.stableBlockId === activeId);
+  const active =
+    currentMs == null
+      ? blocks.find((block) => block.stableBlockId === activeId)
+      : (blocks.find(
+          (block) =>
+            block.locatable &&
+            block.geometry?.kind === "media_segment" &&
+            currentMs >= block.geometry.startMs &&
+            (block.geometry.endMs == null || currentMs < block.geometry.endMs),
+        ) ?? blocks.filter((b) => b.locatable).at(-1));
+  const selectedId = active?.stableBlockId ?? activeId;
   const mutate = async (state?: SetProcessingUnitRequest["state"]) => {
     if (locked.current) return;
     locked.current = true;
@@ -68,7 +84,7 @@ export function ProcessingUnitControls({
       if (state && active?.blockContentHash) {
         const result = await appApi.setProcessingUnit({
           sourceId,
-          blockId: activeId,
+          blockId: selectedId,
           contentHash: active.blockContentHash,
           expectedState: active.state,
           state,
@@ -113,7 +129,7 @@ export function ProcessingUnitControls({
       <SourceReturnBriefing
         sourceId={sourceId}
         scheduledReturn={scheduledReturn}
-        canJump={ready}
+        canJump={canJump}
         onJump={(id) => {
           if (!onJump(id)) setError(true);
         }}
@@ -121,7 +137,7 @@ export function ProcessingUnitControls({
       />
       <SourcePendingRail
         sourceId={sourceId}
-        canJump={ready}
+        canJump={canJump}
         onJump={onJump}
         openSignal={openSignal}
       />
@@ -129,31 +145,62 @@ export function ProcessingUnitControls({
         <span>
           {active?.geometry?.kind === "pdf_page"
             ? t("sourceReturn.page", { number: active.geometry.page })
-            : t("sourceReturn.unitState")}
+            : active?.geometry?.kind === "media_segment"
+              ? t("sourceReturn.segment", {
+                  start: format.number(active.geometry.startMs / 1000),
+                  end:
+                    active.geometry.endMs == null
+                      ? t("sourceReturn.unknownEnd")
+                      : format.number(active.geometry.endMs / 1000),
+                })
+              : t("sourceReturn.unitState")}
         </span>
         <span>{active ? stateLabels[active.state] : t("sourceReturn.noPreview")}</span>
         {active && active.outputElementIds.length > 0 && (
           <span>{t("sourceReturn.unitOutputs", { count: active.outputElementIds.length })}</span>
         )}
         <span className="processing-units__progress">
+          {playbackReadPct !== undefined && (
+            <span>
+              {playbackReadPct == null
+                ? t("sourceReturn.unknownRead")
+                : t("sourceReturn.read", {
+                    percent: format.number(playbackReadPct, {
+                      style: "percent",
+                      maximumFractionDigits: 0,
+                    }),
+                  })}{" "}
+              ·{" "}
+            </span>
+          )}
           {t("sourceReturn.resolvedUnits", {
             count: resolved,
             total: format.number(blocks.length),
           })}
         </span>
-        {actions.map(([state, icon, label]) => (
-          <button
-            key={state}
-            type="button"
-            className="btn btn--ghost btn--icon"
-            title={label}
-            aria-label={label}
-            disabled={!ready || !active?.locatable || busy}
-            onClick={() => void mutate(state)}
-          >
-            <Icon name={icon} size={14} />
-          </button>
-        ))}
+        {actions
+          .filter(([state]) => active?.geometry?.kind !== "media_segment" || state !== "read")
+          .map(([state, icon, label]) => (
+            <button
+              key={state}
+              type="button"
+              className="btn btn--ghost btn--icon"
+              title={label}
+              aria-label={label}
+              disabled={
+                !ready ||
+                !active?.locatable ||
+                busy ||
+                (active.geometry?.kind === "media_segment" &&
+                  active.geometry.endMs == null &&
+                  state !== "unread" &&
+                  state !== "needs_later")
+              }
+              onClick={() => void mutate(state)}
+            >
+              <Icon name={icon} size={14} />
+            </button>
+          ))}
         {receipt && (
           <button
             type="button"
@@ -168,6 +215,29 @@ export function ProcessingUnitControls({
         )}
         {error && <span role="alert">{t("sourceReturn.pendingChanged")}</span>}
       </section>
+      {currentMs != null && (
+        <section className="processing-segments" aria-label={t("sourceReturn.segments")}>
+          {blocks
+            .filter((block) => block.locatable && block.geometry?.kind === "media_segment")
+            .map((block) => (
+              <button
+                key={block.stableBlockId}
+                type="button"
+                className="processing-segments__unit"
+                data-state={block.state}
+                aria-current={block.stableBlockId === selectedId ? "true" : undefined}
+                disabled={!canJump}
+                title={`${block.order + 1}: ${stateLabels[block.state]}`}
+                aria-label={`${block.order + 1}: ${stateLabels[block.state]}`}
+                onClick={() => {
+                  if (!onJump(block.stableBlockId)) setError(true);
+                }}
+              >
+                {block.order + 1}
+              </button>
+            ))}
+        </section>
+      )}
     </>
   );
 }

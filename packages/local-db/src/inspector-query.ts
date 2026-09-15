@@ -93,6 +93,7 @@ export interface SchedulerSignals {
 export interface SourceYieldSignals {
   /** How far the source has been read, in `[0, 1]`. */
   readonly readPct: number;
+  readonly readPctKnown?: boolean;
   /** Live `extract` descendants created from the source. */
   readonly extractsCreated: number;
   /** Extracts that produced non-card value, de-duplicated across fate + synthesis refs. */
@@ -420,6 +421,7 @@ export class InspectorQuery {
       if (row) {
         sourceYield = {
           readPct: row.readPct,
+          readPctKnown: row.readPctKnown !== false,
           extractsCreated: row.extractsCreated,
           productiveExtracts: row.productiveExtracts,
           cardsCreated: row.cardsCreated,

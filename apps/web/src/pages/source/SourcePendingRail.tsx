@@ -284,9 +284,17 @@ function SourcePendingRailVisit({
                     ? t("sourceReturn.moved")
                     : entry.geometry?.kind === "pdf_page"
                       ? t("sourceReturn.page", { number: format.number(entry.geometry.page) })
-                      : t("sourceReturn.paragraph", {
-                          number: format.number(entry.order + 1),
-                        })}{" "}
+                      : entry.geometry?.kind === "media_segment"
+                        ? t("sourceReturn.segment", {
+                            start: format.number(entry.geometry.startMs / 1000),
+                            end:
+                              entry.geometry.endMs == null
+                                ? t("sourceReturn.unknownEnd")
+                                : format.number(entry.geometry.endMs / 1000),
+                          })
+                        : t("sourceReturn.paragraph", {
+                            number: format.number(entry.order + 1),
+                          })}{" "}
                   ·{" "}
                   {entry.state === "needs_later"
                     ? t("sourceReturn.pendingDeferred")
@@ -312,7 +320,7 @@ function SourcePendingRailVisit({
                   className="btn btn--ghost btn--icon"
                   title={t("sourceReturn.resumeRead")}
                   aria-label={t("sourceReturn.resumeRead")}
-                  disabled={busy || !entry.canResume || !canJump}
+                  disabled={busy || !entry.canResume || !canJump || entry.canResumeRead === false}
                   onClick={() => resume(entry, "read")}
                 >
                   <Icon name="eye" size={14} />

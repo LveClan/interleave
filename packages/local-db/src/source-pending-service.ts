@@ -52,7 +52,8 @@ export class SourcePendingService {
             contentHash: v.blockContentHash,
             locatable: v.locatable === true,
             canResume: v.locatable === true,
-            geometry: v.geometry,
+            ...(v.canMarkRead === undefined ? {} : { canResumeRead: v.canMarkRead }),
+            ...(v.geometry === undefined ? {} : { geometry: v.geometry }),
           })),
       };
     const meta = this.db.select().from(sources).where(eq(sources.elementId, sourceId)).get();

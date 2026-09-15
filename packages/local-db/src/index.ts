@@ -925,4 +925,5 @@ export function createRepositories(
   (repos as { weeklyReview: WeeklyReviewQuery }).weeklyReview = new WeeklyReviewQuery(db, repos);
   return repos;
 }
+export { MediaPlaybackService } from "./media-playback-service";
 export { ProcessingUnitService } from "./processing-unit-service";

@@ -193,9 +193,12 @@ export interface SourceBlockProcessingView {
   readonly remainingState?: SourceBlockProcessingState;
   readonly preview?: string;
   readonly locatable?: boolean;
+  readonly canMarkRead?: boolean;
 }
 
-export type ProcessingUnitGeometry = { readonly kind: "pdf_page"; readonly page: number };
+export type ProcessingUnitGeometry =
+  | { readonly kind: "pdf_page"; readonly page: number }
+  | { readonly kind: "media_segment"; readonly startMs: number; readonly endMs: number | null };
 
 export interface SetProcessingUnitRequest {
   readonly sourceId: string;
@@ -213,6 +216,8 @@ export function composeProcessingUnitState(
 }
 
 export interface SourceBlockProcessingSummary {
+  /** Media-only actual playback coverage; null when total duration is unknown. */
+  readonly playbackReadPct?: number | null;
   readonly sourceElementId: ElementId;
   readonly totalBlocks: number;
   readonly processedBlocks: number;
