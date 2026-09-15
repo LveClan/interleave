@@ -1254,7 +1254,9 @@ function SourceReaderVisit() {
       <div className="reader-with-aside" data-has-aside={rereadItem ? "true" : "false"}>
         <div className="reader-main-column">
           <div className="reader-briefing-slot">
-            {inspector?.element.type === "source" && <StructuralSkim key={id} sourceId={id} />}
+            {inspector?.element.type === "source" && (
+              <StructuralSkim key={`skim:${id}`} sourceId={id} />
+            )}
             <SourceReturnBriefing
               sourceId={id}
               scheduledReturn={search.entry === "queue" || rereadId !== null}
@@ -1263,7 +1265,7 @@ function SourceReaderVisit() {
               onOpenPending={() => setPendingOpenSignal((value) => value + 1)}
             />
             <SourcePendingRail
-              key={id}
+              key={`pending:${id}`}
               sourceId={id}
               canJump={editorReady && doc.status === "ready" && !doc.saving}
               onJump={jumpToPendingBlock}

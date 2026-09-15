@@ -1,4 +1,5 @@
 .source-return {
+  flex-shrink: 0;
   margin-bottom: var(--s-6);
   padding-block: var(--s-4);
   border-block: 1px solid var(--border);
@@ -45,5 +46,7 @@
   gap: var(--s-2);
   min-height: 28px;
   flex-shrink: 0;
+  min-width: 0;
+  max-width: 100%;
   white-space: normal;
 }

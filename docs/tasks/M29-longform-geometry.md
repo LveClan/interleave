@@ -32,14 +32,18 @@
 > **2026-09-15 basic-check follow-up:** the user subsequently authorized full Linux basic
 > checks and repair of their failures. See [results and repairs](./M29-basic-checks-2026-09-15.md).
 > All 5020 tests have final passing evidence across the full run and affected-file reruns;
-> lint and typechecking pass. Electron/Windows/GUI acceptance remains deferred; statuses stay `[~]`.
+> lint and typechecking pass. This historical checkpoint is superseded by the
+> [Windows functional acceptance record](./M29-windows-acceptance-2026-09-15.md).
+> Task statuses below reflect acceptance commits; earlier implementation notes retain
+> their original verification scope. Final acceptance followed the user's single-agent
+> instruction and used self-review; original independent implementation reviews remain valid.
 
 ---
 
 # T130 — Source re-entry briefing
 
 - **Milestone:** M29 — Long-form geometry & re-entry
-- **Status:** `[~]` implemented and independently reviewed; unified verification deferred by user
+- **Status:** `[x]` Windows functional acceptance complete; commit `T130: 完成来源重返摘要的 Windows 验收`
 - **Depends on:** T083
 - **Roadmap line:** opening a scheduled source return renders a since-last-visit briefing —
   read %, new/deferred/stale block counts, descendant card performance, last extraction point —

@@ -633,7 +633,7 @@ describe("SourceReader", () => {
     // the reader stays usable (T135 / U7).
     h.actOnQueueItem.mockRejectedValue(new Error("delete failed"));
     const { getByTestId, findByTestId } = render(<SourceReader />);
-    await findByTestId("mock-source-editor");
+    await findByTestId("reader-title");
 
     fireEvent.click(getByTestId("reader-delete"));
 
@@ -1125,7 +1125,7 @@ describe("SourceReader", () => {
     expect(getByTestId("reader-postpone")).toBeInTheDocument();
     expect(getByTestId("reader-mark-done")).toBeInTheDocument();
     expect(getByTestId("reader-lower-priority")).toBeInTheDocument();
-    expect(getByTestId("reader-open-original")).toHaveAttribute(
+    expect(await findByTestId("reader-open-original")).toHaveAttribute(
       "href",
       "https://example.com/source",
     );

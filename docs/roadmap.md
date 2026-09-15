@@ -509,9 +509,9 @@ Detailed specs: [`tasks/M28-lapse-rereading.md`](./tasks/M28-lapse-rereading.md)
 ## M29 — Long-form geometry & the re-entry payoff (T130–T134)
 Detailed specs: [`tasks/M29-longform-geometry.md`](./tasks/M29-longform-geometry.md)
 
-- [~] **T130 — Source re-entry briefing** · _deps: T083_ · implementation reviewed; unified verification deferred by user
+- [x] **T130 — Source re-entry briefing** · _deps: T083_ · commit: `T130: 完成来源重返摘要的 Windows 验收`
   Done when: opening a scheduled source return renders a since-last-visit briefing — read %, new/deferred/stale block counts, descendant card performance, last extraction point — computed from existing block and yield rows, with one-click jump to the next unresolved block.
-  Implemented in local commit `T130: add source re-entry briefing`. Typed read-only model and compact queue/process reader strip, current block/card statistics, honest unknown historical delta, per-visit dismissal, stable-block jumps and async isolation. Independent review fixes complete; final focused tests: 44 passed. T130 Electron flow passed, related Electron run: 15 passed / 1 timeout. Full unit suite was stopped by user request; broad verification and remaining failures await a later explicit unified-test request. See the [T130 implementation/verification record](./tasks/M29-longform-geometry.md#implementation-and-verification-2026-09-15). Not yet marked fully complete.
+  Windows acceptance passed: casual/queue/process entry, current counts, unknown history, dismissal, jumps, IPC rejection, light/dark/narrow layouts and restart. Fixed text-reader sibling keys and async test readiness. Root lint/typecheck passed; 5023 tests have combined final passing evidence. Original implementation was independently reviewed; final acceptance used self-review under the user's single-agent instruction. See [M29 acceptance](./tasks/M29-windows-acceptance-2026-09-15.md).
 - [~] **T131 — Honor `needs_later`** · _deps: T130_ · implemented and reviewed; unified verification pending
   Done when: deferred blocks are reachable via a jump rail (listing `needs_later` and `stale_after_edit` blocks) and un-deferring/resolving updates the durable state — block deferral stops being write-only bookkeeping that is counted at exit and never seen again.
   Local commit: `T131: make deferred source passages actionable`. Document-order collapsible rail in both readers, T130 entry, previous/next keyboard navigation, trusted resume-as-unread/read and guarded receipt undo. Live output/reverify provenance remains protected, stale async results are isolated, and existing unresolved-ratio scheduling is pinned. Independent review and focused tests passed; full/typecheck/Electron/GUI/restart checks were explicitly deferred by the user. See [T131 basic verification](./tasks/M29-longform-geometry.md#t131-implementation-and-basic-verification-2026-09-15). T130 stays `[~]`.
@@ -537,6 +537,8 @@ Detailed specs: [`plans/2026-06-12-004-feat-lineage-aware-deletion-plan.md`](./p
 ---
 
 ## Progress log
+
+- **2026-09-15 — T130 Windows acceptance complete:** `T130: 完成来源重返摘要的 Windows 验收`. Final briefing/pending Electron rerun passed 2/2; source-reader test rerun passed with the full-suite evidence retained. T131 can reuse the accepted reader entry and source-isolated refresh behavior. See [M29 acceptance](./tasks/M29-windows-acceptance-2026-09-15.md).
 
 - **2026-09-15 — M29 Linux basic-check repairs:** user-authorized full checks found 23 unit/property/UI failures plus format/type errors. Repairs and independent review complete; 5020 tests across 476 files have passing evidence from the full run plus final affected-file reruns, with lint/typecheck passing. See [the detailed check record](./tasks/M29-basic-checks-2026-09-15.md). T130-T134 remain `[~]` pending Electron/Windows/GUI acceptance.
 
