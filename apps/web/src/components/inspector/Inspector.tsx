@@ -191,6 +191,7 @@ function headerStateLine(
 
 /** A clickable lineage row that re-selects the target element and may open its detail surface. */
 function LineageRow({ item, onOpen }: { item: LineageItem; onOpen: (item: LineageItem) => void }) {
+  useLocale();
   return (
     <button
       type="button"
@@ -213,8 +214,9 @@ function ElementPicker({
   elements: readonly ElementSummary[];
   onSelect: (id: string) => void;
 }) {
+  useLocale();
   if (elements.length === 0) {
-    return <p className="insp-empty">No elements yet. Import a source to get started.</p>;
+    return <p className="insp-empty">{t("shell.inspectorEmpty")}</p>;
   }
   return (
     <div className="insp-picker" data-testid="element-picker">
@@ -255,6 +257,7 @@ function PriorityControl({
   busy: boolean;
   onSetPriority: (action: ElementsSetPriorityAction) => void;
 }) {
+  useLocale();
   const current = priorityLabel(priority);
   return (
     <div className="prio-edit" data-testid="inspector-priority">
@@ -262,14 +265,14 @@ function PriorityControl({
         type="button"
         className="prio-edit__step"
         data-testid="inspector-priority-raise"
-        title="Raise priority one band"
-        aria-label="Raise priority"
+        title={t("details.m2750f16ccab2")}
+        aria-label={t("details.m16dd10b91ea8")}
         disabled={busy || current === "A"}
         onClick={() => onSetPriority({ kind: "raise" })}
       >
         <Icon name="arrowUp" size={14} />
       </button>
-      <fieldset className="prio-edit__seg" aria-label="Set priority">
+      <fieldset className="prio-edit__seg" aria-label={t("details.m491dc6df71d6")}>
         {PRIORITY_BANDS.map((band) => {
           const active = current === band;
           return (
@@ -295,8 +298,8 @@ function PriorityControl({
         type="button"
         className="prio-edit__step"
         data-testid="inspector-priority-lower"
-        title="Lower priority one band"
-        aria-label="Lower priority"
+        title={t("details.mb201d9e6107a")}
+        aria-label={t("details.m73817b249283")}
         disabled={busy || current === "D"}
         onClick={() => onSetPriority({ kind: "lower" })}
       >
@@ -317,6 +320,7 @@ function FallowSection({
   onFallow: (request: TopicFallowRequest) => Promise<TopicFallowResult>;
   onUnfallow: (request: TopicUnfallowRequest) => Promise<TopicFallowResult>;
 }) {
+  useLocale();
   const [date, setDate] = useState(() => defaultFallowDate(element.fallowUntil));
   const [reason, setReason] = useState(element.fallowReason ?? "");
   const [message, setMessage] = useState<string | null>(null);
@@ -379,22 +383,29 @@ function FallowSection({
   return (
     <div className="insp-sec" data-testid="fallow-section">
       <div className="insp-sec__title">
-        <span>Topic rest</span>
+        <span>{t("details.m90e9a59d09d0")}</span>
         <span className={`insp-fallow__state insp-fallow__state--${state}`}>
-          {state === "active" ? "Resting" : state === "returned" ? "Returned" : "Not resting"}
+          {state === "active"
+            ? t("details.mb95006948ace")
+            : state === "returned"
+              ? t("details.m3610231fdcab")
+              : t("details.m14968add93e6")}
         </span>
       </div>
       <div className="insp-fallow">
         {fallowUntil ? (
           <div className="insp-fallow__current" data-testid="fallow-current">
             <Icon name="pause" size={14} />
-            <span>Back {fmtDate(fallowUntil)}</span>
+            <span>
+              {t("details.m9153f74ab465")}
+              {fmtDate(fallowUntil)}
+            </span>
             {element.fallowReason ? <span>{element.fallowReason}</span> : null}
           </div>
         ) : null}
         <div className="insp-fallow__form">
           <label className="insp-fallow__field">
-            <span>Return</span>
+            <span>{t("details.m6b0143d03864")}</span>
             <input
               type="date"
               value={date}
@@ -404,7 +415,7 @@ function FallowSection({
             />
           </label>
           <label className="insp-fallow__field">
-            <span>Reason</span>
+            <span>{t("details.mf81ab834de5f")}</span>
             <input
               type="text"
               maxLength={240}
@@ -424,7 +435,7 @@ function FallowSection({
             onClick={() => void submit()}
           >
             <Icon name="calendar" size={13} />
-            Rest topic
+            {t("details.m0e6708bc891d")}
           </button>
           {state !== "none" ? (
             <button
@@ -435,11 +446,11 @@ function FallowSection({
               onClick={() => void clear()}
             >
               <Icon name="return" size={13} />
-              Clear rest
+              {t("details.m6126983b88b3")}
             </button>
           ) : null}
         </div>
-        <p className="insp-fallow__note">Card reviews continue while attention work rests.</p>
+        <p className="insp-fallow__note">{t("details.m583f4e47cb74")}</p>
         {message ? (
           <p className="insp-fallow__message" data-testid="fallow-message">
             {message}
@@ -471,6 +482,7 @@ function OrganizeSection({
   allConcepts: readonly ConceptNode[];
   onChanged: () => void;
 }) {
+  useLocale();
   const [tagDraft, setTagDraft] = useState("");
   const [conceptDraft, setConceptDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -537,7 +549,7 @@ function OrganizeSection({
     <>
       {/* Concepts. */}
       <div className="insp-sec" data-testid="concepts-section">
-        <div className="insp-sec__title">Concepts</div>
+        <div className="insp-sec__title">{t("details.m0d0a8c6df3ac")}</div>
         <div className="insp-organize">
           {concepts.length > 0 ? (
             <div className="insp-organize__row" data-testid="concept-pills">
@@ -553,7 +565,7 @@ function OrganizeSection({
                     type="button"
                     className="insp-chip-del"
                     data-testid="concept-remove"
-                    aria-label={`Remove concept ${c.name}`}
+                    aria-label={t("details.me3cca4c4f957", { value1: String(c.name) })}
                     disabled={busy}
                     onClick={() =>
                       run(() => appApi.unassignConcept({ elementId, conceptId: c.id }))
@@ -565,19 +577,19 @@ function OrganizeSection({
               ))}
             </div>
           ) : (
-            <p className="insp-empty">No concepts.</p>
+            <p className="insp-empty">{t("details.mbe690468104e")}</p>
           )}
           {assignable.length > 0 && (
             <div className="insp-add">
               <select
                 className="insp-add__select"
                 data-testid="concept-picker"
-                aria-label="Assign concept"
+                aria-label={t("details.m1898c4694fa0")}
                 value={conceptDraft}
                 disabled={busy}
                 onChange={(e) => setConceptDraft(e.target.value)}
               >
-                <option value="">Assign concept…</option>
+                <option value="">{t("details.m7f524f59dd90")}</option>
                 {assignable.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.parentConceptId ? `↳ ${c.name}` : c.name}
@@ -591,7 +603,7 @@ function OrganizeSection({
                 disabled={busy || !conceptDraft}
                 onClick={onAssignConcept}
               >
-                Assign
+                {t("details.mf98025169f4a")}
               </button>
             </div>
           )}
@@ -607,7 +619,7 @@ function OrganizeSection({
                   data-testid="concept-create-name"
                   // biome-ignore lint/a11y/noAutofocus: opening the create form is an explicit user action
                   autoFocus
-                  placeholder="New concept name…"
+                  placeholder={t("details.m3ba046751e07")}
                   value={newConceptName}
                   disabled={busy}
                   onChange={(e) => setNewConceptName(e.target.value)}
@@ -625,12 +637,12 @@ function OrganizeSection({
                 <select
                   className="insp-add__select"
                   data-testid="concept-create-parent"
-                  aria-label="Parent concept (optional)"
+                  aria-label={t("details.m76e6987c136f")}
                   value={newConceptParent}
                   disabled={busy}
                   onChange={(e) => setNewConceptParent(e.target.value)}
                 >
-                  <option value="">No parent (root)</option>
+                  <option value="">{t("details.m06466af8a659")}</option>
                   {allConcepts.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.parentConceptId ? `↳ ${c.name}` : c.name}
@@ -644,7 +656,7 @@ function OrganizeSection({
                   disabled={busy || newConceptName.trim().length === 0}
                   onClick={onCreateConcept}
                 >
-                  Create
+                  {t("details.m672ffa473180")}
                 </button>
                 <button
                   type="button"
@@ -653,7 +665,7 @@ function OrganizeSection({
                   disabled={busy}
                   onClick={() => setCreating(false)}
                 >
-                  Cancel
+                  {t("details.m0ef70263b054")}
                 </button>
               </div>
             </div>
@@ -665,7 +677,8 @@ function OrganizeSection({
               disabled={busy}
               onClick={() => setCreating(true)}
             >
-              <Icon name="plus" size={12} /> New concept…
+              <Icon name="plus" size={12} />
+              {t("details.m0627964f4efc")}
             </button>
           )}
         </div>
@@ -673,7 +686,7 @@ function OrganizeSection({
 
       {/* Tags. */}
       <div className="insp-sec" data-testid="tags-section">
-        <div className="insp-sec__title">Tags</div>
+        <div className="insp-sec__title">{t("details.m1331275bc537")}</div>
         <div className="insp-organize">
           {tags.length > 0 ? (
             <div className="insp-organize__row" data-testid="tag-pills">
@@ -689,7 +702,7 @@ function OrganizeSection({
                     type="button"
                     className="insp-chip-del"
                     data-testid="tag-remove"
-                    aria-label={`Remove tag ${tag}`}
+                    aria-label={t("details.m3af2ff1e0def", { value1: String(tag) })}
                     disabled={busy}
                     onClick={() => run(() => appApi.removeTag({ elementId, tag }))}
                   >
@@ -699,13 +712,13 @@ function OrganizeSection({
               ))}
             </div>
           ) : (
-            <p className="insp-empty">No tags.</p>
+            <p className="insp-empty">{t("details.m9098cf0d23d8")}</p>
           )}
           <div className="insp-add">
             <input
               className="insp-add__input"
               data-testid="tag-input"
-              placeholder="Add a tag…"
+              placeholder={t("details.md0218e9140e4")}
               value={tagDraft}
               disabled={busy}
               onChange={(e) => setTagDraft(e.target.value)}
@@ -723,7 +736,7 @@ function OrganizeSection({
               disabled={busy || tagDraft.trim().length === 0}
               onClick={onAddTag}
             >
-              Add
+              {t("details.m8d89e4a829ae")}
             </button>
           </div>
         </div>
@@ -796,6 +809,7 @@ function isAttentionScheduler(
  * nothing in a bare renderer.
  */
 function ExportMarkdownSection({ elementId }: { elementId: string }) {
+  useLocale();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -818,7 +832,7 @@ function ExportMarkdownSection({ elementId }: { elementId: string }) {
 
   return (
     <div className="insp-sec" data-testid="export-section">
-      <div className="insp-sec__title">Export</div>
+      <div className="insp-sec__title">{t("details.m3664895579f0")}</div>
       <button
         type="button"
         className="insp-add__btn"
@@ -827,11 +841,12 @@ function ExportMarkdownSection({ elementId }: { elementId: string }) {
         onClick={() => void onExport()}
       >
         <Icon name={busy ? "clock" : "download"} size={12} className={busy ? "animate-spin" : ""} />
-        {busy ? "Exporting…" : "Export to Markdown"}
+        {busy ? t("details.ma2dd9cbb7013") : t("details.ma938c96b3ae1")}
       </button>
       {done ? (
         <p className="insp-empty" data-testid="export-done">
-          Exported to {done}
+          {t("details.m7367335cfd6a")}
+          {done}
         </p>
       ) : null}
       {error ? (
@@ -868,6 +883,7 @@ function ExportAnkiSection({
   cardId: string;
   concepts: readonly { id: string; name: string }[];
 }) {
+  useLocale();
   const [scope, setScope] = useState<AnkiExportScope>({ kind: "card" });
   const [busy, setBusy] = useState<"apkg" | "csv" | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -889,7 +905,7 @@ function ExportAnkiSection({
       const result = await appApi.exportAnki(request);
       setDone(
         `${result.directoryLabel}/${result.relativePath} · ${result.cardCount} card${
-          result.cardCount === 1 ? "" : "s"
+          i18n.language.startsWith("zh") ? "" : result.cardCount === 1 ? "" : "s"
         }`,
       );
     } catch (e) {
@@ -903,24 +919,36 @@ function ExportAnkiSection({
 
   // Build the scope options: this card always; one per assigned concept; all cards.
   const scopeOptions: { value: string; label: string; scope: AnkiExportScope }[] = [
-    { value: "card", label: "This card", scope: { kind: "card" } },
+    {
+      value: "card",
+      get label() {
+        return t("options.m27968b2ac9cf");
+      },
+      scope: { kind: "card" },
+    },
     ...concepts.map((c) => ({
       value: `concept:${c.id}`,
       label: `Concept: ${c.name}`,
       scope: { kind: "concept" as const, id: c.id },
     })),
-    { value: "all", label: "All cards", scope: { kind: "all" } },
+    {
+      value: "all",
+      get label() {
+        return t("options.m230612091750");
+      },
+      scope: { kind: "all" },
+    },
   ];
   const selectedValue =
     scope.kind === "concept" ? `concept:${scope.id}` : scope.kind === "all" ? "all" : "card";
 
   return (
     <div className="insp-sec" data-testid="export-anki-section">
-      <div className="insp-sec__title">Export to Anki</div>
+      <div className="insp-sec__title">{t("details.m748597596a8e")}</div>
       <select
         className="insp-add__select"
         data-testid="export-anki-scope"
-        aria-label="Export scope"
+        aria-label={t("details.md9b7a4681b53")}
         value={selectedValue}
         disabled={busy != null}
         onChange={(e) => {
@@ -936,7 +964,7 @@ function ExportAnkiSection({
         ))}
       </select>
       <div className="insp-export-actions">
-        <span className="insp-export-actions__label">Export as</span>
+        <span className="insp-export-actions__label">{t("details.m1e74a176a3dd")}</span>
         <button
           type="button"
           className="insp-add__btn"
@@ -949,7 +977,7 @@ function ExportAnkiSection({
             size={12}
             className={busy === "apkg" ? "animate-spin" : ""}
           />
-          {busy === "apkg" ? "Exporting…" : ".apkg"}
+          {busy === "apkg" ? t("details.ma2dd9cbb7013") : ".apkg"}
         </button>
         <button
           type="button"
@@ -963,12 +991,13 @@ function ExportAnkiSection({
             size={12}
             className={busy === "csv" ? "animate-spin" : ""}
           />
-          {busy === "csv" ? "Exporting…" : "CSV"}
+          {busy === "csv" ? t("details.ma2dd9cbb7013") : t("details.meb6b42f54c42")}
         </button>
       </div>
       {done ? (
         <p className="insp-empty" data-testid="export-anki-done">
-          Exported to {done}
+          {t("details.m7367335cfd6a")}
+          {done}
         </p>
       ) : null}
       {error ? (
@@ -999,6 +1028,7 @@ const RETENTION_SOURCE_LABEL: Record<string, string> = {
  * band → global). Card-only; re-fetched when the inspected card changes.
  */
 function ResolvedRetentionRow({ cardId }: { cardId: string }) {
+  useLocale();
   const [target, setTarget] = useState<number | null>(null);
   const [source, setSource] = useState<string | null>(null);
   useEffect(() => {
@@ -1056,6 +1086,7 @@ function maturityStatusLabel(
 }
 
 function TopicMaturitySection({ topicId }: { topicId: string }) {
+  useLocale();
   const [subject, setSubject] = useState<TopicKnowledgeStateSubject | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1094,7 +1125,7 @@ function TopicMaturitySection({ topicId }: { topicId: string }) {
   return (
     <div className="insp-sec insp-maturity" data-testid="topic-maturity-section">
       <div className="insp-sec__title">
-        <span>Knowledge state</span>
+        <span>{t("details.mc1b06a4be599")}</span>
         {subject ? (
           <span
             className={`insp-maturity__status insp-maturity__status--${subject.graduationState.status}`}
@@ -1106,7 +1137,7 @@ function TopicMaturitySection({ topicId }: { topicId: string }) {
       </div>
       {loading && !subject ? (
         <p className="insp-empty" data-testid="topic-maturity-loading">
-          Loading maturity…
+          {t("details.m79424bcc5311")}
         </p>
       ) : error ? (
         <p className="insp-empty text-danger" data-testid="topic-maturity-error">
@@ -1117,28 +1148,47 @@ function TopicMaturitySection({ topicId }: { topicId: string }) {
           <div className="insp-maturity__grid">
             <div className="insp-maturity__metric">
               <span>{maturityPct(subject.funnel.extractedOfRead)}</span>
-              <small>extracted / read</small>
+              <small>{t("details.m8e5d7079ae91")}</small>
             </div>
             <div className="insp-maturity__metric">
               <span>{maturityPct(subject.funnel.matureOfCarded)}</span>
               <small>
-                {subject.funnel.mature}/{subject.funnel.carded} mature
+                {subject.funnel.mature}/{subject.funnel.carded}
+                {t("details.mace6de3c6478")}
               </small>
             </div>
             <div className="insp-maturity__metric">
               <span>{maturityPct(subject.retention.measuredRetention)}</span>
-              <small>target {maturityPct(subject.retention.retentionTarget)}</small>
+              <small>
+                {t("details.m7c51bfc4180d")}
+                {maturityPct(subject.retention.retentionTarget)}
+              </small>
             </div>
           </div>
           <div className="insp-maturity__buckets" data-testid="topic-maturity-buckets">
-            <span>Young {subject.stability.young}</span>
-            <span>Maturing {subject.stability.maturing}</span>
-            <span>Mature {subject.stability.mature}</span>
-            <span>Retired {subject.stability.retired}</span>
+            <span>
+              {t("details.m741d85a901fa")}
+              {subject.stability.young}
+            </span>
+            <span>
+              {t("details.m6c6dcac76958")}
+              {subject.stability.maturing}
+            </span>
+            <span>
+              {t("details.m3eb9e0ebece7")}
+              {subject.stability.mature}
+            </span>
+            <span>
+              {t("details.md1cd7e9ee7d3")}
+              {subject.stability.retired}
+            </span>
           </div>
           {subject.staleness.staleItems > 0 || subject.staleness.needsReverify > 0 ? (
             <p className="insp-maturity__note" data-testid="topic-maturity-flags">
-              {subject.staleness.staleItems} stale · {subject.staleness.needsReverify} need reverify
+              {subject.staleness.staleItems}
+              {t("details.me86eb1928a67")}
+              {subject.staleness.needsReverify}
+              {t("details.m07f71bf6ce1e")}
             </p>
           ) : null}
           <p className="insp-maturity__note">{subject.graduationState.reason}</p>
@@ -1148,7 +1198,9 @@ function TopicMaturitySection({ topicId }: { topicId: string }) {
                 selector={{ kind: "branch", rootId: topicId }}
                 hideWhileLoading
                 icon="target"
-                label={(n) => `Review ${n} weak-topic card${n === 1 ? "" : "s"}`}
+                label={(n) =>
+                  `Review ${n} weak-topic card${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "s"}`
+                }
                 testId="topic-maturity-review"
               />
             </div>
@@ -1156,7 +1208,7 @@ function TopicMaturitySection({ topicId }: { topicId: string }) {
         </>
       ) : (
         <p className="insp-empty" data-testid="topic-maturity-empty">
-          No maturity receipt yet.
+          {t("details.mfd2b3d33e780")}
         </p>
       )}
     </div>
@@ -1177,9 +1229,24 @@ const EXPIRY_STATUS_CLASS: Record<FactLifetimeSummary["status"], string> = {
 };
 /** The fact-stability options for the picker (T090). */
 const STABILITY_OPTIONS: readonly { value: FactStability; label: string }[] = [
-  { value: "stable", label: "Stable" },
-  { value: "slow", label: "Slow-changing" },
-  { value: "volatile", label: "Volatile" },
+  {
+    value: "stable",
+    get label() {
+      return t("options.m90ee305714d7");
+    },
+  },
+  {
+    value: "slow",
+    get label() {
+      return t("options.m11731f2d454f");
+    },
+  },
+  {
+    value: "volatile",
+    get label() {
+      return t("options.ma9e1146636dd");
+    },
+  },
 ];
 
 /**
@@ -1200,6 +1267,7 @@ export function ExpirySection({
   lifetime: FactLifetimeSummary;
   onChanged: () => void;
 }) {
+  useLocale();
   const anySet =
     lifetime.factStability !== null ||
     !!lifetime.validFrom ||
@@ -1268,7 +1336,7 @@ export function ExpirySection({
   return (
     <div className="insp-sec" data-testid="expiry-section">
       <div className="insp-sec__title">
-        <span>Expiry</span>
+        <span>{t("details.m6956d81401b8")}</span>
         <span
           className={`badge ${EXPIRY_STATUS_CLASS[lifetime.status]}`}
           data-testid="inspector-expiry-badge"
@@ -1297,7 +1365,7 @@ export function ExpirySection({
             </div>
           ) : (
             <p className="insp-empty" data-testid="inspector-expiry-empty">
-              No expiry set — this fact never goes stale.
+              {t("details.mefd31b0d5575")}
             </p>
           )}
           <button
@@ -1308,50 +1376,50 @@ export function ExpirySection({
             style={{ marginTop: 8 }}
           >
             <Icon name="calendar" size={13} />
-            {anySet ? "Edit expiry" : "Add expiry"}
+            {anySet ? t("details.m4dabf2795b4f") : t("details.mac850f1d0b34")}
           </button>
         </>
       ) : (
         <div className="meta-list">
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Valid until</span>
+            <span className="meta-key">{t("details.m92cd054da773")}</span>
             <input
               className="insp-add__input"
               data-testid="inspector-expiry-valid-until"
-              placeholder="YYYY-MM-DD"
+              placeholder={t("details.m6c48580bf8e9")}
               value={validUntil}
               onChange={(e) => setValidUntil(e.target.value)}
             />
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Review by</span>
+            <span className="meta-key">{t("details.mb526f9341880")}</span>
             <input
               className="insp-add__input"
               data-testid="inspector-expiry-review-by"
-              placeholder="YYYY-MM-DD"
+              placeholder={t("details.m6c48580bf8e9")}
               value={reviewBy}
               onChange={(e) => setReviewBy(e.target.value)}
             />
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Valid from</span>
+            <span className="meta-key">{t("details.m9a56d91b5571")}</span>
             <input
               className="insp-add__input"
               data-testid="inspector-expiry-valid-from"
-              placeholder="YYYY-MM-DD"
+              placeholder={t("details.m6c48580bf8e9")}
               value={validFrom}
               onChange={(e) => setValidFrom(e.target.value)}
             />
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Stability</span>
+            <span className="meta-key">{t("details.m1e42d0c86af7")}</span>
             <select
               className="insp-add__select"
               data-testid="inspector-expiry-stability"
               value={factStability}
               onChange={(e) => setFactStability(e.target.value as FactStability | "")}
             >
-              <option value="">Unspecified</option>
+              <option value="">{t("details.m5b8aa0bf3c59")}</option>
               {STABILITY_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
@@ -1360,21 +1428,21 @@ export function ExpirySection({
             </select>
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Jurisdiction</span>
+            <span className="meta-key">{t("details.md69b9ac78e0f")}</span>
             <input
               className="insp-add__input"
               data-testid="inspector-expiry-jurisdiction"
-              placeholder="US-CA / EU / global"
+              placeholder={t("details.m3e180f311bee")}
               value={jurisdiction}
               onChange={(e) => setJurisdiction(e.target.value)}
             />
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Version</span>
+            <span className="meta-key">{t("details.mdd167905de0d")}</span>
             <input
               className="insp-add__input"
               data-testid="inspector-expiry-version"
-              placeholder="React 19 / Postgres 18"
+              placeholder={t("details.m64eb596b8313")}
               value={softwareVersion}
               onChange={(e) => setSoftwareVersion(e.target.value)}
             />
@@ -1388,7 +1456,7 @@ export function ExpirySection({
               onClick={() => void save()}
             >
               <Icon name="check" size={13} />
-              Apply
+              {t("details.md0b4b04a552c")}
             </button>
             <button
               type="button"
@@ -1397,7 +1465,7 @@ export function ExpirySection({
               disabled={busy}
               onClick={() => setEditing(false)}
             >
-              Cancel
+              {t("details.m0ef70263b054")}
             </button>
           </div>
           {error ? (
@@ -1413,11 +1481,36 @@ export function ExpirySection({
 
 /** The verification-task kinds the "Create task" picker offers (T092). */
 const TASK_TYPE_OPTIONS: readonly { value: TaskType; label: string }[] = [
-  { value: "verify_claim", label: "Verify claim" },
-  { value: "find_better_source", label: "Find better source" },
-  { value: "update_outdated_card", label: "Update outdated card" },
-  { value: "check_current_version", label: "Check current version" },
-  { value: "custom", label: "Custom task" },
+  {
+    value: "verify_claim",
+    get label() {
+      return t("options.me024d347a85c");
+    },
+  },
+  {
+    value: "find_better_source",
+    get label() {
+      return t("options.mbc4be0b5cfe1");
+    },
+  },
+  {
+    value: "update_outdated_card",
+    get label() {
+      return t("options.m84142b694aa0");
+    },
+  },
+  {
+    value: "check_current_version",
+    get label() {
+      return t("options.mb54bfe8d7da4");
+    },
+  },
+  {
+    value: "custom",
+    get label() {
+      return t("options.m9e10b39e60da");
+    },
+  },
 ];
 
 /**
@@ -1441,6 +1534,7 @@ export function MaintenanceSection({
   onChanged: () => void;
   refreshTick?: number;
 }) {
+  useLocale();
   const [tasks, setTasks] = useState<TaskSummary[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1500,7 +1594,7 @@ export function MaintenanceSection({
   return (
     <div className="insp-sec" data-testid="maintenance-section">
       <div className="insp-sec__title">
-        <span>Maintenance</span>
+        <span>{t("details.m17ccfa5b681e")}</span>
         <span className="insp-sec__count" data-testid="maintenance-count">
           {tasks.length}
         </span>
@@ -1508,28 +1602,28 @@ export function MaintenanceSection({
 
       {tasks.length > 0 ? (
         <div className="insp-task-list" data-testid="maintenance-task-list">
-          {tasks.map((t) => (
+          {tasks.map((task) => (
             <div
               className="insp-task"
               data-testid="maintenance-task"
-              data-task-id={t.id}
-              key={t.id}
+              data-task-id={task.id}
+              key={task.id}
             >
               <div className="insp-task__main">
                 <span className="insp-task__kind">
-                  <Icon name="task" size={13} /> {taskTypeLabel(t.taskType)}
+                  <Icon name="task" size={13} /> {taskTypeLabel(task.taskType)}
                 </span>
-                {t.note ? <span className="insp-task__note">{t.note}</span> : null}
+                {task.note ? <span className="insp-task__note">{task.note}</span> : null}
               </div>
               <div className="insp-task__acts">
                 <button
                   type="button"
                   className="insp-task__act"
                   data-testid="maintenance-complete"
-                  title="Complete"
-                  aria-label="Complete task"
+                  title={t("details.m143b270a3260")}
+                  aria-label={t("details.mf9126d256e3d")}
                   disabled={busy}
-                  onClick={() => run(() => appApi.completeTask({ id: t.id }))}
+                  onClick={() => run(() => appApi.completeTask({ id: task.id }))}
                 >
                   <Icon name="check" size={13} />
                 </button>
@@ -1537,10 +1631,10 @@ export function MaintenanceSection({
                   type="button"
                   className="insp-task__act"
                   data-testid="maintenance-postpone"
-                  title="Postpone"
-                  aria-label="Postpone task"
+                  title={t("details.m63fb48d94634")}
+                  aria-label={t("details.m794a349c8a6c")}
                   disabled={busy}
-                  onClick={() => run(() => appApi.postponeTask({ id: t.id }))}
+                  onClick={() => run(() => appApi.postponeTask({ id: task.id }))}
                 >
                   <Icon name="postpone" size={13} />
                 </button>
@@ -1550,14 +1644,14 @@ export function MaintenanceSection({
         </div>
       ) : (
         <p className="insp-empty" data-testid="maintenance-empty">
-          No open maintenance tasks.
+          {t("details.m353addc5ec90")}
         </p>
       )}
 
       {creating ? (
         <div className="meta-list" style={{ marginTop: 8 }}>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Task</span>
+            <span className="meta-key">{t("details.m4bc74b21357c")}</span>
             <select
               className="insp-add__select"
               data-testid="maintenance-type"
@@ -1572,17 +1666,17 @@ export function MaintenanceSection({
             </select>
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Note</span>
+            <span className="meta-key">{t("details.md8da2c49df39")}</span>
             <input
               className="insp-add__input"
               data-testid="maintenance-note"
-              placeholder="What needs checking?"
+              placeholder={t("details.m309b105e493d")}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Schedule</span>
+            <span className="meta-key">{t("details.mf4830a1dae29")}</span>
             <select
               className="insp-add__select"
               data-testid="maintenance-due"
@@ -1591,9 +1685,9 @@ export function MaintenanceSection({
                 setDueChoice(e.target.value as "tomorrow" | "nextWeek" | "nextMonth")
               }
             >
-              <option value="tomorrow">Tomorrow</option>
-              <option value="nextWeek">Next week</option>
-              <option value="nextMonth">Next month</option>
+              <option value="tomorrow">{t("details.m456a73bbcefb")}</option>
+              <option value="nextWeek">{t("details.m21fbde19cfb0")}</option>
+              <option value="nextMonth">{t("details.m74e53211fef4")}</option>
             </select>
           </div>
           <div className="insp-add" style={{ marginTop: 8 }}>
@@ -1605,7 +1699,7 @@ export function MaintenanceSection({
               onClick={onCreate}
             >
               <Icon name="check" size={13} />
-              Create task
+              {t("details.m8ea18f6625a1")}
             </button>
             <button
               type="button"
@@ -1614,7 +1708,7 @@ export function MaintenanceSection({
               disabled={busy}
               onClick={() => setCreating(false)}
             >
-              Cancel
+              {t("details.m0ef70263b054")}
             </button>
           </div>
         </div>
@@ -1627,7 +1721,7 @@ export function MaintenanceSection({
           style={{ marginTop: 8 }}
         >
           <Icon name="plus" size={13} />
-          Create verification task
+          {t("details.m1f855981e885")}
         </button>
       )}
 
@@ -1647,29 +1741,114 @@ function taskTitleFor(taskType: TaskType, elementTitle: string): string {
 
 /** The source-type options for the reliability picker (T091). */
 const SOURCE_TYPE_OPTIONS: readonly { value: SourceTypeInput; label: string }[] = [
-  { value: "paper", label: "Paper" },
-  { value: "book", label: "Book" },
-  { value: "article", label: "Article" },
-  { value: "docs", label: "Docs" },
-  { value: "reference", label: "Reference" },
-  { value: "blog", label: "Blog" },
-  { value: "forum", label: "Forum" },
-  { value: "video", label: "Video" },
-  { value: "dataset", label: "Dataset" },
-  { value: "personal_note", label: "Personal note" },
-  { value: "other", label: "Other" },
+  {
+    value: "paper",
+    get label() {
+      return t("options.m35045eff549e");
+    },
+  },
+  {
+    value: "book",
+    get label() {
+      return t("options.m909cb81127c5");
+    },
+  },
+  {
+    value: "article",
+    get label() {
+      return t("options.m29d94922512b");
+    },
+  },
+  {
+    value: "docs",
+    get label() {
+      return t("options.m7af023c43013");
+    },
+  },
+  {
+    value: "reference",
+    get label() {
+      return t("options.m71bf90935fc2");
+    },
+  },
+  {
+    value: "blog",
+    get label() {
+      return t("options.m8c6bc099534a");
+    },
+  },
+  {
+    value: "forum",
+    get label() {
+      return t("options.m4da7bd42ab80");
+    },
+  },
+  {
+    value: "video",
+    get label() {
+      return t("options.md534be829e32");
+    },
+  },
+  {
+    value: "dataset",
+    get label() {
+      return t("options.m4411e525721e");
+    },
+  },
+  {
+    value: "personal_note",
+    get label() {
+      return t("options.m27c48db7a923");
+    },
+  },
+  {
+    value: "other",
+    get label() {
+      return t("options.mf97e9da0e3b8");
+    },
+  },
 ];
 /** The reliability-tier options (T091). */
 const TIER_OPTIONS: readonly { value: ReliabilityTierInput; label: string }[] = [
-  { value: "primary", label: "Primary" },
-  { value: "secondary", label: "Secondary" },
-  { value: "tertiary", label: "Tertiary" },
+  {
+    value: "primary",
+    get label() {
+      return t("options.mefe10c80ec8a");
+    },
+  },
+  {
+    value: "secondary",
+    get label() {
+      return t("options.m62f2ccfffcc5");
+    },
+  },
+  {
+    value: "tertiary",
+    get label() {
+      return t("options.maf3ddd815af8");
+    },
+  },
 ];
 /** The confidence options (T091). */
 const CONFIDENCE_OPTIONS: readonly { value: ConfidenceLevelInput; label: string }[] = [
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
+  {
+    value: "high",
+    get label() {
+      return t("options.mc4ebc6d4a583");
+    },
+  },
+  {
+    value: "medium",
+    get label() {
+      return t("options.m8e588cd18774");
+    },
+  },
+  {
+    value: "low",
+    get label() {
+      return t("options.mf793de205ead");
+    },
+  },
 ];
 const TYPE_LABEL: Record<SourceTypeInput, string> = Object.fromEntries(
   SOURCE_TYPE_OPTIONS.map((o) => [o.value, o.label]),
@@ -1706,6 +1885,7 @@ export function ReliabilitySection({
   provenance: SourceProvenance;
   onChanged: () => void;
 }) {
+  useLocale();
   const anySet =
     provenance.sourceType !== null ||
     provenance.reliabilityTier !== null ||
@@ -1773,7 +1953,7 @@ export function ReliabilitySection({
   return (
     <div className="insp-sec" data-testid="reliability-section">
       <div className="insp-sec__title">
-        <span>Reliability</span>
+        <span>{t("details.m71d0acd46556")}</span>
         {anySet ? (
           <span
             className={`badge ${reliabilityBadgeClass(
@@ -1812,7 +1992,7 @@ export function ReliabilitySection({
               </MetaRow>
               {provenance.reliabilityNotes ? (
                 <div className="meta-row meta-row--stack">
-                  <span className="meta-key">Notes</span>
+                  <span className="meta-key">{t("details.m8a7525b1492f")}</span>
                   <span data-testid="inspector-reliability-notes">
                     {provenance.reliabilityNotes}
                   </span>
@@ -1821,7 +2001,7 @@ export function ReliabilitySection({
             </div>
           ) : (
             <p className="insp-empty" data-testid="inspector-reliability-empty">
-              No reliability set — add the source's tier, type, and confidence.
+              {t("details.mce7bec53112d")}
             </p>
           )}
           <button
@@ -1832,20 +2012,20 @@ export function ReliabilitySection({
             style={{ marginTop: 8 }}
           >
             <Icon name="shield" size={13} />
-            {anySet ? "Edit reliability" : "Add reliability"}
+            {anySet ? t("details.mafe4cdde4cd4") : t("details.m21a339c37eb8")}
           </button>
         </>
       ) : (
         <div className="meta-list">
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Tier</span>
+            <span className="meta-key">{t("details.mcb9e8664edea")}</span>
             <select
               className="insp-add__select"
               data-testid="inspector-reliability-tier"
               value={tier}
               onChange={(e) => setTier(e.target.value as ReliabilityTierInput | "")}
             >
-              <option value="">Unspecified</option>
+              <option value="">{t("details.m5b8aa0bf3c59")}</option>
               {TIER_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
@@ -1854,14 +2034,14 @@ export function ReliabilitySection({
             </select>
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Type</span>
+            <span className="meta-key">{t("details.mbaaddf70fb5d")}</span>
             <select
               className="insp-add__select"
               data-testid="inspector-reliability-type"
               value={sourceType}
               onChange={(e) => setSourceType(e.target.value as SourceTypeInput | "")}
             >
-              <option value="">Unspecified</option>
+              <option value="">{t("details.m5b8aa0bf3c59")}</option>
               {SOURCE_TYPE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
@@ -1870,14 +2050,14 @@ export function ReliabilitySection({
             </select>
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Confidence</span>
+            <span className="meta-key">{t("details.m6422e3e78f5e")}</span>
             <select
               className="insp-add__select"
               data-testid="inspector-reliability-confidence"
               value={confidence}
               onChange={(e) => setConfidence(e.target.value as ConfidenceLevelInput | "")}
             >
-              <option value="">Unspecified</option>
+              <option value="">{t("details.m5b8aa0bf3c59")}</option>
               {CONFIDENCE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
@@ -1886,11 +2066,11 @@ export function ReliabilitySection({
             </select>
           </div>
           <div className="meta-row meta-row--stack">
-            <span className="meta-key">Notes</span>
+            <span className="meta-key">{t("details.m8a7525b1492f")}</span>
             <textarea
               className="insp-add__input"
               data-testid="inspector-reliability-notes-input"
-              placeholder="Caveats / known biases"
+              placeholder={t("details.m090b05d62690")}
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -1905,7 +2085,7 @@ export function ReliabilitySection({
               onClick={() => void save()}
             >
               <Icon name="check" size={13} />
-              Apply
+              {t("details.md0b4b04a552c")}
             </button>
             <button
               type="button"
@@ -1914,7 +2094,7 @@ export function ReliabilitySection({
               disabled={busy}
               onClick={() => setEditing(false)}
             >
-              Cancel
+              {t("details.m0ef70263b054")}
             </button>
           </div>
           {error ? (
@@ -1945,6 +2125,7 @@ function RetirementRow({
   isRetired: boolean;
   onChanged: () => void;
 }) {
+  useLocale();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const toggle = useCallback(async () => {
@@ -1971,12 +2152,12 @@ function RetirementRow({
           {isRetired ? (
             <>
               <span className="insp-retire__dot insp-retire__dot--retired" />
-              Retired · kept for reference
+              {t("details.mc4394666ebb3")}
             </>
           ) : (
             <>
               <span className="insp-retire__dot insp-retire__dot--active" />
-              Active
+              {t("details.m2aca3f3da08b")}
             </>
           )}
         </span>
@@ -1988,7 +2169,7 @@ function RetirementRow({
           onClick={() => void toggle()}
         >
           <Icon name={isRetired ? "restore" : "archive"} size={13} />
-          {isRetired ? "Un-retire" : "Retire"}
+          {isRetired ? t("details.m97fe668c3c34") : t("details.mda8597f3f278")}
         </button>
       </div>
       {error ? (
@@ -2009,6 +2190,7 @@ function RelatedRow({
   item: SemanticRelatedItem;
   onSelect: (id: string) => void;
 }) {
+  useLocale();
   const isDuplicate = item.kind === "duplicate";
   // A local "dismiss" so a flagged duplicate can be hidden for this session. A
   // PERSISTED "not a duplicate" mark is DEFERRED to a later task (T088 surfaces,
@@ -2030,10 +2212,10 @@ function RelatedRow({
         title={item.title}
       >
         <TypeIcon type={item.type} />
-        <span className="related-row__title">{item.title || "Untitled"}</span>
+        <span className="related-row__title">{item.title || t("details.mf59ab8d1331b")}</span>
         {isDuplicate ? (
           <span className="related-row__badge" data-testid="related-duplicate-badge">
-            possible duplicate
+            {t("details.ma373d4a251a3")}
           </span>
         ) : null}
         {pct ? <span className="related-row__sim">{pct}</span> : null}
@@ -2043,8 +2225,8 @@ function RelatedRow({
           type="button"
           className="related-row__dismiss"
           data-testid="related-duplicate-dismiss"
-          aria-label="Dismiss duplicate suggestion"
-          title="Dismiss (this session)"
+          aria-label={t("details.m6c6c6fccaed6")}
+          title={t("details.m8da7e15864d1")}
           onClick={() => setDismissed(true)}
         >
           <Icon name="x" size={13} />
@@ -2072,6 +2254,7 @@ export function RelatedSection({
   elementId: string;
   onSelect: (id: string) => void;
 }) {
+  useLocale();
   const [related, setRelated] = useState<SemanticRelatedResult | null>(null);
 
   useEffect(() => {
@@ -2106,11 +2289,11 @@ export function RelatedSection({
 
   return (
     <div className="insp-sec" data-testid="related-section">
-      <div className="insp-sec__title">Related</div>
+      <div className="insp-sec__title">{t("details.m45ca56d179d4")}</div>
 
       {duplicates.length > 0 ? (
         <div className="related-bucket" data-testid="related-duplicates">
-          <div className="related-bucket__label">Possible duplicates</div>
+          <div className="related-bucket__label">{t("details.ma4304564a7b9")}</div>
           {duplicates.map((item) => (
             <RelatedRow key={item.id} item={item} onSelect={onSelect} />
           ))}
@@ -2119,7 +2302,7 @@ export function RelatedSection({
 
       {similar.length > 0 ? (
         <div className="related-bucket" data-testid="related-similar">
-          <div className="related-bucket__label">Similar extracts</div>
+          <div className="related-bucket__label">{t("details.m493d1d9327e1")}</div>
           {similar.map((item) => (
             <RelatedRow key={item.id} item={item} onSelect={onSelect} />
           ))}
@@ -2128,7 +2311,7 @@ export function RelatedSection({
 
       {prerequisiteConcepts.length > 0 ? (
         <div className="related-bucket" data-testid="related-prereqs">
-          <div className="related-bucket__label">Prerequisite concepts</div>
+          <div className="related-bucket__label">{t("details.m443259bddfb9")}</div>
           <div className="related-bucket__concepts" data-testid="related-prereq-concepts">
             {prerequisiteConcepts.map((c) => (
               <ConceptTag key={c.id} name={c.name} />
@@ -2139,7 +2322,7 @@ export function RelatedSection({
 
       {siblingSources.length > 0 ? (
         <div className="related-bucket" data-testid="related-siblings">
-          <div className="related-bucket__label">Sibling sources</div>
+          <div className="related-bucket__label">{t("details.m15a5e357b37b")}</div>
           {siblingSources.map((item) => (
             <RelatedRow key={item.id} item={item} onSelect={onSelect} />
           ))}
@@ -2148,7 +2331,7 @@ export function RelatedSection({
 
       {!semanticAvailable ? (
         <p className="insp-empty" data-testid="related-degrade-hint">
-          Similarity suggestions are unavailable until the local semantic index is ready.
+          {t("details.m08f8c0181b02")}
         </p>
       ) : null}
     </div>
@@ -2164,25 +2347,31 @@ function AttentionSummary({
   busy: boolean;
   onSchedule: (choice: QueueScheduleChoice) => void;
 }) {
+  useLocale();
   return (
     <div className="attention-summary" data-testid="attention-summary">
       <div className="attention-summary__main">
         <span>{seenLabel(scheduler.lastProcessedAt)}</span>
-        {scheduler.postponed === 0 ? <span>Postponed 0x</span> : null}
+        {scheduler.postponed === 0 ? <span>{t("details.m02c6aa55b4d6")}</span> : null}
       </div>
       {scheduler.yield ? (
         <div className="attention-summary__yield" data-testid="inspector-yield">
           <span data-testid="inspector-yield-read">
             {scheduler.yield.readPctKnown === false
               ? t("sourceReturn.unknownRead")
-              : `${Math.round(scheduler.yield.readPct * 100)}% read`}
+              : t("details.maeb42d2853f2", {
+                  value1: String(Math.round(scheduler.yield.readPct * 100)),
+                })}
           </span>
           <span>
-            {scheduler.yield.extractsCreated} extract
-            {scheduler.yield.extractsCreated === 1 ? "" : "s"}
+            {scheduler.yield.extractsCreated}
+            {t("details.meeed966e373a")}
+            {i18n.language.startsWith("zh") ? "" : scheduler.yield.extractsCreated === 1 ? "" : "s"}
           </span>
           <span>
-            {scheduler.yield.cardsCreated} card{scheduler.yield.cardsCreated === 1 ? "" : "s"}
+            {scheduler.yield.cardsCreated}
+            {t("details.m8dca4312766a")}
+            {i18n.language.startsWith("zh") ? "" : scheduler.yield.cardsCreated === 1 ? "" : "s"}
           </span>
         </div>
       ) : null}
@@ -2206,6 +2395,7 @@ function SourceLineageSection({
   onOpenLineageItem: (item: LineageItem) => void;
   onJumpToLocation: (location: NonNullable<InspectorData["location"]>) => void;
 }) {
+  useLocale();
   const quote = location?.selectedText || sourceRef?.snippet || "";
   const canJump = Boolean(location && location.blockIds.length > 0);
   const hasSourceContext = Boolean(source || sourceRef || location);
@@ -2214,8 +2404,8 @@ function SourceLineageSection({
   if (!hasSourceContext) {
     return (
       <div className="insp-sec" data-testid="source-lineage-section">
-        <div className="insp-sec__title">Source lineage</div>
-        <p className="insp-empty">Source unavailable.</p>
+        <div className="insp-sec__title">{t("details.mf91b0fdfcf21")}</div>
+        <p className="insp-empty">{t("details.m21d1dc9118a9")}</p>
       </div>
     );
   }
@@ -2223,16 +2413,17 @@ function SourceLineageSection({
   return (
     <div className="insp-sec source-lineage" data-testid="source-lineage-section">
       <div className="insp-sec__title">
-        <span>Source lineage</span>
+        <span>{t("details.mf91b0fdfcf21")}</span>
         {canJump && location ? (
           <button
             type="button"
             className="insp-jump"
             data-testid="location-jump"
-            title="Open the source and scroll to this paragraph"
+            title={t("details.m524d758ee0a6")}
             onClick={() => onJumpToLocation(location)}
           >
-            <Icon name="external" size={13} /> Jump to source
+            <Icon name="external" size={13} />
+            {t("details.m934caf53ef7d")}
           </button>
         ) : null}
       </div>
@@ -2256,7 +2447,7 @@ function SourceLineageSection({
       {sourceRef ? (
         <RefBlock ref={sourceRef} testId="inspector-refblock" showSnippet={false} />
       ) : (
-        <p className="insp-empty">Source reference unavailable.</p>
+        <p className="insp-empty">{t("details.m9b7c213c218c")}</p>
       )}
 
       {location ? (
@@ -2319,6 +2510,7 @@ function InspectorBody({
   scheduleBusy: boolean;
   refreshTick: number;
 }) {
+  useLocale();
   const {
     element,
     scheduler,
@@ -2412,7 +2604,8 @@ function InspectorBody({
         <div className="insp-sec insp-library" data-testid="inspector-library-actions">
           {libraryPanel.parkedAt ? (
             <div className="insp-library__reason" data-testid="inspector-parked-date">
-              Parked {formatShortDate(libraryPanel.parkedAt)}
+              {t("details.m38ce3f87e4e8")}
+              {formatShortDate(libraryPanel.parkedAt)}
             </div>
           ) : null}
           {libraryPanel.notInQueueReason ? (
@@ -2430,7 +2623,7 @@ function InspectorBody({
                 onClick={libraryPanel.parked.onMoveToInbox}
               >
                 <Icon name="inbox" size={13} />
-                Move to inbox
+                {t("details.m71c71db6507c")}
               </button>
               <button
                 type="button"
@@ -2440,7 +2633,7 @@ function InspectorBody({
                 onClick={libraryPanel.parked.onQueueSoon}
               >
                 <Icon name="clock" size={13} />
-                Queue soon
+                {t("details.me0549967e46d")}
               </button>
               <button
                 type="button"
@@ -2450,7 +2643,7 @@ function InspectorBody({
                 onClick={libraryPanel.parked.onDismiss}
               >
                 <Icon name="x" size={13} />
-                Dismiss
+                {t("details.medc0fe2d169a")}
               </button>
             </div>
           ) : null}
@@ -2468,7 +2661,7 @@ function InspectorBody({
 
       {/* Properties: the editable control surface. */}
       <div className="insp-sec">
-        <div className="insp-sec__title">Properties</div>
+        <div className="insp-sec__title">{t("details.mae43692b2a31")}</div>
         <div className="meta-list">
           <MetaRow k="Type">
             <span data-testid="meta-type">{typeLabel(element.type)}</span>
@@ -2490,7 +2683,7 @@ function InspectorBody({
               that section's picker is the provenance-aware one (avoids a duplicate). */}
           {showInboxTriage ? null : (
             <div className="meta-row meta-row--stack">
-              <span className="meta-key">Set priority</span>
+              <span className="meta-key">{t("details.m491dc6df71d6")}</span>
               <PriorityControl
                 priority={element.priority}
                 busy={priorityBusy}
@@ -2521,14 +2714,17 @@ function InspectorBody({
       {/* Scheduler — the FSRS vs attention split, surfaced explicitly. */}
       <div className="insp-sec" data-testid="scheduler-section">
         <div className="insp-sec__title">
-          <span>{scheduler.kind === "fsrs" ? "Recall (FSRS)" : "Attention"}</span>
+          <span>
+            {scheduler.kind === "fsrs" ? t("details.m786064f60c21") : t("details.mc2eb8cd9d956")}
+          </span>
           <SchedulerChip scheduler={scheduler} />
         </div>
         {/* T123 content-staleness advisory — distinct from the T090 topic-knowledge
             "N need reverify" count above; this is THIS element's own body drift. */}
         {scheduler.needsReverify ? (
           <p className="insp-reverify" data-testid="inspector-reverify">
-            <Icon name="warning" size={13} /> Source content changed — re-verify this item
+            <Icon name="warning" size={13} />
+            {t("details.maaf70c37b1a1")}
           </p>
         ) : null}
         <ScheduleReasonLine scheduler={scheduler} className="insp-schedule-reason" />
@@ -2537,7 +2733,7 @@ function InspectorBody({
             <FsrsStats scheduler={scheduler} />
           ) : (
             <p className="insp-empty" data-testid="fsrs-review-missing">
-              Review state unavailable.
+              {t("details.m655c952577f2")}
             </p>
           )
         ) : isAttentionScheduler(scheduler) ? (
@@ -2547,14 +2743,14 @@ function InspectorBody({
             onSchedule={(choice) => onScheduleAttention(element.id, choice)}
           />
         ) : (
-          <p className="insp-empty">Scheduler unavailable.</p>
+          <p className="insp-empty">{t("details.m972dfafaa489")}</p>
         )}
       </div>
 
       {/* Source provenance (only on sources). */}
       {provenance && (
         <div className="insp-sec">
-          <div className="insp-sec__title">Source</div>
+          <div className="insp-sec__title">{t("details.m0e570ca6fabe")}</div>
           <div className="meta-list">
             <MetaRow k="Author">{provenance.author ?? "—"}</MetaRow>
             <MetaRow k="URL">
@@ -2615,7 +2811,7 @@ function InspectorBody({
       {/* Parent (lineage up). */}
       {!redactCardSourceContext && parent && (
         <div className="insp-sec" data-testid="parent-section">
-          <div className="insp-sec__title">Parent</div>
+          <div className="insp-sec__title">{t("details.m5f7953f7c9b6")}</div>
           <div className="tree">
             <LineageRow item={parent} onOpen={onOpenLineageItem} />
           </div>
@@ -2625,7 +2821,7 @@ function InspectorBody({
       {/* Children (lineage down). */}
       <div className="insp-sec" data-testid="children-section">
         <div className="insp-sec__title">
-          <span>Children</span>
+          <span>{t("details.m3583a358a585")}</span>
           <span className="insp-sec__count">{children.length}</span>
         </div>
         {children.length > 0 ? (
@@ -2635,7 +2831,7 @@ function InspectorBody({
             ))}
           </div>
         ) : (
-          <p className="insp-empty">No children yet.</p>
+          <p className="insp-empty">{t("details.m229960f04e23")}</p>
         )}
       </div>
 
@@ -2645,7 +2841,7 @@ function InspectorBody({
       {!redactCardSourceContext && currentLineage && currentLineage.nodes.length > 0 && (
         <div className="insp-sec" data-testid="lineage-section">
           <div className="insp-sec__title">
-            <span>Lineage</span>
+            <span>{t("details.m044baaecb29f")}</span>
             <span className="insp-sec__tools">
               {hasDeletedLineage ? (
                 <button
@@ -2661,7 +2857,9 @@ function InspectorBody({
                   }
                 >
                   <Icon name={showDeletedLineage ? "eye" : "trash"} size={11} />
-                  {showDeletedLineage ? "Hide deleted" : `Show deleted (${deletedLineageCount})`}
+                  {showDeletedLineage
+                    ? t("details.m042b158a0c69")
+                    : t("details.m8cda6b38eaff", { value1: String(deletedLineageCount) })}
                 </button>
               ) : null}
               <span className="insp-sec__count">{lineageNodes.length}</span>
@@ -2679,8 +2877,8 @@ function InspectorBody({
               <Icon name="trash" size={12} />
               <span>
                 {tombstonedAncestorCount === 1
-                  ? "An ancestor of this item is deleted."
-                  : `${tombstonedAncestorCount} ancestors of this item are deleted.`}
+                  ? t("details.m30b61ecb474e")
+                  : t("details.ma205d7fccdff", { value1: String(tombstonedAncestorCount) })}
               </span>
               <button
                 type="button"
@@ -2690,7 +2888,9 @@ function InspectorBody({
                 onClick={() => onRestoreAncestors()}
               >
                 <Icon name="restore" size={12} />
-                {restoringId === element.id ? "Restoring…" : "Restore"}
+                {restoringId === element.id
+                  ? t("details.m5a4918e0201c")
+                  : t("details.ma76e13b98392")}
               </button>
             </p>
           ) : null}
@@ -2724,8 +2924,8 @@ function InspectorBody({
                 icon="layers"
                 label={(n) =>
                   element.type === "source"
-                    ? `Review ${n} card${n === 1 ? "" : "s"} in this source`
-                    : `Review ${n} card${n === 1 ? "" : "s"} in this branch`
+                    ? `Review ${n} card${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "s"} in this source`
+                    : `Review ${n} card${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "s"} in this branch`
                 }
                 testId="inspector-review-branch"
               />
@@ -2749,7 +2949,7 @@ function InspectorBody({
       {/* Review metadata (cards only). */}
       {review && (
         <div className="insp-sec" data-testid="review-section">
-          <div className="insp-sec__title">Review</div>
+          <div className="insp-sec__title">{t("details.maff0766a5290")}</div>
           <div className="meta-list">
             <MetaRow k="Due">{fmtDate(review.dueAt)}</MetaRow>
             <MetaRow k="State">{review.fsrsState}</MetaRow>
@@ -2809,6 +3009,7 @@ function InspectorBody({
  * graceful "desktop only" / empty / loading state.
  */
 export function Inspector() {
+  useLocale();
   const { selectedId, select } = useSelection();
   const navigate = useNavigate();
   const navigateToLocation = useNavigateToLocation();
@@ -3093,10 +3294,10 @@ export function Inspector() {
     [restoreAncestorChainFor, selectedId],
   );
 
-  const headerTitle = data ? typeLabel(data.element.type) : "Inspector";
+  const headerTitle = data ? typeLabel(data.element.type) : t("shell.inspector");
 
   return (
-    <aside className="shell-inspector" data-testid="inspector" aria-label="Inspector">
+    <aside className="shell-inspector" data-testid="inspector" aria-label={t("shell.inspector")}>
       <div className="shell-inspector__head">
         <span className="shell-inspector__title" data-testid="inspector-header">
           {headerTitle}
@@ -3106,7 +3307,7 @@ export function Inspector() {
             type="button"
             className="shell-cheat__close"
             data-testid="inspector-clear"
-            aria-label="Clear selection"
+            aria-label={t("shell.clearSelection")}
             onClick={() => select(null)}
           >
             <Icon name="x" size={15} />
@@ -3117,17 +3318,14 @@ export function Inspector() {
         {!desktop ? (
           <div className="shell-inspector__placeholder" data-testid="inspector-desktop-only">
             <Icon name="info" size={22} />
-            <p>
-              The inspector reads element data through the desktop bridge — open the Electron app to
-              see it.
-            </p>
+            <p>{t("shell.inspectorDesktop")}</p>
           </div>
         ) : error ? (
           <p className="text-danger text-sm" data-testid="inspector-error">
             {error}
           </p>
         ) : selectedId && loading && !data ? (
-          <p className="insp-empty">Loading…</p>
+          <p className="insp-empty">{t("shell.inspectorLoading")}</p>
         ) : selectedId && data ? (
           <InspectorBody
             key={data.element.id}
@@ -3152,16 +3350,16 @@ export function Inspector() {
           />
         ) : selectedId && !data ? (
           <p className="insp-empty" data-testid="inspector-missing">
-            That element is no longer available.
+            {t("shell.inspectorMissing")}
           </p>
         ) : (
           <>
             <div className="shell-inspector__placeholder" style={{ height: "auto" }}>
               <Icon name="info" size={22} />
-              <p>Select an element to see its details, lineage, and scheduler signals.</p>
+              <p>{t("shell.inspectorSelect")}</p>
             </div>
             <div className="insp-sec">
-              <div className="insp-sec__title">Elements</div>
+              <div className="insp-sec__title">{t("shell.inspectorElements")}</div>
               <ElementPicker elements={elements} onSelect={onSelect} />
             </div>
           </>
@@ -3171,4 +3369,4 @@ export function Inspector() {
   );
 }
 
-import { t } from "../../i18n";
+import { i18n, t, useLocale } from "../../i18n";

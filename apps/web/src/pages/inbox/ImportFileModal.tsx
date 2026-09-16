@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../../i18n";
 /**
  * Import-from-file modal (T067) — the local file-import dialog.
  *
@@ -29,34 +30,54 @@ const KIND_CONFIG: Record<
   { title: string; choose: string; ext: string; hint: string }
 > = {
   epub: {
-    title: "Import EPUB",
+    get title() {
+      return t("supplement.mca70d2f02952");
+    },
     choose: "Choose EPUB…",
     ext: ".epub",
-    hint: "The whole book imports locally as chapters — its original .epub is kept in your vault.",
+    get hint() {
+      return t("options.maf3884075e33");
+    },
   },
   markdown: {
-    title: "Import Markdown",
+    get title() {
+      return t("supplement.m9430b1911deb");
+    },
     choose: "Choose Markdown…",
     ext: ".md",
-    hint: "The Markdown imports locally as a source — headings, code, links and lists are preserved.",
+    get hint() {
+      return t("options.ma53f25ed4863");
+    },
   },
   html: {
-    title: "Import HTML",
+    get title() {
+      return t("supplement.mb1c4a1028601");
+    },
     choose: "Choose HTML…",
     ext: ".html",
-    hint: "The HTML is sanitized and imported locally — its original .html is kept in your vault.",
+    get hint() {
+      return t("options.m9d882f654a11");
+    },
   },
   highlights: {
-    title: "Import highlights",
+    get title() {
+      return t("supplement.m9e2217dd6748");
+    },
     choose: "Choose export…",
     ext: ".csv / .json / .txt",
-    hint: "A Readwise CSV/JSON or a Kindle My Clippings.txt — each highlight becomes an inbox extract.",
+    get hint() {
+      return t("options.m23947dc24fc1");
+    },
   },
   anki: {
-    title: "Import Anki deck",
+    get title() {
+      return t("supplement.m05f9e7ddf771");
+    },
     choose: "Choose .apkg…",
     ext: ".apkg",
-    hint: "An Anki deck — each note becomes a card. Review history is carried over approximately.",
+    get hint() {
+      return t("options.md2a9f5a1ef84");
+    },
   },
 };
 
@@ -137,6 +158,7 @@ export function ImportFileModal({
   onImported,
   onHighlightsImported,
 }: ImportFileModalProps) {
+  useLocale();
   const [kind, setKind] = useState<ImportFileKind>(initialKind);
   const config = KIND_CONFIG[kind];
   const [path, setPath] = useState<string | null>(null);
@@ -204,7 +226,7 @@ export function ImportFileModal({
           const historyPart =
             result.withHistory > 0 ? ` (${result.withHistory} with scheduling carried over)` : "";
           setSuccess(
-            `Imported ${result.cardCount} card${result.cardCount === 1 ? "" : "s"}${historyPart}.`,
+            `Imported ${result.cardCount} card${i18n.language.startsWith("zh") ? "" : result.cardCount === 1 ? "" : "s"}${historyPart}.`,
           );
           setPath(null);
           setSubmitting(false);
@@ -218,7 +240,7 @@ export function ImportFileModal({
           // the user reads the summary, then closes it (highlights → many sources).
           const skippedPart = result.skipped > 0 ? `, ${result.skipped} skipped` : "";
           setSuccess(
-            `Imported ${result.extractCount} highlight${result.extractCount === 1 ? "" : "s"} into ${result.sourceCount} source${result.sourceCount === 1 ? "" : "s"}${skippedPart}.`,
+            `Imported ${result.extractCount} highlight${i18n.language.startsWith("zh") ? "" : result.extractCount === 1 ? "" : "s"} into ${result.sourceCount} source${i18n.language.startsWith("zh") ? "" : result.sourceCount === 1 ? "" : "s"}${skippedPart}.`,
           );
           setPath(null);
           setSubmitting(false);
@@ -262,7 +284,7 @@ export function ImportFileModal({
       <button
         type="button"
         className="absolute inset-0 bg-black/30"
-        aria-label={`Close ${config.title}`}
+        aria-label={t("collection.m39f97a2f3052", { value1: String(config.title) })}
         tabIndex={-1}
         onClick={onClose}
       />
@@ -284,7 +306,7 @@ export function ImportFileModal({
             <button
               type="button"
               data-testid="import-file-close"
-              aria-label="Close"
+              aria-label={t("collection.m7d9eb7acb13e")}
               onClick={onClose}
               className="rounded p-1 text-text-3 hover:text-text"
             >
@@ -294,7 +316,9 @@ export function ImportFileModal({
 
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
             <div>
-              <span className="mb-1.5 block font-medium text-sm text-text-2">Format</span>
+              <span className="mb-1.5 block font-medium text-sm text-text-2">
+                {t("collection.m2f343666aaa8")}
+              </span>
               <div className="flex gap-1.5" data-testid="import-file-kind">
                 {KIND_ORDER.map((k) => {
                   const active = kind === k;
@@ -344,7 +368,9 @@ export function ImportFileModal({
             </div>
 
             <div>
-              <span className="mb-1.5 block font-medium text-sm text-text-2">Priority</span>
+              <span className="mb-1.5 block font-medium text-sm text-text-2">
+                {t("collection.md60dbba07922")}
+              </span>
               <div className="flex gap-1.5" data-testid="import-file-priority">
                 {PRIORITY_LABELS.map((p) => {
                   const active = priority === p;
@@ -394,7 +420,7 @@ export function ImportFileModal({
               onClick={onClose}
               className="rounded-md border border-border bg-surface px-3 py-1.5 font-medium text-sm text-text-2 hover:text-text"
             >
-              Cancel
+              {t("collection.m0ef70263b054")}
             </button>
             <button
               type="submit"
@@ -405,11 +431,11 @@ export function ImportFileModal({
               {submitting ? (
                 <>
                   <Icon name="clock" size={14} className="animate-spin" />
-                  Importing…
+                  {t("collection.m1651f479cdc4")}
                 </>
               ) : (
                 <>
-                  Import
+                  {t("collection.m06fe0ef789f0")}
                   <Kbd keys={["⌘", "↵"]} />
                 </>
               )}

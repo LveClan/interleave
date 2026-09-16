@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { i18n, t, useLocale } from "../i18n";
 import type { AutoPostponeReceipt, DailyWorkUndoAutoPostponeReceiptResult } from "../lib/appApi";
 import { Icon } from "./Icon";
 
@@ -9,6 +10,7 @@ export function AutoPostponeReceiptLine({
   receipt: AutoPostponeReceipt | null;
   onUndo: (batchId: string) => Promise<DailyWorkUndoAutoPostponeReceiptResult>;
 }) {
+  useLocale();
   const [state, setState] = useState<"idle" | "pending" | "undone" | "error">("idle");
   const [message, setMessage] = useState("");
   if (!receipt) return null;
@@ -17,8 +19,8 @@ export function AutoPostponeReceiptLine({
   const minutes = Math.round(receipt.postponedMinutes);
   const bands = receipt.priorityBands.length > 0 ? receipt.priorityBands.join("/") : "low";
   const summary = undone
-    ? `${receipt.postponed} item${receipt.postponed === 1 ? "" : "s"} restored`
-    : `${receipt.postponed} item${receipt.postponed === 1 ? "" : "s"} slipped`;
+    ? `${receipt.postponed} item${i18n.language.startsWith("zh") ? "" : receipt.postponed === 1 ? "" : "s"} restored`
+    : `${receipt.postponed} item${i18n.language.startsWith("zh") ? "" : receipt.postponed === 1 ? "" : "s"} slipped`;
 
   return (
     <div
@@ -32,8 +34,10 @@ export function AutoPostponeReceiptLine({
         <div className="min-w-0">
           <div className="font-medium text-text">{summary}</div>
           <div className="truncate text-text-3">
-            {minutes} min, bands {bands}, {Math.round(receipt.remainingMinutesAfter)} min left on{" "}
-            {receipt.localDay}
+            {minutes}
+            {t("details.m1c5ad2af013a")}
+            {bands}, {Math.round(receipt.remainingMinutesAfter)}
+            {t("details.m1c13a1909d82")} {receipt.localDay}
           </div>
           <div className="sr-only" role="status" aria-live="polite">
             {message}
@@ -42,7 +46,7 @@ export function AutoPostponeReceiptLine({
       </div>
       {undone ? (
         <span className="shrink-0 text-text-3" data-testid="auto-postpone-receipt-undone">
-          Undone
+          {t("details.mb855fdf3ef50")}
         </span>
       ) : (
         <button
@@ -69,7 +73,11 @@ export function AutoPostponeReceiptLine({
           }}
         >
           <Icon name="undo" size={13} />
-          {state === "pending" ? "Undoing" : state === "error" ? "Retry" : "Undo"}
+          {state === "pending"
+            ? t("details.m6b9c7841fef8")
+            : state === "error"
+              ? t("details.m942087cc2d41")
+              : t("details.ma8283ade3185")}
         </button>
       )}
     </div>

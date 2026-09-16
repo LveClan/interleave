@@ -23,16 +23,16 @@ describe("main language coordination", () => {
     h.send.mockClear();
     h.install.mockClear();
   });
-  it("resolves unsupported systems and synchronizes all renderers from persisted settings", () => {
+  it("resolves Chinese systems and synchronizes explicit English settings and menus", () => {
     const db = { getAppSettings: () => ({ settings: { language: h.preference } }) } as DbService;
     const controller = new LocaleController(db);
     expect(controller.sync()).toEqual({
       preference: "system",
       systemLocale: "zh-CN",
-      locale: "en",
+      locale: "zh-CN",
     });
     expect(h.install).toHaveBeenCalledOnce();
-    expect(h.install.mock.calls[0]?.[0]("menu.file")).toBe("File");
+    expect(h.install.mock.calls[0]?.[0]("menu.file")).toBe("文件");
     h.preference = "en";
     controller.sync();
     expect(h.send).toHaveBeenLastCalledWith(IPC_CHANNELS.localeChanged, {
@@ -42,6 +42,6 @@ describe("main language coordination", () => {
     });
     controller.sync();
     expect(h.send).toHaveBeenCalledTimes(2);
-    expect(h.install).toHaveBeenCalledOnce();
+    expect(h.install).toHaveBeenCalledTimes(2);
   });
 });

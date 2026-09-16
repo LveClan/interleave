@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Stagnant-extracts maintenance view (T084) — the attention-side mirror of the leech
  * cleanup screen.
@@ -88,6 +89,7 @@ function stageLabel(stage: string): string {
 }
 
 export function StagnantExtracts() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   // The route declares no `validateSearch`, so search is loosely typed. An optional
@@ -174,7 +176,7 @@ export function StagnantExtracts() {
       });
       setAgingMessage(
         result.demoted > 0
-          ? `${result.demoted} extract${result.demoted === 1 ? "" : "s"} returned to reference.`
+          ? `${result.demoted} extract${i18n.language.startsWith("zh") ? "" : result.demoted === 1 ? "" : "s"} returned to reference.`
           : "No eligible extracts changed.",
       );
       await load();
@@ -207,11 +209,8 @@ export function StagnantExtracts() {
             <div className="rv-empty__icon">
               <Icon name="hourglass" size={26} />
             </div>
-            <h1 className="rv-empty__title">Stagnant extracts</h1>
-            <p className="rv-empty__body">
-              Extracts that keep returning without progressing are listed here for repair — open the
-              Electron app to clean them up.
-            </p>
+            <h1 className="rv-empty__title">{t("collection.m96ef8f44a686")}</h1>
+            <p className="rv-empty__body">{t("collection.mbbb8f6cb384d")}</p>
           </div>
         </div>
       </div>
@@ -224,15 +223,13 @@ export function StagnantExtracts() {
         <div>
           <h1 className="lc-title">
             <Icon name="hourglass" size={18} />
-            Stagnant extracts
+            {t("collection.m8bc239271d87")}
           </h1>
-          <p className="lc-sub">
-            Extracts that keep coming back without progressing — postponed repeatedly, never
-            advanced a stage, no children. Finish, rewrite, postpone deliberately, or drop them.
-          </p>
+          <p className="lc-sub">{t("collection.m9809aca6027e")}</p>
         </div>
         <span className="lc-count" data-testid="stagnant-count">
-          {rows.length} stagnant
+          {rows.length}
+          {t("collection.m5f5d67c809ba")}
         </span>
       </div>
 
@@ -247,13 +244,18 @@ export function StagnantExtracts() {
           <div className="se-aging-sweep__copy">
             <div className="se-aging-sweep__title">
               <Icon name="clock" size={14} />
-              Extract aging sweep
+              {t("collection.mf7d5eba9cbbc")}
             </div>
             <div className="se-aging-sweep__meta">
-              {agingPreview.candidateCount} eligible after {agingPreview.thresholds.returnThreshold}{" "}
-              returns / {agingPreview.thresholds.ageDays} days
+              {agingPreview.candidateCount}
+              {t("collection.maecbfc09e481")}
+              {agingPreview.thresholds.returnThreshold} {t("collection.mcdfb9a5f4ffa")}
+              {agingPreview.thresholds.ageDays}
+              {t("collection.m8fae8e734d61")}
               {agingPreview.remainingCandidateCount > 0
-                ? `, ${agingPreview.remainingCandidateCount} beyond this batch`
+                ? t("collection.mfdb9b6ccace5", {
+                    value1: String(agingPreview.remainingCandidateCount),
+                  })
                 : ""}
             </div>
             <div className="sr-only" role="status" aria-live="polite">
@@ -268,7 +270,7 @@ export function StagnantExtracts() {
             onClick={() => void applyExtractAgingSweep()}
           >
             <Icon name="bookmark" size={14} />
-            {agingBusy ? "Applying" : "Return batch to reference"}
+            {agingBusy ? t("collection.m8a9bd1bef40d") : t("collection.m4d452bd1754f")}
           </button>
         </div>
       ) : null}
@@ -276,18 +278,15 @@ export function StagnantExtracts() {
       <div className="lc-list">
         {loading ? (
           <p className="lc-loading" data-testid="stagnant-loading">
-            Loading…
+            {t("collection.m0a5afbeee779")}
           </p>
         ) : rows.length === 0 ? (
           <div className="rv-empty" data-testid="stagnant-empty">
             <div className="rv-empty__icon">
               <Icon name="checkCircle" size={26} />
             </div>
-            <h2 className="rv-empty__title">No stagnant extracts</h2>
-            <p className="rv-empty__body">
-              No extracts are stuck. Extracts that keep returning without ever advancing or
-              producing anything will appear here so you can finish or drop them.
-            </p>
+            <h2 className="rv-empty__title">{t("collection.m7e0d09ddd1b4")}</h2>
+            <p className="rv-empty__body">{t("collection.mb8eeef84212d")}</p>
           </div>
         ) : (
           rows.map((row) => {
@@ -307,10 +306,12 @@ export function StagnantExtracts() {
                   <span className="badge badge--soft">{stageLabel(row.extract.stage)}</span>
                   <Prio priority={row.extract.priority} />
                   <span className="badge se-badge--postpone" data-testid="stagnant-postpones">
-                    Postponed ×{row.postponeCount}
+                    {t("collection.m3f118f6829af")}
+                    {row.postponeCount}
                   </span>
                   <span className="badge badge--soft" data-testid="stagnant-stale">
-                    {row.daysSinceProgress}d no progress
+                    {row.daysSinceProgress}
+                    {t("collection.ma4651e681718")}
                   </span>
                   {fate ? (
                     <span className="badge badge--soft" data-testid="stagnant-fate">
@@ -335,7 +336,8 @@ export function StagnantExtracts() {
                   </div>
                   <div className="se-suggest" data-testid="stagnant-suggestion">
                     <Icon name="sparkle" size={12} />
-                    Suggested: {SUGGESTION_LABEL[suggestion]}
+                    {t("collection.m003c052ea56a")}
+                    {SUGGESTION_LABEL[suggestion]}
                   </div>
                 </div>
 
@@ -348,7 +350,7 @@ export function StagnantExtracts() {
                     onClick={() => open(row.extract.id)}
                   >
                     <Icon name="edit" size={14} />
-                    Rewrite
+                    {t("collection.m4b7ce7840ba1")}
                   </button>
                   <button
                     type="button"
@@ -358,7 +360,7 @@ export function StagnantExtracts() {
                     onClick={() => open(row.extract.id)}
                   >
                     <Icon name="card" size={14} />
-                    Convert
+                    {t("collection.mfc7dd2a0c71e")}
                   </button>
                   <button
                     type="button"
@@ -368,7 +370,7 @@ export function StagnantExtracts() {
                     onClick={() => void act(row.extract.id, "postpone")}
                   >
                     <Icon name="hourglass" size={14} />
-                    Postpone
+                    {t("collection.m6087edb47090")}
                   </button>
                   {/* Descendant-aware delete (T135 / U7): a leaf deletes quietly; a row that
                       still anchors live descendants opens the intent menu. Keeps the
@@ -394,13 +396,11 @@ export function StagnantExtracts() {
                     className={`rv-repair__btn${suggestion === "keep_as_reference" ? " se-btn--suggested" : ""}`}
                     data-testid="stagnant-reference"
                     disabled={busyId === row.extract.id || !fateSupported}
-                    title={
-                      fateSupported ? "Keep this extract for reference" : EXTRACT_FATE_BRIDGE_HINT
-                    }
+                    title={fateSupported ? t("collection.m33ad657cde1f") : EXTRACT_FATE_BRIDGE_HINT}
                     onClick={() => void act(row.extract.id, "reference")}
                   >
                     <Icon name="bookmark" size={14} />
-                    Reference
+                    {t("collection.mab0cedb8fbaa")}
                   </button>
                   {fate ? (
                     <button
@@ -410,13 +410,13 @@ export function StagnantExtracts() {
                       disabled={busyId === row.extract.id || !reactivateSupported}
                       title={
                         reactivateSupported
-                          ? "Return this extract to the attention queue"
+                          ? t("collection.m0f16cb23ecfd")
                           : EXTRACT_FATE_BRIDGE_HINT
                       }
                       onClick={() => void act(row.extract.id, "reactivate")}
                     >
                       <Icon name="restore" size={14} />
-                      Reactivate
+                      {t("collection.mf8aa7263bcd8")}
                     </button>
                   ) : null}
                 </div>

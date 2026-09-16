@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * ProcessOverflowMenu — collapses the infrequently-used process actions (Raise,
  * Lower, Delete) behind a single "⋯" affordance in the action bar so the bar
@@ -39,6 +40,7 @@ export function ProcessOverflowMenu({
   onDelete: () => void;
   triggerTestId?: string;
 }) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLSpanElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -89,7 +91,7 @@ export function ProcessOverflowMenu({
 
   return (
     <span className="pq-overflow" ref={rootRef} data-testid="process-overflow">
-      <Tooltip label="More actions" disabled={open}>
+      <Tooltip label={t("details.mf8d46c2570e7")} disabled={open}>
         <button
           type="button"
           ref={triggerRef}
@@ -97,7 +99,7 @@ export function ProcessOverflowMenu({
           disabled={busy}
           aria-haspopup="menu"
           aria-expanded={open}
-          aria-label="More actions"
+          aria-label={t("details.mf8d46c2570e7")}
           data-testid={triggerTestId}
           onClick={() => setOpen((o) => !o)}
         >
@@ -120,7 +122,7 @@ export function ProcessOverflowMenu({
             onClick={() => pick(() => onAction("raise"))}
           >
             <Icon name="arrowUp" size={15} />
-            Raise priority
+            {t("details.m21749156d81b")}
           </button>
           <button
             type="button"
@@ -131,7 +133,7 @@ export function ProcessOverflowMenu({
             onClick={() => pick(() => onAction("lower"))}
           >
             <Icon name="arrowDown" size={15} />
-            Lower priority
+            {t("details.mfc2790b99da8")}
           </button>
           <button
             type="button"
@@ -142,7 +144,7 @@ export function ProcessOverflowMenu({
             onClick={() => pick(onDelete)}
           >
             <Icon name="trash" size={15} />
-            Delete
+            {t("details.m85941fb9c992")}
           </button>
         </div>
       ) : null}

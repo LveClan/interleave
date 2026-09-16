@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../../i18n";
 /**
  * Daily Queue screen (T029) — the real `/queue`, replacing the placeholder.
  *
@@ -90,23 +91,90 @@ const ROW_ACTIONS: readonly {
   label: string;
   danger?: boolean;
 }[] = [
-  { kind: "postpone", icon: "postpone", label: "Postpone" },
-  { kind: "raise", icon: "arrowUp", label: "Raise priority" },
-  { kind: "lower", icon: "arrowDown", label: "Lower priority" },
-  { kind: "markDone", icon: "check", label: "Mark done" },
-  { kind: "dismiss", icon: "x", label: "Dismiss" },
-  { kind: "delete", icon: "trash", label: "Delete", danger: true },
+  {
+    kind: "postpone",
+    icon: "postpone",
+    get label() {
+      return t("options.m63fb48d94634");
+    },
+  },
+  {
+    kind: "raise",
+    icon: "arrowUp",
+    get label() {
+      return t("options.m16dd10b91ea8");
+    },
+  },
+  {
+    kind: "lower",
+    icon: "arrowDown",
+    get label() {
+      return t("options.m73817b249283");
+    },
+  },
+  {
+    kind: "markDone",
+    icon: "check",
+    get label() {
+      return t("options.m95acc4a22bde");
+    },
+  },
+  {
+    kind: "dismiss",
+    icon: "x",
+    get label() {
+      return t("options.m48845bff334a");
+    },
+  },
+  {
+    kind: "delete",
+    icon: "trash",
+    get label() {
+      return t("options.me2d0a54968ea");
+    },
+    danger: true,
+  },
 ];
 
 /** The filter chips, in kit order. `type` narrows by element type; `high` by band A. */
 type FilterId = "all" | "card" | "source" | "extract" | "task" | "high";
 const FILTERS: readonly { id: FilterId; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "card", label: "Cards" },
-  { id: "source", label: "Sources" },
-  { id: "extract", label: "Extracts" },
-  { id: "task", label: "Tasks" },
-  { id: "high", label: "High priority" },
+  {
+    id: "all",
+    get label() {
+      return t("options.ma52ace420f21");
+    },
+  },
+  {
+    id: "card",
+    get label() {
+      return t("options.ma52fcbbc3364");
+    },
+  },
+  {
+    id: "source",
+    get label() {
+      return t("options.mcaf85b0888d7");
+    },
+  },
+  {
+    id: "extract",
+    get label() {
+      return t("options.m877e04b7e7ed");
+    },
+  },
+  {
+    id: "task",
+    get label() {
+      return t("options.mb3a60e61a523");
+    },
+  },
+  {
+    id: "high",
+    get label() {
+      return t("options.mb699a8c8e2c8");
+    },
+  },
 ];
 
 /**
@@ -136,9 +204,26 @@ const STATUS_FILTERS: readonly {
   label: string;
   statuses?: readonly string[];
 }[] = [
-  { id: "all", label: "Any status" },
-  { id: "active", label: "Active", statuses: ["active", "pending", "inbox"] },
-  { id: "scheduled", label: "Scheduled", statuses: ["scheduled"] },
+  {
+    id: "all",
+    get label() {
+      return t("options.mac78229d6b82");
+    },
+  },
+  {
+    id: "active",
+    get label() {
+      return t("options.m92340695899b");
+    },
+    statuses: ["active", "pending", "inbox"],
+  },
+  {
+    id: "scheduled",
+    get label() {
+      return t("options.m4724f344c1c0");
+    },
+    statuses: ["scheduled"],
+  },
 ];
 
 const PRIORITY_INTEGRITY_QUEUE_NOTICE_ID = "priorityIntegrity.queue";
@@ -186,6 +271,7 @@ function QueueItem({
   /** Explicit (tomorrow/next-week/next-month/manual) scheduling — attention items only. */
   onSchedule: (item: QueueItemSummary, choice: QueueScheduleChoice) => void;
 }) {
+  useLocale();
   const scheduleReasonId = useId();
   const action = actionFor(item);
   // The per-type meta sub-line, matching the kit's `QueueItem` (one branch per
@@ -285,7 +371,9 @@ function QueueItem({
                   data-testid="queue-fallow-badge"
                 >
                   <Icon name="pause" size={12} />
-                  {item.fallowState === "active" ? "Resting" : "Returned"}
+                  {item.fallowState === "active"
+                    ? t("learning.mb95006948ace")
+                    : t("learning.m3610231fdcab")}
                   {item.fallowReason ? ` · ${item.fallowReason}` : ""}
                 </span>
               </>
@@ -372,24 +460,24 @@ function QueueItem({
         )}
         {retirementSuggestion ? (
           <span className="qitem__retirement" data-testid="queue-retirement-suggestion">
-            <Tooltip label="Review done suggestion" disabled={busy}>
+            <Tooltip label={t("learning.md4a86192a25a")} disabled={busy}>
               <button
                 type="button"
                 disabled={busy}
-                aria-label="Review done suggestion"
+                aria-label={t("learning.md4a86192a25a")}
                 data-testid="queue-retirement-review"
                 className="qitem__retirement-btn"
                 onClick={() => setRetirementReviewSignal((value) => value + 1)}
               >
                 <Icon name="warning" size={13} />
-                <span>Done?</span>
+                <span>{t("learning.m5ca4d1e9e296")}</span>
               </button>
             </Tooltip>
-            <Tooltip label="Dismiss suggestion" disabled={busy}>
+            <Tooltip label={t("learning.mae5e3911d51a")} disabled={busy}>
               <button
                 type="button"
                 disabled={busy}
-                aria-label="Dismiss done suggestion"
+                aria-label={t("learning.mfd3bbb5f1e5d")}
                 data-testid="queue-retirement-dismiss"
                 className="qitem__retirement-icon"
                 onClick={() => onDismissRetirementSuggestion(item)}
@@ -405,6 +493,7 @@ function QueueItem({
 }
 
 export function QueueScreen() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const { selectedId, select } = useSelection();
@@ -590,7 +679,7 @@ export function QueueScreen() {
     const cutoff = Date.now() - 48 * 60 * 60 * 1000;
     return list.find((p) => Date.parse(p.mostRecentLapseAt) >= cutoff) ?? null;
   }, [rereadProposals]);
-  const today = new Date().toLocaleDateString("en-US", {
+  const today = new Date().toLocaleDateString(i18n.language, {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -785,7 +874,7 @@ export function QueueScreen() {
       void refresh();
       if (count > 0) {
         setBatchUndoState({
-          message: `Postponed ${count} low-priority item${count === 1 ? "" : "s"}`,
+          message: `Postponed ${count} low-priority item${i18n.language.startsWith("zh") ? "" : count === 1 ? "" : "s"}`,
         });
       }
     },
@@ -802,7 +891,7 @@ export function QueueScreen() {
       void refresh();
       if (count > 0) {
         setBatchUndoState({
-          message: `${label} ${count} item${count === 1 ? "" : "s"}`,
+          message: `${label} ${count} item${i18n.language.startsWith("zh") ? "" : count === 1 ? "" : "s"}`,
         });
       }
     },
@@ -835,23 +924,22 @@ export function QueueScreen() {
         <div className="grid size-12 place-items-center rounded-lg bg-accent-soft text-accent-text">
           <Icon name="queue" size={26} />
         </div>
-        <h1 className="font-semibold text-2xl text-text tracking-tight">Daily Queue</h1>
-        <p className="max-w-sm text-base text-text-2">
-          The queue reads due items through the desktop bridge — open the Electron app to process
-          your day.
-        </p>
+        <h1 className="font-semibold text-2xl text-text tracking-tight">
+          {t("learning.m830e63c54f03")}
+        </h1>
+        <p className="max-w-sm text-base text-text-2">{t("learning.m8cf285b5f30c")}</p>
       </div>
     );
   }
 
   const primaryLabel =
     dailyWork?.recommendedAction === "triage_inbox"
-      ? "Triage inbox"
+      ? t("home.triageInbox")
       : dailyWork?.recommendedAction === "resume_unscheduled_source"
-        ? "Resume source"
+        ? t("home.resumeSource")
         : dailyWork?.recommendedAction === "clear"
-          ? "Open inbox"
-          : "Start session";
+          ? t("home.openInbox")
+          : t("home.startSession");
   const primaryIcon =
     dailyWork?.recommendedAction === "triage_inbox"
       ? "inbox"
@@ -862,12 +950,12 @@ export function QueueScreen() {
           : "play";
   const sessionNote =
     dailyWork?.recommendedAction === "triage_inbox"
-      ? `${dailyWork.inboxSources} inbox source${dailyWork.inboxSources === 1 ? "" : "s"} awaiting triage.`
+      ? t("home.sessionNoteTriage", { count: dailyWork.inboxSources })
       : dailyWork?.recommendedAction === "resume_unscheduled_source" && dailyWork.resumeSource
-        ? `Resume ${dailyWork.resumeSource.title}.`
+        ? t("home.sessionNoteResumeTitle", { title: dailyWork.resumeSource.title })
         : dailyWork?.recommendedAction === "clear"
-          ? "No due queue or inbox work right now."
-          : "Process one item at a time — sorted by priority, then due date.";
+          ? t("home.sessionNoteClear")
+          : t("home.sessionNoteDefault");
   const hasActiveFilters = filter !== "all" || statusFilter !== "all" || concept !== undefined;
   const priorityFlags = priorityIntegrity?.thresholdFlags;
   const showPriorityIntegrityWarning =
@@ -888,16 +976,20 @@ export function QueueScreen() {
         <div className="q-head">
           <div>
             <h1 className="q-title">
-              Daily Queue <HelpLink slug="daily-loop" />
+              {t("learning.mded2c99f4529")}
+              <HelpLink slug="daily-loop" />
             </h1>
             <p className="q-sub" data-testid="queue-subtitle">
               {data ? (
                 <>
-                  {today} · {dueCount} item{dueCount === 1 ? "" : "s"} due
+                  {today} · {dueCount}
+                  {t("learning.ma5f3c2e9f903")}
+                  {i18n.language.startsWith("zh") ? "" : dueCount === 1 ? "" : "s"}
+                  {t("learning.m3cecde1a1c78")}
                   {estimateLabel ? (
                     <>
                       {" "}
-                      · est.{" "}
+                      {t("learning.m17fe3f2ce46d")}{" "}
                       <span>
                         {estimateLabel.text}
                         <span className="sr-only"> {estimateLabel.ariaLabel}</span>
@@ -920,9 +1012,9 @@ export function QueueScreen() {
 
         {freshReread ? (
           <p className="q-sub" data-testid="queue-reread-line">
-            A section keeps tripping a few cards —{" "}
+            {t("learning.m4cfb6c8f1b2e")}{" "}
             <Link to="/maintenance" className="underline">
-              re-reading it may help
+              {t("learning.m0f1bf9801c84")}
             </Link>
             .
           </p>
@@ -934,7 +1026,7 @@ export function QueueScreen() {
               <Icon name="warning" size={15} />
             </div>
             <div className="q-priority__body">
-              <div className="q-priority__title">Priority integrity needs attention</div>
+              <div className="q-priority__title">{t("learning.me6f9311691df")}</div>
               <div className="q-priority__text">{priorityReason}</div>
               {priorityDismissError ? (
                 <div className="q-priority__error" data-testid="queue-priority-dismiss-error">
@@ -950,13 +1042,13 @@ export function QueueScreen() {
                 onClick={viewPriorityIntegrity}
               >
                 <Icon name="analytics" size={13} />
-                View analytics
+                {t("learning.m37a9f22e9c86")}
               </button>
               <button
                 type="button"
                 className="q-priority__icon-button"
                 data-testid="queue-priority-hide-week"
-                aria-label="Hide priority integrity warning for a week"
+                aria-label={t("learning.m56294f21120a")}
                 onClick={hidePriorityIntegrityForWeek}
               >
                 <Icon name="x" size={13} />
@@ -977,7 +1069,7 @@ export function QueueScreen() {
           <div className="q-metrics">
             <div className="q-metric">
               <span className="q-metric__v">{counts?.all ?? 0}</span>
-              <span className="q-metric__l">due today</span>
+              <span className="q-metric__l">{t("learning.mc3f9637c4ba5")}</span>
             </div>
             <div className="q-metric">
               <span
@@ -986,13 +1078,13 @@ export function QueueScreen() {
               >
                 {counts?.overdue ?? 0}
               </span>
-              <span className="q-metric__l">overdue</span>
+              <span className="q-metric__l">{t("learning.m7038dedb22f1")}</span>
             </div>
             <div className="q-metric">
               <span className="q-metric__v" data-testid="queue-protected-count">
                 {counts?.protected ?? 0}
               </span>
-              <span className="q-metric__l">protected</span>
+              <span className="q-metric__l">{t("learning.m9b2bbce6c72d")}</span>
             </div>
           </div>
         </div>
@@ -1061,7 +1153,7 @@ export function QueueScreen() {
             onClick={() => void navigate({ to: "/convert" })}
           >
             <Icon name="target" size={14} />
-            Convert statements
+            {t("learning.m9e1dbc056d88")}
           </button>
           <span className="sessionbar__note">{sessionNote}</span>
         </div>
@@ -1177,10 +1269,12 @@ export function QueueScreen() {
                 <div className="q-empty__icon q-empty__icon--filter">
                   <Icon name="inbox" size={24} />
                 </div>
-                <h2 className="q-empty__title">No due items today</h2>
+                <h2 className="q-empty__title">{t("learning.m9721220c8c2e")}</h2>
                 <p className="q-empty__body">
-                  {dailyWork.inboxSources} inbox source
-                  {dailyWork.inboxSources === 1 ? "" : "s"} awaiting triage.
+                  {dailyWork.inboxSources}
+                  {t("learning.mde0e09e41977")}
+                  {i18n.language.startsWith("zh") ? "" : dailyWork.inboxSources === 1 ? "" : "s"}
+                  {t("learning.mef8f433df45b")}
                 </p>
                 <button
                   type="button"
@@ -1189,7 +1283,7 @@ export function QueueScreen() {
                   onClick={() => void navigate({ to: "/inbox" })}
                 >
                   <Icon name="inbox" size={14} />
-                  Triage inbox
+                  {t("learning.m093c9db0431c")}
                 </button>
               </div>
             ) : dailyWork?.recommendedAction === "resume_unscheduled_source" &&
@@ -1198,9 +1292,10 @@ export function QueueScreen() {
                 <div className="q-empty__icon q-empty__icon--filter">
                   <Icon name="source" size={24} />
                 </div>
-                <h2 className="q-empty__title">No due items today</h2>
+                <h2 className="q-empty__title">{t("learning.m9721220c8c2e")}</h2>
                 <p className="q-empty__body">
-                  {dailyWork.resumeSource.title} is active without a return date.
+                  {dailyWork.resumeSource.title}
+                  {t("learning.m5fae2757c106")}
                 </p>
                 <button
                   type="button"
@@ -1219,7 +1314,7 @@ export function QueueScreen() {
                   }}
                 >
                   <Icon name="source" size={14} />
-                  Resume source
+                  {t("learning.m7fcef71c6385")}
                 </button>
               </div>
             ) : (
@@ -1227,11 +1322,8 @@ export function QueueScreen() {
                 <div className="q-empty__icon">
                   <Icon name="checkCircle" size={26} />
                 </div>
-                <h2 className="q-empty__title">Queue clear for today</h2>
-                <p className="q-empty__body">
-                  You've processed everything due. The next items unlock as they come due — your
-                  high-priority sources are protected and won't pile up.
-                </p>
+                <h2 className="q-empty__title">{t("learning.m2e4d839bebd1")}</h2>
+                <p className="q-empty__body">{t("learning.ma1a995d5a5d4")}</p>
               </div>
             )}
           </div>
@@ -1242,18 +1334,17 @@ export function QueueScreen() {
                 <Icon name="filter" size={24} />
               </div>
               <h2 className="q-empty__title">
-                No {filter === "all" ? "items" : FILTER_EMPTY_NOUN[filter]}
+                {t("learning.m05f8bb36f881")}
+                {filter === "all" ? t("learning.m5f3c4f8580d3") : FILTER_EMPTY_NOUN[filter]}
               </h2>
-              <p className="q-empty__body">
-                Nothing matches this filter right now. Try another filter or clear it.
-              </p>
+              <p className="q-empty__body">{t("learning.ma57a687cc01a")}</p>
               <button
                 type="button"
                 onClick={() => setFilter("all")}
                 className="sessionbar__start"
                 data-testid="queue-show-all"
               >
-                Show all
+                {t("learning.m6134b89407a6")}
               </button>
             </div>
           </div>

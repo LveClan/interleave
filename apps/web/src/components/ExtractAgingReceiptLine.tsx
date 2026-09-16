@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { i18n, t, useLocale } from "../i18n";
 import type { ExtractAgingReceipt, ExtractAgingUndoReceiptResult } from "../lib/appApi";
 import { Icon } from "./Icon";
 
@@ -9,14 +10,15 @@ export function ExtractAgingReceiptLine({
   receipt: ExtractAgingReceipt | null;
   onUndo: (batchId: string) => Promise<ExtractAgingUndoReceiptResult>;
 }) {
+  useLocale();
   const [state, setState] = useState<"idle" | "pending" | "undone" | "error">("idle");
   const [message, setMessage] = useState("");
   if (!receipt) return null;
 
   const undone = receipt.status === "undone" || state === "undone";
   const summary = undone
-    ? `${receipt.demoted} extract${receipt.demoted === 1 ? "" : "s"} restored`
-    : `${receipt.demoted} extract${receipt.demoted === 1 ? "" : "s"} returned to reference`;
+    ? `${receipt.demoted} extract${i18n.language.startsWith("zh") ? "" : receipt.demoted === 1 ? "" : "s"} restored`
+    : `${receipt.demoted} extract${i18n.language.startsWith("zh") ? "" : receipt.demoted === 1 ? "" : "s"} returned to reference`;
   const remaining =
     receipt.remainingCandidateCount > 0
       ? `${receipt.remainingCandidateCount} still eligible`
@@ -34,8 +36,14 @@ export function ExtractAgingReceiptLine({
         <div className="min-w-0">
           <div className="font-medium text-text">{summary}</div>
           <div className="truncate text-text-3">
-            {receipt.policy}, after {receipt.thresholds.returnThreshold} returns /{" "}
-            {receipt.thresholds.ageDays} days, {remaining} on {receipt.localDay}
+            {receipt.policy}
+            {t("details.m29f8846bc0e0")}
+            {receipt.thresholds.returnThreshold}
+            {t("details.mf5dc960e2928")} {receipt.thresholds.ageDays}
+            {t("details.mf3ea3238b107")}
+            {remaining}
+            {t("details.m0f580db40fe2")}
+            {receipt.localDay}
           </div>
           <div className="sr-only" role="status" aria-live="polite">
             {message}
@@ -44,7 +52,7 @@ export function ExtractAgingReceiptLine({
       </div>
       {undone ? (
         <span className="shrink-0 text-text-3" data-testid="extract-aging-receipt-undone">
-          Undone
+          {t("details.mb855fdf3ef50")}
         </span>
       ) : (
         <button
@@ -71,7 +79,11 @@ export function ExtractAgingReceiptLine({
           }}
         >
           <Icon name="undo" size={13} />
-          {state === "pending" ? "Undoing" : state === "error" ? "Retry" : "Undo"}
+          {state === "pending"
+            ? t("details.m6b9c7841fef8")
+            : state === "error"
+              ? t("details.m942087cc2d41")
+              : t("details.ma8283ade3185")}
         </button>
       )}
     </div>

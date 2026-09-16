@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Retired-card inventory (T082) — the maintenance surface for cards that have
  * gracefully left active review.
@@ -32,6 +33,7 @@ import "../review/review.css";
 import "./leech-cleanup.css";
 
 export function RetiredCards() {
+  useLocale();
   const desktop = isDesktop();
   const [cards, setCards] = useState<readonly RetiredCardSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,11 +84,8 @@ export function RetiredCards() {
             <div className="rv-empty__icon">
               <Icon name="archive" size={26} />
             </div>
-            <h1 className="rv-empty__title">Retired cards</h1>
-            <p className="rv-empty__body">
-              Low-value mature cards you have retired are listed here — open the Electron app to
-              review or restore them.
-            </p>
+            <h1 className="rv-empty__title">{t("collection.m3c95d7bd7c41")}</h1>
+            <p className="rv-empty__body">{t("collection.mc959b6a9a1f0")}</p>
           </div>
         </div>
       </div>
@@ -99,15 +98,13 @@ export function RetiredCards() {
         <div>
           <h1 className="lc-title">
             <Icon name="archive" size={18} />
-            Retired cards
+            {t("collection.m8d9ba07feb19")}
           </h1>
-          <p className="lc-sub">
-            Low-value mature cards that have left active review, kept for reference. Un-retire any
-            to return it to the review queue.
-          </p>
+          <p className="lc-sub">{t("collection.m62e5a40a7455")}</p>
         </div>
         <span className="lc-count" data-testid="retired-count">
-          {cards.length} retired
+          {cards.length}
+          {t("collection.mf307c26e973f")}
         </span>
       </div>
 
@@ -120,18 +117,15 @@ export function RetiredCards() {
       <div className="lc-list">
         {loading ? (
           <p className="lc-loading" data-testid="retired-loading">
-            Loading…
+            {t("collection.m0a5afbeee779")}
           </p>
         ) : cards.length === 0 ? (
           <div className="rv-empty" data-testid="retired-empty">
             <div className="rv-empty__icon">
               <Icon name="checkCircle" size={26} />
             </div>
-            <h2 className="rv-empty__title">No retired cards</h2>
-            <p className="rv-empty__body">
-              You have not retired any cards. Retire a low-value mature card from review or its
-              inspector and it will appear here.
-            </p>
+            <h2 className="rv-empty__title">{t("collection.mf9711236d4be")}</h2>
+            <p className="rv-empty__body">{t("collection.m3dd710a34af1")}</p>
           </div>
         ) : (
           cards.map((card) => (
@@ -142,14 +136,17 @@ export function RetiredCards() {
               data-card-id={card.id}
             >
               <div className="lc-card__meta">
-                <span className="badge badge--soft">{card.kind === "cloze" ? "Cloze" : "Q&A"}</span>
+                <span className="badge badge--soft">
+                  {card.kind === "cloze" ? t("collection.mde503889179e") : "Q&A"}
+                </span>
                 <Prio priority={card.priority} />
                 <span className="badge badge--retired" data-testid="retired-card-badge">
                   <Icon name="archive" size={11} />
-                  Retired
+                  {t("collection.md1cd7e9ee7d3")}
                 </span>
                 <span className="badge badge--soft" data-testid="retired-card-stability">
-                  {formatStability(card.stability)}d stability
+                  {formatStability(card.stability)}
+                  {t("collection.m942bce65b99c")}
                 </span>
               </div>
               <div className="lc-card__body">
@@ -176,7 +173,7 @@ export function RetiredCards() {
                   onClick={() => void unretire(card.id)}
                 >
                   <Icon name="archive" size={14} />
-                  Un-retire
+                  {t("collection.m9207ff62308b")}
                 </button>
               </div>
             </div>

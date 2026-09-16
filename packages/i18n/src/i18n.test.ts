@@ -10,9 +10,11 @@ import {
 import { pseudoLanguage } from "./pseudo";
 
 describe("local language registry and fallback", () => {
-  it("ships only English and safely resolves unsupported and malformed language preferences", () => {
-    expect(languages.map((language) => language.code)).toEqual(["en"]);
-    for (const system of ["zh-CN", "fr-FR", "not a language", "", "en_US"]) {
+  it("ships English and Chinese and safely resolves unsupported and malformed preferences", () => {
+    expect(languages.map((language) => language.code)).toEqual(["en", "zh-CN"]);
+    expect(resolveLocale("system", "zh-CN")).toBe("zh-CN");
+    expect(createI18n("zh-CN").t("common.language")).toBe("语言");
+    for (const system of ["fr-FR", "not a language", "", "en_US"]) {
       expect(resolveLocale("system", system)).toBe("en");
       expect(createI18n(system).t("menu.file")).toBe("File");
     }
@@ -26,7 +28,7 @@ describe("local language registry and fallback", () => {
       direction: "ltr" as const,
       messages: { menu: { file: "test file" } },
     };
-    const available = [...languages, chinese];
+    const available = [...languages.filter((language) => language.code !== "zh-CN"), chinese];
     expect(resolveLocale("system", "zh-Hans-SG", available)).toBe("zh-CN");
     expect(resolveLocale("en", "zh-CN", available)).toBe("en");
     expect(resolveLocale("system", "zh-TW", available)).toBe("en");

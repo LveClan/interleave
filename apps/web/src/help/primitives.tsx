@@ -11,6 +11,7 @@
  */
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Icon, type IconName } from "../components/Icon";
+import { t, useLocale } from "../i18n";
 
 /** Join truthy class names (the kit's `cx`). */
 export function cx(...parts: Array<string | false | null | undefined>): string {
@@ -41,6 +42,7 @@ export function Btn({
   type = "button",
   ...rest
 }: BtnProps) {
+  useLocale();
   return (
     <button
       type={type}
@@ -77,6 +79,7 @@ export function Segmented<T extends string>({
   value: T;
   onChange: (value: T) => void;
 }) {
+  useLocale();
   return (
     <div className="segmented">
       {options.map((o) => (
@@ -101,12 +104,48 @@ export function Segmented<T extends string>({
  * Used in the welcome modal and the help center's `pipeline` figure.
  */
 export const PIPELINE_STEPS: ReadonlyArray<{ key: string; icon: IconName; label: string }> = [
-  { key: "source", icon: "source", label: "Source" },
-  { key: "extract", icon: "extract", label: "Extract" },
-  { key: "clean", icon: "highlight", label: "Clean" },
-  { key: "atomic", icon: "target", label: "Atomic" },
-  { key: "card", icon: "card", label: "Card" },
-  { key: "mature", icon: "brain", label: "Mature" },
+  {
+    key: "source",
+    icon: "source",
+    get label() {
+      return t("options.m0e570ca6fabe");
+    },
+  },
+  {
+    key: "extract",
+    icon: "extract",
+    get label() {
+      return t("options.mc15301c0e647");
+    },
+  },
+  {
+    key: "clean",
+    icon: "highlight",
+    get label() {
+      return t("options.m5137c8760c94");
+    },
+  },
+  {
+    key: "atomic",
+    icon: "target",
+    get label() {
+      return t("options.m3a3cdc6b5e92");
+    },
+  },
+  {
+    key: "card",
+    icon: "card",
+    get label() {
+      return t("options.mbe3702e3f1af");
+    },
+  },
+  {
+    key: "mature",
+    icon: "brain",
+    get label() {
+      return t("options.m2cc08418a5a0");
+    },
+  },
 ];
 
 /**
@@ -116,6 +155,7 @@ export const PIPELINE_STEPS: ReadonlyArray<{ key: string; icon: IconName; label:
  * would clash with the otherwise blue-accented, restrained help surface.
  */
 export function Pipeline({ active = "extract" }: { active?: string | null }) {
+  useLocale();
   const ai =
     active == null
       ? -1

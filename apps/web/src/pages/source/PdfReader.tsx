@@ -30,7 +30,7 @@ import {
   type OcrPageSummary,
 } from "../../lib/appApi";
 import "./pdf-reader.css";
-import { t } from "../../i18n";
+import { t, useLocale } from "../../i18n";
 import { sourceReadingChanged } from "../../lib/sourceReadingEvents";
 import { ProcessingUnitControls } from "./ProcessingUnitControls";
 import { StructuralSkim } from "./StructuralSkim";
@@ -109,6 +109,7 @@ export function PdfReader({
   jump,
   toast,
 }: PdfReaderProps) {
+  useLocale();
   const desktop = isDesktop();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const activeJump = useRef(false);
@@ -610,7 +611,7 @@ export function PdfReader({
   if (!desktop) {
     return (
       <div className="pdf-reader-state" data-testid="pdf-reader-no-desktop">
-        Open the desktop app to read a PDF.
+        {t("learning.m7f29a11e91c5")}
       </div>
     );
   }
@@ -637,7 +638,8 @@ export function PdfReader({
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => void setReadPoint()}
         >
-          <Icon name="bookmark" size={14} /> Set read-point
+          <Icon name="bookmark" size={14} />
+          {t("learning.m3e86639d2e5c")}
         </button>
         <button
           type="button"
@@ -646,7 +648,8 @@ export function PdfReader({
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => void onExtract()}
         >
-          <Icon name="extract" size={14} /> Extract selection
+          <Icon name="extract" size={14} />
+          {t("learning.m383753a556f5")}
         </button>
         <button
           type="button"
@@ -654,14 +657,20 @@ export function PdfReader({
           data-testid="pdf-region-mode"
           data-active={regionMode ? "true" : "false"}
           aria-pressed={regionMode}
-          title="Draw a rectangle over a figure/table to extract it (R)"
+          title={t("learning.m8e6b023d84b6")}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setRegionMode((on) => !on)}
         >
-          <Icon name="image" size={14} /> {regionMode ? "Region mode: on" : "Region"}
+          <Icon name="image" size={14} />{" "}
+          {regionMode ? t("learning.me2b0a24ef885") : t("learning.md3a008ef1335")}
         </button>
         <span className="pdf-reader-pagecount" data-testid="pdf-page-indicator">
-          {status === "ready" ? `Page ${activePage} of ${pages.length}` : "—"}
+          {status === "ready"
+            ? t("learning.m4654cbe48cbe", {
+                value1: String(activePage),
+                value2: String(pages.length),
+              })
+            : "—"}
         </span>
       </div>
 
@@ -679,15 +688,15 @@ export function PdfReader({
 
       {status === "loading" ? (
         <p className="pdf-reader-state" data-testid="pdf-reader-loading">
-          Loading PDF…
+          {t("learning.mf05972a253a1")}
         </p>
       ) : status === "error" ? (
         <p className="pdf-reader-state pdf-reader-state--error" data-testid="pdf-reader-error">
-          {error ?? "Failed to load the PDF."}
+          {error ?? t("learning.me2639aee5b00")}
         </p>
       ) : status === "empty" ? (
         <p className="pdf-reader-state" data-testid="pdf-reader-empty">
-          This source has no PDF bytes in the vault.
+          {t("learning.m1f37fb82d84a")}
         </p>
       ) : (
         <div
@@ -714,18 +723,19 @@ export function PdfReader({
       {pending ? (
         <div className="pdf-region-confirm" data-testid="pdf-region-confirm" role="dialog">
           <div className="pdf-region-confirm__head">
-            <Icon name="image" size={14} /> Extract this region as a card topic
+            <Icon name="image" size={14} />
+            {t("learning.m622c7362f439")}
           </div>
           <img
             className="pdf-region-confirm__preview"
             src={pending.previewUrl}
-            alt="Selected region preview"
+            alt={t("learning.mfc7d994933fb")}
           />
           <input
             className="pdf-region-confirm__caption"
             data-testid="pdf-region-caption"
             type="text"
-            placeholder={`Caption (optional) · page ${pending.page}`}
+            placeholder={t("learning.md3f8cbc90883", { value1: String(pending.page) })}
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             // Enter confirms; Esc cancels (the global handler also handles Esc).
@@ -747,7 +757,7 @@ export function PdfReader({
               disabled={submitting}
               onClick={cancelPending}
             >
-              Cancel
+              {t("learning.m0ef70263b054")}
             </button>
             <button
               type="button"
@@ -756,7 +766,8 @@ export function PdfReader({
               disabled={submitting}
               onClick={() => void confirmRegion()}
             >
-              <Icon name="check" size={14} /> {submitting ? "Extracting…" : "Extract region"}
+              <Icon name="check" size={14} />{" "}
+              {submitting ? t("learning.mb5c67a58a1f7") : t("learning.m9f1e7c2e3424")}
             </button>
           </div>
         </div>
@@ -797,6 +808,7 @@ function PdfPageView({
   extractedRegions: readonly { page: number; region: RegionRect }[];
   flashRegion: RegionRect | null;
 }) {
+  useLocale();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const textRef = useRef<HTMLDivElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -1038,6 +1050,7 @@ function OcrPanel({
   onAccept: () => void;
   onDismiss: () => void;
 }) {
+  useLocale();
   // A suggestion to review (recognized + not yet accepted/dismissed).
   if (ocr && ocr.status === "suggested") {
     const band = confidenceBand(ocr.meanConfidence);
@@ -1045,21 +1058,24 @@ function OcrPanel({
       <section
         className="pdf-ocr-panel"
         data-testid="pdf-ocr-suggestion"
-        aria-label={`OCR text for page ${page}`}
+        aria-label={t("learning.mdc977787c1d8", { value1: String(page) })}
       >
         <div className="pdf-ocr-panel__head">
-          <Icon name="extract" size={14} /> OCR text for page {page}
+          <Icon name="extract" size={14} />
+          {t("learning.mf366b099da7f")}
+          {page}
           <span
             className={`pdf-ocr-badge pdf-ocr-badge--${band}`}
             data-testid="pdf-ocr-confidence"
-            title="Mean recognition confidence"
+            title={t("learning.ma74acbe06f44")}
           >
-            {ocr.meanConfidence}% confidence
-            {band === "low" ? " · low — review carefully" : ""}
+            {ocr.meanConfidence}
+            {t("learning.m87c149f909c5")}
+            {band === "low" ? t("learning.mab8a215d1cba") : ""}
           </span>
         </div>
         <p className="pdf-ocr-panel__text" data-testid="pdf-ocr-text">
-          {ocr.text || "(no text recognized)"}
+          {ocr.text || t("learning.m055f7fb46d92")}
         </p>
         <div className="pdf-ocr-panel__actions">
           <button
@@ -1068,7 +1084,7 @@ function OcrPanel({
             data-testid="pdf-ocr-dismiss"
             onClick={onDismiss}
           >
-            Dismiss
+            {t("learning.medc0fe2d169a")}
           </button>
           <button
             type="button"
@@ -1076,7 +1092,8 @@ function OcrPanel({
             data-testid="pdf-ocr-accept"
             onClick={onAccept}
           >
-            <Icon name="check" size={14} /> Accept into page
+            <Icon name="check" size={14} />
+            {t("learning.mb9df0bf751be")}
           </button>
         </div>
       </section>
@@ -1087,7 +1104,10 @@ function OcrPanel({
   if (ocr && ocr.status === "accepted") {
     return (
       <div className="pdf-ocr-panel pdf-ocr-panel--done" data-testid="pdf-ocr-accepted">
-        <Icon name="check" size={14} /> OCR text accepted into page {page} (now searchable).
+        <Icon name="check" size={14} />
+        {t("learning.mb9f42f99fd31")}
+        {page}
+        {t("learning.m4f768940d285")}
       </div>
     );
   }
@@ -1097,14 +1117,16 @@ function OcrPanel({
     <section
       className="pdf-ocr-panel"
       data-testid="pdf-ocr-prompt"
-      aria-label={`OCR for page ${page}`}
+      aria-label={t("learning.m6ab946a730d8", { value1: String(page) })}
     >
       <span className="pdf-ocr-panel__prompt">
-        <Icon name="image" size={14} /> Scanned page — no embedded text.
+        <Icon name="image" size={14} />
+        {t("learning.m9b3c629a65f8")}
       </span>
       {busy ? (
         <span className="pdf-ocr-panel__progress" data-testid="pdf-ocr-progress">
-          Recognizing… {progress}%
+          {t("learning.mf1b64f12bf0d")}
+          {progress}%
         </span>
       ) : (
         <button
@@ -1113,7 +1135,8 @@ function OcrPanel({
           data-testid="pdf-ocr-run"
           onClick={onRun}
         >
-          <Icon name="extract" size={14} /> Run OCR on this page
+          <Icon name="extract" size={14} />
+          {t("learning.mdabfa04a891e")}
         </button>
       )}
     </section>

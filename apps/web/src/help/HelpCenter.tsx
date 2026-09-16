@@ -12,6 +12,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "../components/Icon";
+import { t, useLocale } from "../i18n";
 import { Kbd } from "../shell/Kbd";
 import { GOTO_MAP } from "../shell/nav";
 import { CHEAT_GROUP_ORDER, SHORTCUTS } from "../shell/shortcuts";
@@ -31,6 +32,7 @@ import { Btn, cx, Pipeline } from "./primitives";
 import "./help.css";
 
 function StatusTag({ status }: { status?: Status }) {
+  useLocale();
   if (!status || status === "shipped") return null;
   const map: Record<string, [string, IconName, string]> = {
     partial: ["partial", "hourglass", "Partial"],
@@ -48,6 +50,7 @@ function StatusTag({ status }: { status?: Status }) {
 
 /** Inline figures used by flagship article bodies. */
 function ArtFigure({ kind }: { kind: string }) {
+  useLocale();
   if (kind === "pipeline") {
     return (
       <div className="hc-callout" style={{ display: "block", background: "var(--surface-2)" }}>
@@ -60,19 +63,16 @@ function ArtFigure({ kind }: { kind: string }) {
       <div className="hc-figure">
         <div className="coach__demo-card">
           <b style={{ color: "var(--sched-fsrs)" }}>
-            <Icon name="brain" size={14} /> Cards · FSRS
+            <Icon name="brain" size={14} />
+            {t("details.m05f08e1c2027")}
           </b>
-          <span>
-            “Can you recall this?” — carries a recall % and grade buttons. The brain chip.
-          </span>
+          <span>{t("details.m8f3bbde36a37")}</span>
         </div>
         <div className="coach__demo-card">
           <b style={{ color: "var(--sched-attn)" }}>
             <Icon name="gauge" size={14} /> Sources &amp; extracts
           </b>
-          <span>
-            “Should you process this again, when?” — a stage and a return date. The gauge chip.
-          </span>
+          <span>{t("details.m5c23d01eda81")}</span>
         </div>
       </div>
     );
@@ -82,15 +82,19 @@ function ArtFigure({ kind }: { kind: string }) {
       <div className="hc-figure">
         <div className="coach__demo-card">
           <b style={{ color: "var(--el-extract)" }}>
-            <Icon name="extract" size={14} /> Extract <Kbd keys="E" />
+            <Icon name="extract" size={14} />
+            {t("details.m6874e92c88df")}
+            <Kbd keys="E" />
           </b>
-          <span>A new scheduled item with lineage — it comes back to you.</span>
+          <span>{t("details.m65448e146a68")}</span>
         </div>
         <div className="coach__demo-card">
           <b style={{ color: "oklch(0.62 0.13 95)" }}>
-            <Icon name="highlight" size={14} /> Highlight <Kbd keys="H" />
+            <Icon name="highlight" size={14} />
+            {t("details.mec017f02d783")}
+            <Kbd keys="H" />
           </b>
-          <span>Just a mark in the source. No item, no schedule.</span>
+          <span>{t("details.mda391d59058e")}</span>
         </div>
       </div>
     );
@@ -99,6 +103,7 @@ function ArtFigure({ kind }: { kind: string }) {
 }
 
 function ArticleBody({ slug }: { slug: string }) {
+  useLocale();
   const blocks = HELP_BODIES[slug];
   if (!blocks) {
     return (
@@ -106,11 +111,8 @@ function ArticleBody({ slug }: { slug: string }) {
         <span className="hc-stub__ico">
           <Icon name="edit" size={20} />
         </span>
-        <span className="hc-stub__t">This article is queued for writing</span>
-        <span className="hc-stub__b">
-          The information architecture, slug, audience, and shipped/planned status are locked. The
-          prose, screenshots, and diagrams will be authored against this template.
-        </span>
+        <span className="hc-stub__t">{t("details.me04534d4a250")}</span>
+        <span className="hc-stub__b">{t("details.mc2726a180f81")}</span>
       </div>
     );
   }
@@ -151,6 +153,7 @@ function ArticleBody({ slug }: { slug: string }) {
 }
 
 function GlossaryView() {
+  useLocale();
   return (
     <dl className="hc-gloss">
       {HELP_GLOSSARY.map((g) => (
@@ -160,7 +163,7 @@ function GlossaryView() {
             {g[1]}{" "}
             {g[2] && HELP_BY_SLUG[g[2]] && (
               <button type="button" className="help-inline" onClick={() => openHelpHash(g[2])}>
-                Read more
+                {t("details.m6b9e5698ec32")}
                 <Icon name="chevronRight" size={12} />
               </button>
             )}
@@ -188,6 +191,7 @@ const GOTO_LABEL: Record<string, string> = {
 };
 
 function KeyboardView() {
+  useLocale();
   const groups = CHEAT_GROUP_ORDER.map((group) => ({
     group,
     rows: SHORTCUTS.filter((s) => s.group === group).map(
@@ -214,7 +218,7 @@ function KeyboardView() {
         </div>
       ))}
       <div className="hc-kb__grp">
-        <h3>Quick navigation (g + letter — a two-key chord, ~700ms window)</h3>
+        <h3>{t("details.m3c2bf17c5226")}</h3>
         {gnav.map((r) => (
           <div className="hc-kb__row" key={r[1]}>
             <span>{r[1]}</span>
@@ -225,9 +229,9 @@ function KeyboardView() {
       <div className="hc-callout">
         <Icon name="info" size={15} />
         <span>
-          The <b>g</b>-prefix is a sequential two-key chord with a ~700ms window — not a held combo.
-          The keyboard-layout setting (QWERTY/Dvorak/Vim) does not yet remap these bindings, and
-          there is no redo.
+          {t("details.m103c5169871d")}
+          <b>g</b>
+          {t("details.m26b5ca26f2ac")}
         </span>
       </div>
     </div>
@@ -245,6 +249,7 @@ export function HelpCenter({
   onClose: () => void;
   onNavScreen: (route: string) => void;
 }) {
+  useLocale();
   const [slug, setSlug] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -298,13 +303,13 @@ export function HelpCenter({
       className="hc-overlay"
       role="dialog"
       aria-modal="true"
-      aria-label="Help center"
+      aria-label={t("details.me2f55c84f3b4")}
       data-testid="help-center"
     >
       <button
         type="button"
         className="hc-overlay__scrim"
-        aria-label="Close help center"
+        aria-label={t("details.m2c5a6a5fc7d6")}
         onClick={onClose}
       />
       <div className="hc">
@@ -313,7 +318,7 @@ export function HelpCenter({
             <span className="hc__brand-ico">
               <Icon name="library" size={15} />
             </span>
-            Help center
+            {t("details.mbcd0b6ff7ee9")}
           </div>
           <div className="hc__search">
             <Icon name="search" size={16} />
@@ -324,15 +329,15 @@ export function HelpCenter({
                 setQuery(e.target.value);
                 if (e.target.value.trim() && slug) setSlug(null);
               }}
-              placeholder="Search the help center…"
-              aria-label="Search the help center"
+              placeholder={t("details.m6c04d4fbb743")}
+              aria-label={t("details.md006af90c1ba")}
             />
             {query && (
               <button
                 type="button"
                 className="btn btn--ghost btn--sm btn--icon"
                 onClick={() => setQuery("")}
-                aria-label="Clear search"
+                aria-label={t("details.m3b7ea51793e9")}
               >
                 <Icon name="x" size={13} />
               </button>
@@ -340,7 +345,8 @@ export function HelpCenter({
           </div>
           <div className="grow" />
           <Btn variant="ghost" icon="x" onClick={onClose}>
-            Close <Kbd keys="Esc" />
+            {t("details.m79c84b48c2f0")}
+            <Kbd keys="Esc" />
           </Btn>
         </div>
 
@@ -350,12 +356,14 @@ export function HelpCenter({
               {results ? (
                 <>
                   <div className="hc-sech">
-                    {results.length} result{results.length !== 1 ? "s" : ""} for “{query}”
+                    {results.length}
+                    {t("details.m6c501d1a34b7")}
+                    {results.length !== 1 ? "s" : ""}
+                    {t("details.mf3839b09d462")}
+                    {query}”
                   </div>
                   {results.length === 0 && (
-                    <p className="hc__home-sub">
-                      No articles match. Try a concept like “extract”, “budget”, or “backup”.
-                    </p>
+                    <p className="hc__home-sub">{t("details.m3c44964bc609")}</p>
                   )}
                   <div className="hc-pop">
                     {results.map((r) => (
@@ -378,14 +386,10 @@ export function HelpCenter({
                 </>
               ) : (
                 <>
-                  <h1 className="hc__home-h">How can we help?</h1>
-                  <p className="hc__home-sub">
-                    Everything the in-app tips link to. Search above, or browse by area. Articles
-                    are tagged for shipped vs planned features so you never hunt for a button that
-                    doesn’t exist.
-                  </p>
+                  <h1 className="hc__home-h">{t("details.m7b56e0d0b308")}</h1>
+                  <p className="hc__home-sub">{t("details.mf475d16a6787")}</p>
 
-                  <div className="hc-sech">Start here</div>
+                  <div className="hc-sech">{t("details.m2adc964c0847")}</div>
                   <div className="hc-pop">
                     {HELP_POPULAR.map((s) => {
                       const a = HELP_BY_SLUG[s];
@@ -406,7 +410,7 @@ export function HelpCenter({
                     })}
                   </div>
 
-                  <div className="hc-sech">Browse by area</div>
+                  <div className="hc-sech">{t("details.mbc44f6feff81")}</div>
                   <div className="hc-cat-grid">
                     {HELP_CATEGORIES.map((c) => (
                       <button
@@ -430,13 +434,13 @@ export function HelpCenter({
                     ))}
                   </div>
 
-                  <div className="hc-sech">Reference</div>
+                  <div className="hc-sech">{t("details.m71bf90935fc2")}</div>
                   <div className="hc-quick">
                     <Btn icon="keyboard" onClick={() => openArticle("keyboard-reference")}>
-                      Keyboard reference
+                      {t("details.m361e56297a81")}
                     </Btn>
                     <Btn icon="text" onClick={() => openArticle("glossary")}>
-                      Concepts glossary
+                      {t("details.m76d3d455b83a")}
                     </Btn>
                   </div>
                 </>
@@ -446,12 +450,14 @@ export function HelpCenter({
             <>
               <div className="hc-rail">
                 <button type="button" className="hc-rail__back" onClick={() => setSlug(null)}>
-                  <Icon name="chevronLeft" size={14} /> All topics
+                  <Icon name="chevronLeft" size={14} />
+                  {t("details.m09a4a38cbe56")}
                 </button>
                 {results ? (
                   <>
                     <div className="hc-rail__cat">
-                      <Icon name="search" size={14} /> Results
+                      <Icon name="search" size={14} />
+                      {t("details.m713a9c62a5fc")}
                     </div>
                     {results.map((r) => (
                       <button
@@ -485,7 +491,8 @@ export function HelpCenter({
                 ) : (
                   <>
                     <div className="hc-rail__cat">
-                      <Icon name="text" size={14} /> Reference
+                      <Icon name="text" size={14} />
+                      {t("details.m18db77e4a15e")}
                     </div>
                     {HELP_SPECIAL.map((s) => (
                       <button
@@ -506,10 +513,10 @@ export function HelpCenter({
                 <div className="hc-read__inner">
                   <div className="hc-read__crumbs">
                     <button type="button" className="hc-read__crumb" onClick={() => setSlug(null)}>
-                      Help
+                      {t("details.m5b7f0154649d")}
                     </button>
                     <Icon name="chevronRight" size={12} />
-                    <span>{art?.special ? "Reference" : art?.catTitle}</span>
+                    <span>{art?.special ? t("details.m71bf90935fc2") : art?.catTitle}</span>
                   </div>
                   <div className="hc-read__badges">
                     {art && <StatusTag status={art.status} />}
@@ -527,7 +534,7 @@ export function HelpCenter({
                           onClose();
                         }}
                       >
-                        Open the relevant screen
+                        {t("details.mb80ddedb19a8")}
                       </Btn>
                     </div>
                   )}
@@ -543,7 +550,7 @@ export function HelpCenter({
                   {art && !art.special && related.length > 0 && (
                     <div className="hc-foot">
                       <div className="hc-sech" style={{ marginTop: 0 }}>
-                        Related articles
+                        {t("details.m453089f46caa")}
                       </div>
                       <div className="hc-related">
                         {related.map(

@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Weekly Review screen (U3 — Weekly Review redesign).
  *
@@ -56,36 +57,56 @@ const SECTIONS: Readonly<Record<WeeklyReviewSectionId, SectionMeta>> = {
     id: "ledger",
     n: "01",
     icon: "analytics",
-    title: "Ledger",
-    sub: "Priority work that slipped this window",
+    get title() {
+      return t("supplement.mee69eb4afc76");
+    },
+    get sub() {
+      return t("options.m794721ea117c");
+    },
   },
   integrity: {
     id: "integrity",
     n: "02",
     icon: "shield",
-    title: "Integrity",
-    sub: "Attention-health checks for the week",
+    get title() {
+      return t("supplement.mad5ea6aae7ca");
+    },
+    get sub() {
+      return t("options.med02831a6c62");
+    },
   },
   parked: {
     id: "parked",
     n: "03",
     icon: "bookmark",
-    title: "Parked",
-    sub: "Saved-for-later sources now due to resurface",
+    get title() {
+      return t("supplement.mf32a2c334c3b");
+    },
+    get sub() {
+      return t("options.mec402884af77");
+    },
   },
   chronic: {
     id: "chronic",
     n: "04",
     icon: "postpone",
-    title: "Chronic",
-    sub: "Repeatedly postponed — force a verdict",
+    get title() {
+      return t("supplement.md714a73b7ec1");
+    },
+    get sub() {
+      return t("options.m2abbc8875efd");
+    },
   },
   fallow: {
     id: "fallow",
     n: "05",
     icon: "hourglass",
-    title: "Fallow",
-    sub: "Topics that have earned a rest",
+    get title() {
+      return t("supplement.ma3fddfcf5c60");
+    },
+    get sub() {
+      return t("options.m7e257c7a3980");
+    },
   },
 };
 
@@ -110,6 +131,7 @@ type LoadState =
   | { status: "ready"; data: WeeklyReviewSummaryResult };
 
 export function WeeklyReviewScreen() {
+  useLocale();
   const [state, setState] = useState<LoadState>({ status: "loading" });
 
   const load = useCallback(async (opts?: { background?: boolean }) => {
@@ -140,7 +162,7 @@ export function WeeklyReviewScreen() {
   if (state.status === "loading") {
     return (
       <div className="wk">
-        <p className="wk-window">Loading weekly review...</p>
+        <p className="wk-window">{t("collection.md3850eae7441")}</p>
       </div>
     );
   }
@@ -151,7 +173,7 @@ export function WeeklyReviewScreen() {
           <div className="banner banner--danger">
             <Icon name="warning" size={16} />
             <div className="grow">
-              <div className="banner__title">Couldn't load the weekly review</div>
+              <div className="banner__title">{t("collection.m87dafbd99d2b")}</div>
               <div className="banner__body">{state.message}</div>
             </div>
           </div>
@@ -170,6 +192,7 @@ function WeeklyReviewBody({
   readonly summary: WeeklyReviewSummaryResult;
   readonly onReload: () => Promise<void>;
 }) {
+  useLocale();
   const progress = summary.progress;
   const [busySection, setBusySection] = useState<WeeklyReviewSectionId | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -328,8 +351,8 @@ function WeeklyReviewBody({
       {/* header */}
       <div className="wk-head">
         <div>
-          <p className="wk-kicker">Weekly session</p>
-          <h1 className="wk-title">Ledger and integrity</h1>
+          <p className="wk-kicker">{t("collection.mf4d232e53048")}</p>
+          <h1 className="wk-title">{t("collection.m36268bd805f0")}</h1>
           <p className="wk-window">
             <span className="mono">
               {formatDate(summary.window.start)} – {formatDate(summary.window.end)}
@@ -338,14 +361,20 @@ function WeeklyReviewBody({
             {cadenceLabel(summary.cadenceDays)}
             <span className="dot-sep" />
             {remaining === 0
-              ? "all reviewed"
-              : `${remaining} section${remaining === 1 ? "" : "s"} left`}
+              ? t("collection.m8ae5b4cd7a22")
+              : t("collection.ma79b541b65dc", {
+                  value1: String(remaining),
+                  value2: String(i18n.language.startsWith("zh") ? "" : remaining === 1 ? "" : "s"),
+                })}
           </p>
         </div>
         <div className="wk-actions">
           <span
             className="wk-prog"
-            title={`${completion.done} of ${completion.total} sections reviewed`}
+            title={t("collection.me41f382aa109", {
+              value1: String(completion.done),
+              value2: String(completion.total),
+            })}
           >
             <span
               className="wk-prog__ring"
@@ -366,7 +395,7 @@ function WeeklyReviewBody({
             onClick={() => void dismiss()}
           >
             <Icon name="clock" size={14} />
-            Snooze
+            {t("collection.mce8d0c5b196e")}
           </button>
           <button
             type="button"
@@ -379,7 +408,7 @@ function WeeklyReviewBody({
             onClick={() => void complete()}
           >
             <Icon name="check" size={14} />
-            Complete
+            {t("collection.mb77de5b28228")}
           </button>
         </div>
       </div>
@@ -393,9 +422,9 @@ function WeeklyReviewBody({
 
       {/* THE LEDGER */}
       <div className="wk-group">
-        <span className="wk-group__t">The ledger</span>
+        <span className="wk-group__t">{t("collection.m222f81dc0a9a")}</span>
         <span className="wk-group__line" />
-        <span className="wk-group__n">what the week produced</span>
+        <span className="wk-group__n">{t("collection.mf630764af222")}</span>
       </div>
       <LedgerFunnel ledger={summary.ledger} />
 
@@ -411,19 +440,27 @@ function WeeklyReviewBody({
         <div className="wk-flags">
           {[
             {
-              label: "A-band deferred",
+              get label() {
+                return t("options.m352fec737e3c");
+              },
               active: summary.integrity.thresholdFlags.aBandDeferredRecently,
               value: summary.integrity.thresholdFlags.aBandDeferredRecently ? "Yes" : "No",
             },
             {
-              label: "Postpone debt",
+              get label() {
+                return t("options.me2bca6b399d9");
+              },
               active: summary.integrity.thresholdFlags.postponeDebtHigh,
               value: summary.integrity.thresholdFlags.postponeDebtHigh ? "High" : "Normal",
             },
           ].map((flag) => (
             <FlagCard key={flag.label} label={flag.label} active={flag.active} value={flag.value} />
           ))}
-          <FlagCard label="Resting topics" active={false} value={summary.integrity.resting.length}>
+          <FlagCard
+            label={t("collection.m9b2f47152d9d")}
+            active={false}
+            value={summary.integrity.resting.length}
+          >
             {summary.integrity.resting.length > 0 ? (
               <div className="wk-flag__pills">
                 {summary.integrity.resting.map((topic) => (
@@ -437,9 +474,9 @@ function WeeklyReviewBody({
 
       {/* DECISIONS */}
       <div className="wk-group">
-        <span className="wk-group__t">Decisions</span>
+        <span className="wk-group__t">{t("collection.mcfa6a08af3ed")}</span>
         <span className="wk-group__line" />
-        <span className="wk-group__n">forced dispositions</span>
+        <span className="wk-group__n">{t("collection.m967c8f543013")}</span>
       </div>
 
       <Section {...sectionProps("parked")}>
@@ -470,11 +507,12 @@ function WeeklyReviewBody({
 /** Shared kicker/title header for the panel states (off, not-due). The editable
  * form keeps its own richer header (window line + actions). */
 function WeeklyHeader() {
+  useLocale();
   return (
     <div className="wk-head">
       <div>
-        <p className="wk-kicker">Weekly session</p>
-        <h1 className="wk-title">Ledger and integrity</h1>
+        <p className="wk-kicker">{t("collection.mf4d232e53048")}</p>
+        <h1 className="wk-title">{t("collection.m36268bd805f0")}</h1>
       </div>
     </div>
   );
@@ -486,6 +524,7 @@ function WeeklyHeader() {
  * pointer to Settings, rather than presenting a fully-locked editable form.
  */
 function WeeklyReviewOff() {
+  useLocale();
   return (
     <div className="wk" data-testid="weekly-off">
       <WeeklyHeader />
@@ -494,10 +533,8 @@ function WeeklyReviewOff() {
           <span className="wk-complete__icon wk-complete__icon--muted">
             <Icon name="calendar" size={26} />
           </span>
-          <h2 className="wk-complete__title">Weekly review is turned off</h2>
-          <p className="wk-complete__body">
-            Enable the weekly session in Settings to run the ledger-and-integrity review.
-          </p>
+          <h2 className="wk-complete__title">{t("collection.m8563fa0617c0")}</h2>
+          <p className="wk-complete__body">{t("collection.m73e34162e855")}</p>
         </div>
       </div>
     </div>
@@ -525,6 +562,7 @@ function WeeklyReviewNotDue({
   readonly justCompleted: boolean;
   readonly onReviewNow: () => void;
 }) {
+  useLocale();
   const title = justCompleted ? "Weekly review complete" : "You're all caught up";
   const body = justCompleted
     ? "Your weekly session is done — the next one is scheduled below."
@@ -542,7 +580,8 @@ function WeeklyReviewNotDue({
           {session.dueAt ? (
             <p className="wk-complete__due">
               <Icon name="calendar" size={13} />
-              Next session due <span className="mono">{formatDate(session.dueAt)}</span>
+              {t("collection.m04727f344218")}
+              <span className="mono">{formatDate(session.dueAt)}</span>
             </p>
           ) : null}
           <div className="wk-complete__actions">
@@ -553,7 +592,7 @@ function WeeklyReviewNotDue({
               onClick={onReviewNow}
             >
               <Icon name="review" size={14} />
-              Review now
+              {t("collection.m766b0c94da6f")}
             </button>
           </div>
         </div>
@@ -577,6 +616,7 @@ function Section({
   readonly onToggle: (target: "done" | "skipped") => void;
   readonly children: ReactNode;
 }) {
+  useLocale();
   const cls = cx(
     "wk-sec",
     state === "done" && "wk-sec--done",
@@ -603,7 +643,7 @@ function Section({
             disabled={locked || busy}
             onClick={() => onToggle("skipped")}
           >
-            Skip
+            {t("collection.m790e6ac0a844")}
           </button>
           <button
             type="button"
@@ -614,10 +654,10 @@ function Section({
             {state === "done" ? (
               <>
                 <Icon name="check" size={13} />
-                Done
+                {t("collection.m5be7899a3a1f")}
               </>
             ) : (
-              "Done"
+              t("collection.m11a6767d5674")
             )}
           </button>
         </div>
@@ -628,21 +668,23 @@ function Section({
 }
 
 function WkState({ state }: { state: SectionState }) {
+  useLocale();
   if (state === "done") {
     return (
       <span className="wk-state wk-state--done">
         <Icon name="check" size={11} />
-        Done
+        {t("collection.m5be7899a3a1f")}
       </span>
     );
   }
   if (state === "skipped") {
-    return <span className="wk-state wk-state--skipped">Skipped</span>;
+    return <span className="wk-state wk-state--skipped">{t("collection.m12698ce1ea5c")}</span>;
   }
-  return <span className="wk-state wk-state--pending">Pending</span>;
+  return <span className="wk-state wk-state--pending">{t("collection.m331551b0de41")}</span>;
 }
 
 function LedgerFunnel({ ledger }: { ledger: WeeklyReviewLedger }) {
+  useLocale();
   const stages: readonly {
     key: "source" | "extract" | "card" | "matured";
     label: string;
@@ -652,28 +694,36 @@ function LedgerFunnel({ ledger }: { ledger: WeeklyReviewLedger }) {
   }[] = [
     {
       key: "source",
-      label: "Sources read",
+      get label() {
+        return t("options.m6c042d27f9de");
+      },
       icon: "source",
       cur: ledger.sources,
       prev: ledger.sourcesPrev,
     },
     {
       key: "extract",
-      label: "Extracts made",
+      get label() {
+        return t("options.mfbe68d889062");
+      },
       icon: "extract",
       cur: ledger.extracts,
       prev: ledger.extractsPrev,
     },
     {
       key: "card",
-      label: "Cards created",
+      get label() {
+        return t("options.m6ec3f3352e66");
+      },
       icon: "card",
       cur: ledger.cards,
       prev: ledger.cardsPrev,
     },
     {
       key: "matured",
-      label: "Cards matured",
+      get label() {
+        return t("options.m55fb67c3cf1e");
+      },
       icon: "brain",
       cur: ledger.maturedCards,
       prev: ledger.maturedCardsPrev,
@@ -703,14 +753,17 @@ function LedgerFunnel({ ledger }: { ledger: WeeklyReviewLedger }) {
 }
 
 function Delta({ cur, prev }: { cur: number; prev: number | undefined }) {
+  useLocale();
   if (prev === undefined) return null;
   const diff = cur - prev;
-  if (diff === 0) return <span className="wk-stage__delta down">±0 vs last wk</span>;
+  if (diff === 0)
+    return <span className="wk-stage__delta down">{t("collection.m0d1c2ff093e0")}</span>;
   const up = diff > 0;
   return (
     <span className={`wk-stage__delta ${up ? "up" : "down"}`}>
       <Icon name={up ? "arrowUp" : "arrowDown"} size={11} />
-      {Math.abs(diff)} vs last wk
+      {Math.abs(diff)}
+      {t("collection.mbbb6bbc89b68")}
     </span>
   );
 }
@@ -727,6 +780,7 @@ function FlagCard({
   readonly value: ReactNode;
   readonly children?: ReactNode;
 }) {
+  useLocale();
   return (
     <div className={cx("wk-flag", active && "wk-flag--on")}>
       <div className="wk-flag__top">
@@ -741,6 +795,7 @@ function FlagCard({
 
 /** Priority-miss severity bars, normalized to the largest deferred count. */
 function PriorityMissList({ misses }: { misses: readonly WeeklyReviewPriorityMiss[] }) {
+  useLocale();
   const max = Math.max(1, ...misses.map((miss) => miss.deferred));
   return (
     <div className="wk-misses">
@@ -750,7 +805,8 @@ function PriorityMissList({ misses }: { misses: readonly WeeklyReviewPriorityMis
           <div className="wk-miss" key={miss.band}>
             <span className="wk-miss__band">
               <span className={`prio-dot prio-dot--${band}`} />
-              Band {miss.band}
+              {t("collection.mf35fc7b2d4eb")}
+              {miss.band}
             </span>
             <span className="wk-miss__bar">
               <i
@@ -761,7 +817,10 @@ function PriorityMissList({ misses }: { misses: readonly WeeklyReviewPriorityMis
               />
             </span>
             <span className="wk-miss__debt">
-              <b>{miss.deferred}</b> deferred · {miss.postponeDebtDays.toFixed(1)}d debt
+              <b>{miss.deferred}</b>
+              {t("collection.m29b2e0075d27")}
+              {miss.postponeDebtDays.toFixed(1)}
+              {t("collection.me42adea2e42c")}
             </span>
           </div>
         );
@@ -778,6 +837,7 @@ function FallowDecisions({
   readonly rows: readonly WeeklyReviewFallowSuggestion[];
   readonly locked: boolean;
 }) {
+  useLocale();
   if (rows.length === 0) {
     return emptyOk("No fallow suggestions — nothing is ready to rest.");
   }
@@ -790,8 +850,14 @@ function FallowDecisions({
             <div className="wk-decision__txt">
               <div className="wk-decision__title truncate">{row.title}</div>
               <div className="wk-decision__meta">
-                <span className="badge badge--soft">Band {row.band}</span>
-                <span className="mono">{row.deferred} deferred</span>
+                <span className="badge badge--soft">
+                  {t("collection.mf35fc7b2d4eb")}
+                  {row.band}
+                </span>
+                <span className="mono">
+                  {row.deferred}
+                  {t("collection.m522f2f73eb8f")}
+                </span>
               </div>
             </div>
           </div>
@@ -814,6 +880,7 @@ function ParkedDecisions({
     decisions: readonly { readonly id: string; readonly kind: ParkedResurfacingDecisionKind }[],
   ) => Promise<void>;
 }) {
+  useLocale();
   const [decisions, setDecisions] = useState<Record<string, ParkedResurfacingDecisionKind>>({});
 
   useEffect(() => {
@@ -841,7 +908,10 @@ function ParkedDecisions({
                   <div className="wk-decision__title truncate">{row.element.title}</div>
                   <div className="wk-decision__meta">
                     <Prio priority={row.element.priority} />
-                    <span className="mono">parked {row.ageDays}d</span>
+                    <span className="mono">
+                      {t("collection.m8846813ddffd")}
+                      {row.ageDays}d
+                    </span>
                   </div>
                 </div>
               </div>
@@ -865,9 +935,7 @@ function ParkedDecisions({
         })}
       </div>
       <div className="wk-applybar">
-        <span className="wk-applybar__note">
-          Decisions run through the same parked-resurfacing commands as Maintenance.
-        </span>
+        <span className="wk-applybar__note">{t("collection.m5cbde7880da2")}</span>
         <button
           type="button"
           className="btn btn--soft"
@@ -882,7 +950,7 @@ function ParkedDecisions({
           }
         >
           <Icon name="check" size={14} />
-          Apply parked decisions
+          {t("collection.m48a40ad940f5")}
         </button>
       </div>
     </>
@@ -900,6 +968,7 @@ function ChronicDecisions({
   readonly locked: boolean;
   readonly onApply: (decisions: readonly ChronicPostponeDecisionInput[]) => Promise<void>;
 }) {
+  useLocale();
   const [decisions, setDecisions] = useState<Record<string, ChronicPostponeDecisionKind>>({});
   const [fallowDates, setFallowDates] = useState<Record<string, string>>({});
 
@@ -947,7 +1016,7 @@ function ChronicDecisions({
   const applyNote = hasInvalidFallowDate
     ? "Set a valid return date to apply."
     : selected.length > 0
-      ? `${selected.length} verdict${selected.length === 1 ? "" : "s"} ready.`
+      ? `${selected.length} verdict${i18n.language.startsWith("zh") ? "" : selected.length === 1 ? "" : "s"} ready.`
       : "Pick a verdict for each chronic item.";
 
   return (
@@ -963,14 +1032,17 @@ function ChronicDecisions({
                   <div className="wk-decision__title truncate">{row.element.title}</div>
                   <div className="wk-decision__meta">
                     <Prio priority={row.element.priority} />
-                    <span className="mono">postponed {row.postponeCount}×</span>
+                    <span className="mono">
+                      {t("collection.mc109f1908ad0")}
+                      {row.postponeCount}×
+                    </span>
                   </div>
                 </div>
               </div>
               <div className="wk-decision__right">
                 {current === "fallow" ? (
                   <label className="wk-date">
-                    <span>Return</span>
+                    <span>{t("collection.m6b0143d03864")}</span>
                     <input
                       type="date"
                       value={fallowDates[row.element.id] ?? defaultFallowDate()}
@@ -1011,7 +1083,7 @@ function ChronicDecisions({
           onClick={() => void onApply(selected)}
         >
           <Icon name="check" size={14} />
-          Apply chronic decisions
+          {t("collection.me78a49226e40")}
         </button>
       </div>
     </>
@@ -1032,6 +1104,7 @@ function WkSeg<T extends string>({
   readonly options: readonly (readonly [T, string, string])[];
   readonly onChange: (value: T) => void;
 }) {
+  useLocale();
   return (
     <fieldset className="wk-seg" aria-label={ariaLabel}>
       {options.map(([option, label, tone]) => (
@@ -1069,7 +1142,9 @@ function cadenceLabel(cadenceDays: number): string {
 }
 
 function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(iso));
+  return new Intl.DateTimeFormat(i18n.language, { month: "short", day: "numeric" }).format(
+    new Date(iso),
+  );
 }
 
 function defaultFallowDate(): string {

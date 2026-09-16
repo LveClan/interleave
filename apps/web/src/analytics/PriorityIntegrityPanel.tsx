@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { Icon } from "../components/Icon";
+import { t } from "../i18n";
 import type { PriorityIntegrityGetResult } from "../lib/appApi";
 
 function formatCount(value: number): string {
@@ -70,8 +71,11 @@ export const PriorityIntegrityPanel = forwardRef<HTMLElement, PriorityIntegrityP
         tabIndex={-1}
       >
         <div className="an-panel__head">
-          <span className="an-panel__title">Priority integrity</span>
-          <span className="an-panel__meta">{data?.windowDays ?? 30} days</span>
+          <span className="an-panel__title">{t("collection.m6e18e420458f")}</span>
+          <span className="an-panel__meta">
+            {data?.windowDays ?? 30}
+            {t("collection.mb1c503166f16")}
+          </span>
         </div>
 
         {error ? (
@@ -93,7 +97,7 @@ export const PriorityIntegrityPanel = forwardRef<HTMLElement, PriorityIntegrityP
               ) : (
                 <span className="an-priority__flag an-priority__flag--ok">
                   <Icon name="checkCircle" size={13} />
-                  No priority-debt threshold crossed
+                  {t("collection.mb314fda52286")}
                 </span>
               )}
             </div>
@@ -108,23 +112,23 @@ export const PriorityIntegrityPanel = forwardRef<HTMLElement, PriorityIntegrityP
                     <span className="an-priority__value">
                       {formatCount(band.attentionServiced)}
                     </span>
-                    <span className="an-priority__label">attention</span>
+                    <span className="an-priority__label">{t("collection.me0787d272a43")}</span>
                   </div>
                   <div>
                     <span className="an-priority__value">{formatCount(band.fsrsServiced)}</span>
-                    <span className="an-priority__label">FSRS</span>
+                    <span className="an-priority__label">{t("collection.me939a1a7c904")}</span>
                   </div>
                   <div>
                     <span className="an-priority__value">{formatCount(band.deferred)}</span>
-                    <span className="an-priority__label">deferred</span>
+                    <span className="an-priority__label">{t("collection.ma706016085b2")}</span>
                   </div>
                   <div>
                     <span className="an-priority__value">{formatDays(band.postponeDebtDays)}</span>
-                    <span className="an-priority__label">debt</span>
+                    <span className="an-priority__label">{t("collection.m652d75f9bafb")}</span>
                   </div>
                   <div>
                     <span className="an-priority__value">{formatRate(band.liveShare)}</span>
-                    <span className="an-priority__label">live share</span>
+                    <span className="an-priority__label">{t("collection.m8799d272ec11")}</span>
                   </div>
                 </div>
               ))}
@@ -132,7 +136,7 @@ export const PriorityIntegrityPanel = forwardRef<HTMLElement, PriorityIntegrityP
 
             <div className="an-priority__columns">
               <div>
-                <div className="an-priority__subhead">Topic anchors</div>
+                <div className="an-priority__subhead">{t("collection.me2257158d10f")}</div>
                 {data.topics.length > 0 ? (
                   <div className="an-priority__list" data-testid="priority-integrity-topics">
                     {data.topics.map((topic) => (
@@ -144,19 +148,19 @@ export const PriorityIntegrityPanel = forwardRef<HTMLElement, PriorityIntegrityP
                           <span>{topic.title}</span>
                         </div>
                         <span>
-                          {formatCount(topic.deferred)} deferred ·{" "}
-                          {formatDays(topic.postponeDebtDays)}
+                          {formatCount(topic.deferred)}
+                          {t("collection.m28f4c44228e1")} {formatDays(topic.postponeDebtDays)}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="an-priority__empty">No topic-level priority debt.</p>
+                  <p className="an-priority__empty">{t("collection.m4e29988086b0")}</p>
                 )}
               </div>
 
               <div>
-                <div className="an-priority__subhead">Postponed rows</div>
+                <div className="an-priority__subhead">{t("collection.mc15564e54ebf")}</div>
                 {data.sacrificed.length > 0 ? (
                   <div className="an-priority__list" data-testid="priority-integrity-sacrificed">
                     {data.sacrificed.map((row) => (
@@ -175,12 +179,12 @@ export const PriorityIntegrityPanel = forwardRef<HTMLElement, PriorityIntegrityP
                     ))}
                   </div>
                 ) : (
-                  <p className="an-priority__empty">No deferred rows in this window.</p>
+                  <p className="an-priority__empty">{t("collection.m2ebdae8b57f4")}</p>
                 )}
               </div>
 
               <div>
-                <div className="an-priority__subhead">Resting topics</div>
+                <div className="an-priority__subhead">{t("collection.m9b2f47152d9d")}</div>
                 {resting.length > 0 ? (
                   <div className="an-priority__list" data-testid="priority-integrity-resting">
                     {resting.map((topic) => (
@@ -192,20 +196,21 @@ export const PriorityIntegrityPanel = forwardRef<HTMLElement, PriorityIntegrityP
                           <span>{topic.title}</span>
                         </div>
                         <span>
-                          back {formatDate(topic.fallowUntil)} ·{" "}
-                          {topic.fallowReason || "no reason recorded"}
+                          {t("collection.m5c260b945d5d")}
+                          {formatDate(topic.fallowUntil)} ·{" "}
+                          {topic.fallowReason || t("collection.m41e2687b3a09")}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="an-priority__empty">No topics deliberately resting.</p>
+                  <p className="an-priority__empty">{t("collection.mf154ad61770e")}</p>
                 )}
               </div>
             </div>
           </div>
         ) : error ? null : (
-          <p className="an-loading">Loading priority integrity...</p>
+          <p className="an-loading">{t("collection.m370d950e0a59")}</p>
         )}
       </section>
     );

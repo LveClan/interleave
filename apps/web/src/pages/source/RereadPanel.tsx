@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * Re-read failing-cards panel (T129 / U7) — the calm aside the source reader shows
  * when opened from a `reread_region` task (`/source/$id?reread=<taskId>`).
@@ -47,6 +48,7 @@ export function RereadPanel({
   onClose,
   onCompleted,
 }: RereadPanelProps) {
+  useLocale();
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,17 +89,18 @@ export function RereadPanel({
   return (
     <aside
       className="reread-panel"
-      aria-label="Failing cards for this re-read"
+      aria-label={t("learning.m79e87b676853")}
       data-testid="reread-panel"
     >
       <div className="reread-panel__head">
         <h2 className="reread-panel__title" tabIndex={-1} ref={headingRef}>
-          <Icon name="eye" size={15} /> Re-reading this section
+          <Icon name="eye" size={15} />
+          {t("learning.m116e488f7504")}
         </h2>
         <button
           type="button"
           className="reread-panel__close"
-          aria-label="Close"
+          aria-label={t("learning.m7d9eb7acb13e")}
           data-testid="reread-panel-close"
           onClick={onClose}
         >
@@ -106,13 +109,14 @@ export function RereadPanel({
       </div>
 
       <p className="reread-panel__lede">
-        These cards keep tripping on <strong>{region.label}</strong>. Re-reading the passage may
-        help them settle.
+        {t("learning.m72f58a42f2ed")}
+        <strong>{region.label}</strong>
+        {t("learning.m79ff8f48de4b")}
       </p>
 
       {members.length === 0 ? (
         <p className="reread-panel__empty" data-testid="reread-panel-empty">
-          No failing cards remain here — they may have recovered.
+          {t("learning.me966da82f991")}
         </p>
       ) : (
         <ul className="reread-panel__cards" data-testid="reread-panel-cards">
@@ -124,12 +128,15 @@ export function RereadPanel({
                 className="reread-panel__card-link"
                 data-testid="reread-panel-card-link"
               >
-                {member.prompt || "Untitled card"}
+                {member.prompt || t("learning.m29fc54324b6c")}
               </Link>
               <span className="reread-panel__lapses">
                 {member.windowLapseCount === 1
-                  ? `1 lapse in ${windowDays}d`
-                  : `${member.windowLapseCount} lapses in ${windowDays}d`}
+                  ? t("learning.m843ebfb50b1a", { value1: String(windowDays) })
+                  : t("learning.m9278ea98b3d9", {
+                      value1: String(member.windowLapseCount),
+                      value2: String(windowDays),
+                    })}
               </span>
             </li>
           ))}
@@ -144,7 +151,8 @@ export function RereadPanel({
           disabled={completing}
           onClick={() => void onMarkDone()}
         >
-          <Icon name="brain" size={14} /> Mark re-read done
+          <Icon name="brain" size={14} />
+          {t("learning.mbbc184ff541b")}
         </button>
       </div>
 
@@ -154,10 +162,7 @@ export function RereadPanel({
         </p>
       ) : null}
 
-      <p className="reread-panel__note">
-        To pull a fresh extract, select the text in the passage. To reword a card, open it and edit
-        it from its detail page.
-      </p>
+      <p className="reread-panel__note">{t("learning.m8a648213c71b")}</p>
     </aside>
   );
 }

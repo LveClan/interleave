@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Active-recall review session (T037) — the FSRS review loop.
  *
@@ -55,10 +56,34 @@ import "./review.css";
 
 /** The four ratings in display + keyboard order (1–4). */
 const GRADES: readonly { rating: ReviewRating; label: string; key: string }[] = [
-  { rating: "again", label: "Again", key: "1" },
-  { rating: "hard", label: "Hard", key: "2" },
-  { rating: "good", label: "Good", key: "3" },
-  { rating: "easy", label: "Easy", key: "4" },
+  {
+    rating: "again",
+    get label() {
+      return t("options.mf72894d8fbb3");
+    },
+    key: "1",
+  },
+  {
+    rating: "hard",
+    get label() {
+      return t("options.m9e73f8fa9cb7");
+    },
+    key: "2",
+  },
+  {
+    rating: "good",
+    get label() {
+      return t("options.mc939327ca16d");
+    },
+    key: "3",
+  },
+  {
+    rating: "easy",
+    get label() {
+      return t("options.md6915875decb");
+    },
+    key: "4",
+  },
 ];
 
 /** Adapt a review card's FSRS signals to the shared `SchedulerChip`/`FsrsStats` shape. */
@@ -97,6 +122,7 @@ function shortDate(iso: string): string {
 
 /** A live mm:ss session clock (ticks every second). */
 function SessionClock({ startMs }: { startMs: number }) {
+  useLocale();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -162,6 +188,7 @@ function parseReviewMode(search: ReviewSearch): ReviewModeSelector | null {
 }
 
 export function ReviewScreen() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const { select } = useSelection();
@@ -635,11 +662,8 @@ export function ReviewScreen() {
             <div className="rv-empty__icon">
               <Icon name="brain" size={26} />
             </div>
-            <h1 className="rv-empty__title">Review</h1>
-            <p className="rv-empty__body">
-              The active-recall session reads your due cards through the desktop bridge — open the
-              Electron app to review.
-            </p>
+            <h1 className="rv-empty__title">{t("learning.maff0766a5290")}</h1>
+            <p className="rv-empty__body">{t("learning.mb8fff1a6f2ff")}</p>
           </div>
         </div>
       </div>
@@ -660,7 +684,10 @@ export function ReviewScreen() {
         <div className="rv-progress">
           <div className="rv-progress__nums">
             <span className="rv-progress__count" data-testid="review-progress">
-              {reviewedCount} reviewed · {Math.max(0, leftCount)} left
+              {reviewedCount}
+              {t("learning.m15d53f0a3740")}
+              {Math.max(0, leftCount)}
+              {t("learning.m20a1ebffed9f")}
             </span>
             <SessionClock startMs={startMs} />
           </div>
@@ -678,7 +705,7 @@ export function ReviewScreen() {
           }}
         >
           <Icon name="x" size={14} />
-          End session
+          {t("learning.med84572aa84c")}
         </button>
       </div>
 
@@ -692,10 +719,13 @@ export function ReviewScreen() {
             {modeLabel}
           </span>
           <span className="rv-mode__count" data-testid="review-mode-count">
-            Reviewing {truncated ? `the first ${total}` : total} card{total === 1 ? "" : "s"}
-            {truncated ? ` of ${modeTotal}` : ""}
+            {t("learning.m1f77932cd752")}
+            {truncated ? t("learning.m605959cab674", { value1: String(total) }) : total}
+            {t("learning.m8dca4312766a")}
+            {i18n.language.startsWith("zh") ? "" : total === 1 ? "" : "s"}
+            {truncated ? t("learning.m6c83f846ba7f", { value1: String(modeTotal) }) : ""}
           </span>
-          <span className="rv-mode__hint">· not limited to what's due</span>
+          <span className="rv-mode__hint">{t("learning.m3237f4f274dd")}</span>
           <button
             type="button"
             className="rv-mode__exit"
@@ -706,7 +736,7 @@ export function ReviewScreen() {
             }}
           >
             <Icon name="x" size={12} />
-            Exit mode
+            {t("learning.m35894a7334f5")}
           </button>
         </div>
       ) : null}
@@ -724,13 +754,18 @@ export function ReviewScreen() {
               <div className="rv-empty__icon">
                 <Icon name="checkCircle" size={26} />
               </div>
-              <h2 className="rv-empty__title">Session complete</h2>
+              <h2 className="rv-empty__title">{t("learning.m06d56ae60a38")}</h2>
               <p className="rv-empty__body" data-testid="review-summary-body">
-                {reviewedCount} card{reviewedCount === 1 ? "" : "s"} reviewed in{" "}
-                {clockLabel((endMs ?? Date.now()) - startMs)}.{" "}
+                {reviewedCount}
+                {t("learning.m8dca4312766a")}
+                {i18n.language.startsWith("zh") ? "" : reviewedCount === 1 ? "" : "s"}
+                {t("learning.me1972189c517")} {clockLabel((endMs ?? Date.now()) - startMs)}.{" "}
                 {mode && modeLabel
-                  ? `Reviewed ${reviewedCount} of the ${modeLabel} subset — these cards are rescheduled through FSRS just like any review.`
-                  : "Your due cards are rescheduled — they return when FSRS says you're about to forget."}
+                  ? t("learning.m0fd4adc245fd", {
+                      value1: String(reviewedCount),
+                      value2: String(modeLabel),
+                    })
+                  : t("learning.md881f888e674")}
               </p>
               <div className="rv-empty__actions">
                 <button
@@ -740,7 +775,7 @@ export function ReviewScreen() {
                   onClick={restart}
                 >
                   <Icon name="review" size={14} />
-                  Review again
+                  {t("learning.ma9588634c466")}
                 </button>
                 {mode ? (
                   <button
@@ -750,7 +785,7 @@ export function ReviewScreen() {
                     onClick={() => navigate({ to: "/review", search: asOf ? { asOf } : {} })}
                   >
                     <Icon name="brain" size={14} />
-                    Back to daily review
+                    {t("learning.m3e81696d2c26")}
                   </button>
                 ) : null}
                 <button
@@ -760,7 +795,7 @@ export function ReviewScreen() {
                   onClick={() => navigate({ to: "/queue", search: asOf ? { asOf } : {} })}
                 >
                   <Icon name="return" size={14} />
-                  Back to queue
+                  {t("learning.md1ecf20848f4")}
                 </button>
               </div>
             </div>
@@ -786,23 +821,28 @@ export function ReviewScreen() {
               <div className="rv-meta__chips">
                 <span className="badge badge--soft" data-testid="review-kind">
                   {card.kind === "cloze"
-                    ? "Cloze"
+                    ? t("learning.mde503889179e")
                     : card.kind === "image_occlusion"
-                      ? "Occlusion"
+                      ? t("learning.m865a3db23fd9")
                       : "Q&A"}
                 </span>
                 {/* Audio badge (T075) — a presentation modifier, shown alongside the
                     kind (an audio card is still a Q&A/cloze card, never a new kind). */}
                 {card.mediaRef ? (
                   <span className="badge badge--soft" data-testid="review-audio-badge">
-                    <Icon name="play" size={11} /> Audio
+                    <Icon name="play" size={11} />
+                    {t("learning.mba46c6ce39a2")}
                   </span>
                 ) : null}
                 {card.concept ? <span className="concept-tag">{card.concept}</span> : null}
                 <Prio priority={card.priority} />
                 <Stage stage={card.stage} />
                 {card.leech ? (
-                  <span className="badge badge--leech">Leech · {card.lapses} lapses</span>
+                  <span className="badge badge--leech">
+                    {t("learning.m8137cf29cb6a")}
+                    {card.lapses}
+                    {t("learning.m8999ff0a4519")}
+                  </span>
                 ) : null}
               </div>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -815,8 +855,9 @@ export function ReviewScreen() {
               <div className="rv-fallow" data-testid="review-fallow-context">
                 <Icon name="pause" size={14} />
                 <span>
-                  {card.fallowContext.topicTitle} is resting until{" "}
-                  {shortDate(card.fallowContext.fallowUntil)}; card review continues.
+                  {card.fallowContext.topicTitle}
+                  {t("learning.m231e85887153")} {shortDate(card.fallowContext.fallowUntil)}
+                  {t("learning.m07f52f4d8caf")}
                 </span>
               </div>
             ) : null}
@@ -825,14 +866,12 @@ export function ReviewScreen() {
               <div className="banner" data-testid="review-leech-banner">
                 <Icon name="leech" size={16} />
                 <div>
-                  <div className="banner__title">This card keeps lapsing</div>
-                  <div className="banner__body">
-                    Consider rewriting it, adding context, or splitting the fact.
-                  </div>
+                  <div className="banner__title">{t("learning.mb0bd4c0d3faf")}</div>
+                  <div className="banner__body">{t("learning.m35254daa8e59")}</div>
                 </div>
                 <div className="banner__actions">
                   <HelpLink slug="leeches" variant="inline">
-                    What’s a leech?
+                    {t("learning.m7c7aa3743fb3")}
                   </HelpLink>
                   <button
                     type="button"
@@ -844,7 +883,7 @@ export function ReviewScreen() {
                     }}
                   >
                     <Icon name="context" size={14} />
-                    Add context
+                    {t("learning.m91e830f0b0a5")}
                   </button>
                 </div>
               </div>
@@ -973,7 +1012,8 @@ export function ReviewScreen() {
                     onClick={() => void reveal()}
                   >
                     <Icon name="eye" size={16} />
-                    Reveal answer <Kbd keys="␣" />
+                    {t("learning.mbcbb138eda79")}
+                    <Kbd keys="␣" />
                   </button>
                 ) : (
                   <>
@@ -997,8 +1037,8 @@ export function ReviewScreen() {
                     </div>
                     <div style={{ marginTop: 10 }}>
                       <InlineHint slug="grading-honestly" slugLabel="How to grade">
-                        Grade honestly — the text under each button is when the card returns.{" "}
-                        <b>Again</b> isn’t failure; it just brings the card back sooner.
+                        {t("learning.mb52ba17c60bd")} <b>{t("learning.mf72894d8fbb3")}</b>
+                        {t("learning.m2aa1e5103414")}
                       </InlineHint>
                     </div>
                     <div style={{ marginTop: 14 }}>
@@ -1034,17 +1074,17 @@ export function ReviewScreen() {
                 <Icon name="checkCircle" size={26} />
               </div>
               <h2 className="rv-empty__title">
-                {mode && modeLabel ? "No cards in this subset" : "No cards due"}
+                {mode && modeLabel ? t("learning.m70d6e734b65f") : t("learning.m5d5f6e9bf914")}
               </h2>
               <p className="rv-empty__body">
                 {mode && modeLabel
-                  ? `The ${modeLabel} subset has no cards to review right now.`
-                  : "Nothing is due for review right now. New cards arrive as you distill extracts into atomic statements."}
+                  ? t("learning.m5f5590a96201", { value1: String(modeLabel) })
+                  : t("learning.mf80b72dd2900")}
               </p>
               {!mode && (
                 <div style={{ marginBottom: 14 }}>
                   <HelpLink slug="no-cards-due" variant="inline">
-                    Why some cards aren’t due
+                    {t("learning.m8b044cc45650")}
                   </HelpLink>
                 </div>
               )}
@@ -1057,7 +1097,7 @@ export function ReviewScreen() {
                     onClick={() => navigate({ to: "/review", search: asOf ? { asOf } : {} })}
                   >
                     <Icon name="brain" size={14} />
-                    Back to daily review
+                    {t("learning.m3e81696d2c26")}
                   </button>
                 ) : null}
                 <button
@@ -1067,7 +1107,7 @@ export function ReviewScreen() {
                   onClick={() => navigate({ to: "/queue", search: asOf ? { asOf } : {} })}
                 >
                   <Icon name="return" size={14} />
-                  Back to queue
+                  {t("learning.md1ecf20848f4")}
                 </button>
               </div>
             </div>

@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../../i18n";
 /**
  * RecoveryPanel (T078) — the catch-up & vacation overload tools' UI.
  *
@@ -59,6 +60,7 @@ function dayToIso(day: string, endOfDay: boolean): string | null {
  * dashed budget line so "each day ≤ budget" is legible at a glance.
  */
 function LoadCurve({ cost, budget }: { cost: RecoveryCostPreview; budget?: number }) {
+  useLocale();
   const maxCount = useMemo(() => {
     const all = [...cost.loadBefore, ...cost.loadAfter].map((p) => p.count);
     return Math.max(1, ...all);
@@ -81,9 +83,14 @@ function LoadCurve({ cost, budget }: { cost: RecoveryCostPreview; budget?: numbe
   );
   return (
     <div className="q-loadcurve" data-testid="recovery-loadcurve">
-      <Row points={cost.loadBefore} label="Before" />
-      <Row points={cost.loadAfter} label="After" />
-      {budget != null ? <div className="q-loadcurve__legend">Daily budget: {budget}</div> : null}
+      <Row points={cost.loadBefore} label={t("learning.m9bb725005055")} />
+      <Row points={cost.loadAfter} label={t("learning.m7b68fe551085")} />
+      {budget != null ? (
+        <div className="q-loadcurve__legend">
+          {t("learning.mca1a65298779")}
+          {budget}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -93,10 +100,11 @@ function slipsSummary(cost: RecoveryCostPreview): string {
   if (cost.slips.length === 0) return "Nothing slips — everything still fits.";
   const maxSlip = cost.slips.reduce((m, s) => Math.max(m, s.slipDays), 0);
   const n = cost.slips.length;
-  return `${n} item${n === 1 ? "" : "s"} now due up to ${maxSlip} day${maxSlip === 1 ? "" : "s"} later`;
+  return `${n} item${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "s"} now due up to ${maxSlip} day${i18n.language.startsWith("zh") ? "" : maxSlip === 1 ? "" : "s"} later`;
 }
 
 export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
+  useLocale();
   const [mode, setMode] = useState<"none" | "catchup" | "vacation">("none");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -204,7 +212,7 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
           onClick={() => (mode === "catchup" ? reset() : void openCatchUp())}
         >
           <Icon name="gauge" size={14} />
-          Catch up
+          {t("learning.m3eb2b5792d74")}
         </button>
         <button
           type="button"
@@ -215,7 +223,7 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
           onClick={() => (mode === "vacation" ? reset() : setMode("vacation"))}
         >
           <Icon name="sun" size={14} />
-          Vacation
+          {t("learning.m819ab332c247")}
         </button>
       </div>
 
@@ -233,8 +241,12 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
       {mode === "catchup" && catchUp ? (
         <div className="q-recovery__preview" data-testid="recovery-catchup-preview">
           <div className="q-overload-banner__title">
-            Spread {catchUp.cost.moved} item{catchUp.cost.moved === 1 ? "" : "s"} over{" "}
-            {catchUp.spreadDays} days
+            {t("learning.md68125c6a284")}
+            {catchUp.cost.moved}
+            {t("learning.ma5f3c2e9f903")}
+            {i18n.language.startsWith("zh") ? "" : catchUp.cost.moved === 1 ? "" : "s"}
+            {t("learning.m1dd5a67f8afc")} {catchUp.spreadDays}
+            {t("learning.m8fae8e734d61")}
           </div>
           <div className="q-overload-banner__body" data-testid="recovery-catchup-slips">
             {slipsSummary(catchUp.cost)}
@@ -249,7 +261,7 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
               onClick={() => void applyCatchUp()}
             >
               <Icon name="check" size={14} />
-              Apply
+              {t("learning.md0b4b04a552c")}
             </button>
             <button
               type="button"
@@ -258,7 +270,7 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
               disabled={busy}
               onClick={reset}
             >
-              Cancel
+              {t("learning.m0ef70263b054")}
             </button>
           </div>
         </div>
@@ -269,7 +281,7 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
         <div className="q-recovery__preview" data-testid="recovery-vacation-preview">
           <div className="q-recovery__range">
             <label className="q-recovery__field">
-              <span>Away from</span>
+              <span>{t("learning.m9f8043581fb7")}</span>
               <input
                 type="date"
                 data-testid="recovery-away-start"
@@ -281,7 +293,7 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
               />
             </label>
             <label className="q-recovery__field">
-              <span>Back on</span>
+              <span>{t("learning.m1def24403e7a")}</span>
               <input
                 type="date"
                 data-testid="recovery-away-end"
@@ -299,14 +311,17 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
               disabled={busy}
               onClick={() => void previewVacation()}
             >
-              Preview cost
+              {t("learning.m4fa58938a31d")}
             </button>
           </div>
 
           {vacation ? (
             <>
               <div className="q-overload-banner__title">
-                {vacation.suspendedCount} suspended · {vacation.shiftedCount} shifted past return
+                {vacation.suspendedCount}
+                {t("learning.m5dc25eb1dcf1")}
+                {vacation.shiftedCount}
+                {t("learning.m43e5007ff022")}
               </div>
               <div className="q-overload-banner__body" data-testid="recovery-vacation-slips">
                 {slipsSummary(vacation.cost)}
@@ -321,7 +336,7 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
                   onClick={() => void applyVacation()}
                 >
                   <Icon name="check" size={14} />
-                  Apply
+                  {t("learning.md0b4b04a552c")}
                 </button>
                 <button
                   type="button"
@@ -330,7 +345,7 @@ export function RecoveryPanel({ asOf, onApplied }: RecoveryPanelProps) {
                   disabled={busy}
                   onClick={reset}
                 >
-                  Cancel
+                  {t("learning.m0ef70263b054")}
                 </button>
               </div>
             </>

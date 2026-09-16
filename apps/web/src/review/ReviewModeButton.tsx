@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * ReviewModeButton (T096) — the calm "Review these" entry affordance.
  *
@@ -76,6 +77,7 @@ export function ReviewModeButton({
   icon = "target",
   testId = "review-mode-button",
 }: ReviewModeButtonProps) {
+  useLocale();
   const navigate = useNavigate();
   const [count, setCount] = useState<number | null>(null);
 
@@ -114,12 +116,15 @@ export function ReviewModeButton({
     if (hideWhileLoading) return null;
     return (
       <span className={`${className} ${className}--loading`} data-testid={`${testId}-loading`}>
-        <Icon name={icon} size={13} /> Review…
+        <Icon name={icon} size={13} />
+        {t("learning.m49439950e394")}
       </span>
     );
   }
 
-  const text = label ? label(count) : `Review ${count} card${count === 1 ? "" : "s"}`;
+  const text = label
+    ? label(count)
+    : `Review ${count} card${i18n.language.startsWith("zh") ? "" : count === 1 ? "" : "s"}`;
   return (
     <button
       type="button"

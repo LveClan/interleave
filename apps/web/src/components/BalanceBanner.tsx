@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * BalanceBanner (T046) — the import/process balance warning.
  *
@@ -57,6 +58,7 @@ export function BalanceBanner({
   onTriageInbox,
   triageInboxLabel = "Triage inbox",
 }: BalanceBannerProps) {
+  useLocale();
   const navigate = useNavigate();
   const [data, setData] = useState<BalanceGetResult | null>(null);
   const [enabled, setEnabled] = useState(true);
@@ -202,17 +204,25 @@ export function BalanceBanner({
       </span>
       <div className="min-w-0 flex-1">
         <div className="font-semibold" data-testid="balance-banner-title">
-          You're importing faster than you process
+          {t("details.mbd2235850c7a")}
         </div>
         <div className="mt-0.5 text-text-2">
-          <span data-testid="balance-sources">{data.sourcesImported}</span> source
-          {data.sourcesImported === 1 ? "" : "s"} in this week, but only{" "}
-          <span data-testid="balance-extracts">{data.extractsCreated}</span> extract
-          {data.extractsCreated === 1 ? "" : "s"} and{" "}
-          <span data-testid="balance-cards">{data.cardsCreated}</span> card
-          {data.cardsCreated === 1 ? "" : "s"} created —{" "}
-          <span data-testid="balance-reviews">{data.reviewsDueThisWeek}</span> review
-          {data.reviewsDueThisWeek === 1 ? "" : "s"} due this week. {guidance}
+          <span data-testid="balance-sources">{data.sourcesImported}</span>
+          {t("details.mf4c3b526b0e6")}
+          {i18n.language.startsWith("zh") ? "" : data.sourcesImported === 1 ? "" : "s"}
+          {t("details.m77b5d3021a94")}{" "}
+          <span data-testid="balance-extracts">{data.extractsCreated}</span>
+          {t("details.meeed966e373a")}
+          {i18n.language.startsWith("zh") ? "" : data.extractsCreated === 1 ? "" : "s"}
+          {t("details.m2e5f769687c7")} <span data-testid="balance-cards">{data.cardsCreated}</span>
+          {t("details.m6ec6736b9d4e")}
+          {i18n.language.startsWith("zh") ? "" : data.cardsCreated === 1 ? "" : "s"}
+          {t("details.ma15b03514914")}{" "}
+          <span data-testid="balance-reviews">{data.reviewsDueThisWeek}</span>
+          {t("details.mce711166b28e")}
+          {i18n.language.startsWith("zh") ? "" : data.reviewsDueThisWeek === 1 ? "" : "s"}
+          {t("details.mccdb04e415e0")}
+          {guidance}
         </div>
         {dismissError ? (
           <div className="mt-1 text-danger text-xs" data-testid="balance-dismiss-error">
@@ -229,7 +239,7 @@ export function BalanceBanner({
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1 font-medium text-sm text-text-2 hover:text-text"
           >
             <Icon name="play" size={13} />
-            Open queue
+            {t("details.m5a5c179957a0")}
           </button>
         ) : null}
         {hasInboxWork ? (
@@ -248,7 +258,7 @@ export function BalanceBanner({
             type="button"
             ref={menuTriggerRef}
             data-testid="balance-dismiss-menu-trigger"
-            aria-label="Balance warning options"
+            aria-label={t("details.m4d75bbdb599e")}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
@@ -271,7 +281,7 @@ export function BalanceBanner({
                 className="flex w-full items-center gap-2 rounded px-2.5 py-1.5 text-left text-sm text-text-2 hover:bg-surface-2 hover:text-text"
               >
                 <Icon name="clock" size={13} />
-                Hide for a week
+                {t("details.m49ef11d5eb2b")}
               </button>
               <button
                 type="button"
@@ -282,8 +292,8 @@ export function BalanceBanner({
               >
                 <Icon name="pause" size={13} />
                 <span className="flex flex-col">
-                  <span>Hide forever</span>
-                  <span className="text-2xs text-text-3">Re-enable in Settings</span>
+                  <span>{t("details.me037863e70b7")}</span>
+                  <span className="text-2xs text-text-3">{t("details.m53d614571f24")}</span>
                 </span>
               </button>
             </div>

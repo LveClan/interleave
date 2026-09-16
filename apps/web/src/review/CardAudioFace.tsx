@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * CardAudioFace (T075) — the looping audio player for an audio review card.
  *
@@ -46,6 +47,7 @@ function fmt(ms: number): string {
 }
 
 export function CardAudioFace({ mediaRef, mediaSource, youtubeId, face }: CardAudioFaceProps) {
+  useLocale();
   const elRef = useRef<HTMLAudioElement | null>(null);
   const { startMs, endMs, sourceElementId } = mediaRef;
 
@@ -94,7 +96,9 @@ export function CardAudioFace({ mediaRef, mediaSource, youtubeId, face }: CardAu
     if (!youtubeId) {
       return (
         <p className="dimmed" data-testid={`card-audio-${face}-youtube`}>
-          Audio clip {fmt(startMs)}–{fmt(endMs)} — open the source to play the embedded segment.
+          {t("learning.mc182847a6f7c")}
+          {fmt(startMs)}–{fmt(endMs)}
+          {t("learning.mbec719871303")}
         </p>
       );
     }
@@ -102,13 +106,17 @@ export function CardAudioFace({ mediaRef, mediaSource, youtubeId, face }: CardAu
       <div className="rcard__audio" data-testid={`card-audio-${face}-youtube`}>
         <iframe
           className="rcard__audio-iframe"
-          title={`Audio clip ${fmt(startMs)}–${fmt(endMs)}`}
+          title={t("learning.md388da2e64e3", {
+            value1: String(fmt(startMs)),
+            value2: String(fmt(endMs)),
+          })}
           src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&start=${startSeconds}&end=${endSeconds}&autoplay=0&loop=1&playlist=${youtubeId}`}
           allow="encrypted-media"
           sandbox="allow-scripts allow-same-origin allow-presentation"
         />
         <span className="rcard__audio-cap">
-          Loop {fmt(startMs)}–{fmt(endMs)}
+          {t("learning.m06d59a31ded1")}
+          {fmt(startMs)}–{fmt(endMs)}
         </span>
       </div>
     );
@@ -128,7 +136,8 @@ export function CardAudioFace({ mediaRef, mediaSource, youtubeId, face }: CardAu
         loop={false}
       />
       <span className="rcard__audio-cap">
-        Loop {fmt(startMs)}–{fmt(endMs)}
+        {t("learning.m06d59a31ded1")}
+        {fmt(startMs)}–{fmt(endMs)}
       </span>
     </div>
   );

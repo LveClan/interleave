@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Maintenance hub (T099) — the janitor's dashboard for a large collection.
  *
@@ -103,6 +104,7 @@ type ExpandedReport =
   | null;
 
 export function MaintenanceScreen() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const [report, setReport] = useState<MaintenanceReportResult | null>(null);
@@ -419,11 +421,8 @@ export function MaintenanceScreen() {
             <div className="rv-empty__icon">
               <Icon name="shield" size={26} />
             </div>
-            <h1 className="rv-empty__title">Maintenance</h1>
-            <p className="rv-empty__body">
-              Duplicates, orphan media, broken sources, lineage gaps, and integrity checks for a
-              large collection live here — open the Electron app to clean up.
-            </p>
+            <h1 className="rv-empty__title">{t("collection.m17ccfa5b681e")}</h1>
+            <p className="rv-empty__body">{t("collection.m7fdfd2c8c1a5")}</p>
           </div>
         </div>
       </div>
@@ -436,32 +435,29 @@ export function MaintenanceScreen() {
         <div>
           <h1 className="lc-title">
             <Icon name="shield" size={18} />
-            Maintenance
+            {t("collection.m879f4732e24c")}
           </h1>
-          <p className="lc-sub">
-            Keep a large collection healthy: find and reclaim duplicates, orphan media, broken
-            sources, and lineage gaps — every cleanup is reversible from Trash + Undo.
-          </p>
+          <p className="lc-sub">{t("collection.m7f465bdb52de")}</p>
         </div>
         <div className="mt-links" data-testid="maintenance-links">
           <Link to="/maintenance/leeches" className="mt-link">
-            Leeches
+            {t("collection.m9d48baf9ada1")}
           </Link>
           <Link to="/maintenance/retired" className="mt-link">
-            Retired
+            {t("collection.md1cd7e9ee7d3")}
           </Link>
           <Link to="/maintenance/stagnant" className="mt-link">
-            Stagnant
+            {t("collection.m80bc2b14399f")}
           </Link>
           <Link
             to="/maintenance/reverify"
             className="mt-link"
             data-testid="maintenance-link-reverify"
           >
-            Re-verify
+            {t("collection.m32ecc71411c8")}
           </Link>
           <Link to="/trash" className="mt-link">
-            Trash
+            {t("collection.m315b4547f2ad")}
           </Link>
         </div>
       </div>
@@ -474,14 +470,14 @@ export function MaintenanceScreen() {
 
       {loading ? (
         <p className="lc-loading" data-testid="maintenance-loading">
-          Loading…
+          {t("collection.m0a5afbeee779")}
         </p>
       ) : !report ? null : (
         <div className="mt-grid" data-testid="maintenance-grid">
           {/* Duplicates */}
           <MetricCard
             icon="copy"
-            title="Duplicates"
+            title={t("collection.m93c28c39252a")}
             value={report.duplicateCount}
             unit="removable copies"
             testId="metric-duplicates"
@@ -500,7 +496,7 @@ export function MaintenanceScreen() {
           {/* Orphan media */}
           <MetricCard
             icon="trash"
-            title="Orphan media"
+            title={t("collection.m9fb32d197f97")}
             value={report.orphanFileCount}
             unit={`files · ${formatBytes(report.orphanBytes)}`}
             testId="metric-orphan"
@@ -530,7 +526,7 @@ export function MaintenanceScreen() {
           {/* Broken sources */}
           <MetricCard
             icon="warning"
-            title="Broken sources"
+            title={t("collection.mb6206f6d87e6")}
             value={report ? undefined : 0}
             unit="snapshot missing"
             testId="metric-broken"
@@ -553,7 +549,7 @@ export function MaintenanceScreen() {
           {/* Cards without sources */}
           <MetricCard
             icon="link"
-            title="Cards without sources"
+            title={t("collection.m37431cceb002")}
             value={report.cardsWithoutSourcesCount}
             unit="lineage gaps"
             testId="metric-sourceless"
@@ -575,7 +571,7 @@ export function MaintenanceScreen() {
           {/* Low-value candidates */}
           <MetricCard
             icon="hourglass"
-            title="Low-value candidates"
+            title={t("collection.mbed23646aa66")}
             value={report.lowValueCount}
             unit="low-priority, stale"
             testId="metric-lowvalue"
@@ -607,7 +603,7 @@ export function MaintenanceScreen() {
           {/* Parked resurfacing */}
           <MetricCard
             icon="bookmark"
-            title="Parked resurfacing"
+            title={t("collection.m193a662067d1")}
             value={report.parkedResurfacingCount}
             unit="saved-for-later due"
             testId="metric-parked"
@@ -624,7 +620,7 @@ export function MaintenanceScreen() {
           {/* Chronic-postpone reckoning */}
           <MetricCard
             icon="hourglass"
-            title="Chronic postpones"
+            title={t("collection.m7da1a4103794")}
             value={report.chronicPostponeCount}
             unit="need a decision"
             testId="metric-chronic"
@@ -642,7 +638,7 @@ export function MaintenanceScreen() {
               enabled the rows gain Re-read / Dismiss; otherwise the panel stays read-only. */}
           <MetricCard
             icon="layers"
-            title="Struggling card groups"
+            title={t("collection.me14d360e7c2c")}
             value={rereadEnabled ? proposals?.proposals.length : clusters?.clusters.length}
             unit="cards failing together"
             testId="metric-clusters"
@@ -705,6 +701,7 @@ function MetricCard({
   onToggle: () => void;
   children: React.ReactNode;
 }) {
+  useLocale();
   const display = value ?? countOf;
   const bodyId = `${testId}-body`;
   return (
@@ -745,7 +742,8 @@ function DuplicatesPanel({
   busy: boolean;
   onDedupe: (ids: string[], label: string) => void;
 }) {
-  if (!data) return <p className="mt-muted">Loading…</p>;
+  useLocale();
+  if (!data) return <p className="mt-muted">{t("collection.mba3bbbe10d8b")}</p>;
   const clusters = [
     ...data.sourceClusters.map((c) => ({ kind: "source" as const, c })),
     ...data.cardClusters.map((c) => ({ kind: "card" as const, c })),
@@ -766,7 +764,9 @@ function DuplicatesPanel({
           onClick={() => onDedupe(allRemovable, "Trashed redundant copies")}
         >
           <Icon name="trash" size={13} />
-          Remove all {allRemovable.length} duplicates
+          {t("collection.m0d43485546e7")}
+          {allRemovable.length}
+          {t("collection.mda7be8dcb530")}
         </button>
       </div>
       {clusters.map(({ kind, c }) => (
@@ -775,7 +775,8 @@ function DuplicatesPanel({
             <span className="badge badge--soft">{kind}</span>
             <span className="mt-cluster__match">{c.matchedBy}</span>
             <span className="mt-keeper" data-testid="cluster-keeper">
-              keep: {c.canonical.title}
+              {t("collection.m064db5116434")}
+              {c.canonical.title}
             </span>
           </div>
           <ul className="mt-dup-list">
@@ -791,7 +792,7 @@ function DuplicatesPanel({
                   disabled={busy}
                   onClick={() => onDedupe([d.id], "Trashed a redundant copy")}
                 >
-                  Remove
+                  {t("collection.m5948954e3b49")}
                 </button>
               </li>
             ))}
@@ -813,18 +814,23 @@ function OrphanPanel({
   busy: boolean;
   onCollect: () => void;
 }) {
+  useLocale();
   const [confirming, setConfirming] = useState(false);
   if (count === 0) return <EmptyRow message="No orphan media files." />;
   return (
     <div data-testid="orphan-panel">
       <p className="mt-muted">
-        {count} vault files reference no live asset (the bytes a hard-purge left behind) —{" "}
-        {formatBytes(bytes)}. Reclaiming them is the one vault-side hard delete (it cannot be
-        undone, but it never touches a referenced file).
+        {count}
+        {t("collection.m718e2739a7c0")} {formatBytes(bytes)}
+        {t("collection.mf29305e57ace")}
       </p>
       {confirming ? (
         <div className="mt-confirm" data-testid="orphan-confirm">
-          <span>Permanently delete {count} orphan files?</span>
+          <span>
+            {t("collection.m194d867366dc")}
+            {count}
+            {t("collection.me5498a9f8c21")}
+          </span>
           <button
             type="button"
             className="rv-repair__btn rv-repair__btn--danger"
@@ -835,10 +841,12 @@ function OrphanPanel({
               onCollect();
             }}
           >
-            Delete {count} files
+            {t("collection.m85941fb9c992")}
+            {count}
+            {t("collection.m36d21abacf02")}
           </button>
           <button type="button" className="mt-row-btn" onClick={() => setConfirming(false)}>
-            Cancel
+            {t("collection.m0ef70263b054")}
           </button>
         </div>
       ) : (
@@ -850,7 +858,8 @@ function OrphanPanel({
           onClick={() => setConfirming(true)}
         >
           <Icon name="trash" size={13} />
-          Reclaim {formatBytes(bytes)}
+          {t("collection.m4e33e01216a6")}
+          {formatBytes(bytes)}
         </button>
       )}
     </div>
@@ -866,7 +875,8 @@ function BrokenPanel({
   busy: boolean;
   onTrash: (ids: string[]) => void;
 }) {
-  if (!rows) return <p className="mt-muted">Loading…</p>;
+  useLocale();
+  if (!rows) return <p className="mt-muted">{t("collection.mba3bbbe10d8b")}</p>;
   if (rows.length === 0) return <EmptyRow message="No broken sources." />;
   const renderRow = (r: BrokenSourceRowSummary) => (
     <li key={r.source.id} data-testid="broken-row" data-element-id={r.source.id}>
@@ -874,10 +884,10 @@ function BrokenPanel({
         {r.source.title}
       </span>
       <span className="badge badge--soft" data-testid="broken-reason">
-        {r.reason === "missingFile" ? "file missing" : "no snapshot"}
+        {r.reason === "missingFile" ? t("collection.m356ce248627d") : t("collection.m86d0803aae5b")}
       </span>
       <Link to="/source/$id" params={{ id: r.source.id }} className="mt-row-btn">
-        Open
+        {t("collection.mb8039d1d54bf")}
       </Link>
       <button
         type="button"
@@ -886,7 +896,7 @@ function BrokenPanel({
         disabled={busy}
         onClick={() => onTrash([r.source.id])}
       >
-        Trash
+        {t("collection.m315b4547f2ad")}
       </button>
     </li>
   );
@@ -915,7 +925,8 @@ function SourcelessPanel({
   busy: boolean;
   onTrash: (ids: string[]) => void;
 }) {
-  if (!rows) return <p className="mt-muted">Loading…</p>;
+  useLocale();
+  if (!rows) return <p className="mt-muted">{t("collection.mba3bbbe10d8b")}</p>;
   if (rows.length === 0) return <EmptyRow message="No cards without sources." />;
   const renderRow = (r: LineageGapRowSummary) => (
     <li key={r.card.id} data-testid="sourceless-row" data-element-id={r.card.id}>
@@ -929,16 +940,13 @@ function SourcelessPanel({
         disabled={busy}
         onClick={() => onTrash([r.card.id])}
       >
-        Trash
+        {t("collection.m315b4547f2ad")}
       </button>
     </li>
   );
   return (
     <div data-testid="sourceless-panel">
-      <p className="mt-muted">
-        These cards trace to no source. Open one to attach a source (fix the lineage), or trash it —
-        a sourceless card may be intentional, so nothing is auto-deleted.
-      </p>
+      <p className="mt-muted">{t("collection.mf15c03a5cf77")}</p>
       {/* Virtualized once the report crosses the threshold (T100); inline below it. */}
       <AutoVirtualList
         items={rows}
@@ -964,7 +972,8 @@ function LowValuePanel({
   onPostpone: (ids: string[]) => void;
   onArchive: (ids: string[], mode: "trash" | "dismiss" | "retire") => void;
 }) {
-  if (!rows) return <p className="mt-muted">Loading…</p>;
+  useLocale();
+  if (!rows) return <p className="mt-muted">{t("collection.mba3bbbe10d8b")}</p>;
   if (rows.length === 0) return <EmptyRow message="No low-value, stale candidates." />;
   const ids = rows.map((r) => r.element.id);
   return (
@@ -978,7 +987,8 @@ function LowValuePanel({
           onClick={() => onPostpone(ids)}
         >
           <Icon name="hourglass" size={13} />
-          Postpone all {ids.length}
+          {t("collection.m8733f7681be0")}
+          {ids.length}
         </button>
         <button
           type="button"
@@ -988,7 +998,7 @@ function LowValuePanel({
           onClick={() => onArchive(ids, "dismiss")}
         >
           <Icon name="archive" size={13} />
-          Dismiss all
+          {t("collection.mff80568b6b6e")}
         </button>
         <button
           type="button"
@@ -998,7 +1008,7 @@ function LowValuePanel({
           onClick={() => onArchive(ids, "trash")}
         >
           <Icon name="trash" size={13} />
-          Trash all
+          {t("collection.m3809fe119b0f")}
         </button>
       </div>
       {/* Virtualized once the report crosses the threshold (T100); inline below it. */}
@@ -1026,6 +1036,7 @@ function ParkedPanel({
     decisions: readonly { readonly id: string; readonly kind: ParkedResurfacingDecisionKind }[],
   ) => void;
 }) {
+  useLocale();
   const [decisions, setDecisions] = useState<Record<string, ParkedResurfacingDecisionKind>>({});
 
   useEffect(() => {
@@ -1037,7 +1048,7 @@ function ParkedPanel({
     });
   }, [rows]);
 
-  if (!rows) return <p className="mt-muted">Loading…</p>;
+  if (!rows) return <p className="mt-muted">{t("collection.mba3bbbe10d8b")}</p>;
   if (rows.length === 0) return <EmptyRow message="No parked sources are due to resurface." />;
 
   const apply = () => {
@@ -1057,9 +1068,15 @@ function ParkedPanel({
         <span className="mt-dup-title" title={row.element.title}>
           {row.element.title}
         </span>
-        <span className="mt-muted">{row.ageDays}d parked</span>
+        <span className="mt-muted">
+          {row.ageDays}
+          {t("collection.mee1139519f9e")}
+        </span>
         <fieldset className="mt-segment">
-          <legend className="sr-only">Decision for {row.element.title}</legend>
+          <legend className="sr-only">
+            {t("collection.m9867c2c1156f")}
+            {row.element.title}
+          </legend>
           <button
             type="button"
             className="mt-segment__btn"
@@ -1069,7 +1086,7 @@ function ParkedPanel({
             disabled={busy}
             onClick={() => setDecisions((prev) => ({ ...prev, [row.element.id]: "keepParked" }))}
           >
-            Keep
+            {t("collection.m95589b5c4cc6")}
           </button>
           <button
             type="button"
@@ -1080,7 +1097,7 @@ function ParkedPanel({
             disabled={busy}
             onClick={() => setDecisions((prev) => ({ ...prev, [row.element.id]: "queueNow" }))}
           >
-            Queue
+            {t("collection.mb6f6fb930c39")}
           </button>
           <button
             type="button"
@@ -1091,7 +1108,7 @@ function ParkedPanel({
             disabled={busy}
             onClick={() => setDecisions((prev) => ({ ...prev, [row.element.id]: "letGo" }))}
           >
-            Let go
+            {t("collection.m0f7de2f40f79")}
           </button>
         </fieldset>
       </>
@@ -1123,7 +1140,9 @@ function ParkedPanel({
           onClick={apply}
         >
           <Icon name="check" size={13} />
-          Apply {rows.length} decisions
+          {t("collection.md0b4b04a552c")}
+          {rows.length}
+          {t("collection.ma42067719761")}
         </button>
       </div>
       <AutoVirtualList
@@ -1150,6 +1169,7 @@ function ChronicPanel({
   busy: boolean;
   onApply: (decisions: readonly ChronicPostponeDecisionInput[]) => void;
 }) {
+  useLocale();
   const [decisions, setDecisions] = useState<Record<string, ChronicPostponeDecisionKind>>({});
   const [fallowDates, setFallowDates] = useState<Record<string, string>>({});
 
@@ -1173,7 +1193,7 @@ function ChronicPanel({
     });
   }, [rows]);
 
-  if (!rows) return <p className="mt-muted">Loading…</p>;
+  if (!rows) return <p className="mt-muted">{t("collection.mba3bbbe10d8b")}</p>;
   if (rows.length === 0) return <EmptyRow message="No chronically postponed items." />;
 
   const selected: ChronicPostponeDecisionInput[] = [];
@@ -1218,7 +1238,10 @@ function ChronicPanel({
           {row.element.type} · {row.scheduler} · {row.postponeCount}x
         </span>
         <fieldset className="mt-segment">
-          <legend className="sr-only">Decision for {row.element.title}</legend>
+          <legend className="sr-only">
+            {t("collection.m9867c2c1156f")}
+            {row.element.title}
+          </legend>
           <button
             type="button"
             className="mt-segment__btn"
@@ -1228,7 +1251,7 @@ function ChronicPanel({
             disabled={busy}
             onClick={() => setDecision(row.element.id, "keep")}
           >
-            Keep
+            {t("collection.m95589b5c4cc6")}
           </button>
           <button
             type="button"
@@ -1239,7 +1262,7 @@ function ChronicPanel({
             disabled={busy}
             onClick={() => setDecision(row.element.id, "demote")}
           >
-            Demote
+            {t("collection.ma60530b9a0e9")}
           </button>
           <button
             type="button"
@@ -1250,7 +1273,7 @@ function ChronicPanel({
             disabled={busy}
             onClick={() => setDecision(row.element.id, "done")}
           >
-            Done
+            {t("collection.m5be7899a3a1f")}
           </button>
           <button
             type="button"
@@ -1261,7 +1284,7 @@ function ChronicPanel({
             disabled={busy}
             onClick={() => setDecision(row.element.id, "delete")}
           >
-            Delete
+            {t("collection.m85941fb9c992")}
           </button>
           {row.element.type === "topic" ? (
             <button
@@ -1273,13 +1296,13 @@ function ChronicPanel({
               disabled={busy}
               onClick={() => setDecision(row.element.id, "fallow")}
             >
-              Rest
+              {t("collection.m3d839ad739a7")}
             </button>
           ) : null}
         </fieldset>
         {current === "fallow" ? (
           <label className="mt-fallow-date">
-            <span>Return</span>
+            <span>{t("collection.m6b0143d03864")}</span>
             <input
               type="date"
               value={fallowDate}
@@ -1322,7 +1345,9 @@ function ChronicPanel({
           onClick={() => onApply(selected)}
         >
           <Icon name="check" size={13} />
-          Apply {selected.length} decisions
+          {t("collection.md0b4b04a552c")}
+          {selected.length}
+          {t("collection.ma42067719761")}
         </button>
       </div>
       <AutoVirtualList
@@ -1348,7 +1373,10 @@ function renderLowValueRow(r: LowValueRowSummary) {
       <span className="mt-dup-title" title={r.element.title}>
         {r.element.title}
       </span>
-      <span className="mt-muted">{r.daysSinceActivity}d stale</span>
+      <span className="mt-muted">
+        {r.daysSinceActivity}
+        {t("collection.ma7d4c93a4f48")}
+      </span>
     </li>
   );
 }
@@ -1362,6 +1390,7 @@ function IntegrityCard({
   report: MaintenanceIntegrityResult | null;
   onRun: () => void;
 }) {
+  useLocale();
   const ok = report ? report.db.ok && report.vault.missing.length === 0 : null;
   return (
     <div className="mt-card mt-card--integrity" data-testid="metric-integrity" data-ok={ok}>
@@ -1369,13 +1398,13 @@ function IntegrityCard({
         <span className="mt-card__icon">
           <Icon name="shield" size={16} />
         </span>
-        <span className="mt-card__title">DB + vault integrity</span>
+        <span className="mt-card__title">{t("collection.mf47e9ba5f7b4")}</span>
         {report ? (
           <span
             className={`mt-card__value ${ok ? "mt-ok" : "mt-bad"}`}
             data-testid="integrity-status"
           >
-            {ok ? "OK" : "Issues"}
+            {ok ? t("collection.m565339bc4d33") : t("collection.m666067dd376e")}
           </span>
         ) : (
           <button
@@ -1385,7 +1414,7 @@ function IntegrityCard({
             disabled={running}
             onClick={onRun}
           >
-            {running ? "Checking…" : "Run check"}
+            {running ? t("collection.mec963ffc911b") : t("collection.m2baf67ea3b71")}
           </button>
         )}
       </div>
@@ -1393,12 +1422,23 @@ function IntegrityCard({
         <div className="mt-card__body" data-testid="integrity-body">
           <ul className="mt-int-list">
             <li>
-              DB: <strong>{report.db.ok ? "ok" : report.db.integrityCheck.join(", ")}</strong> ·{" "}
-              {report.db.foreignKeyViolations} FK violations · {report.db.mode}
+              {t("collection.m28d4dbe15bd8")}
+              <strong>
+                {report.db.ok ? t("collection.m2689367b205c") : report.db.integrityCheck.join(", ")}
+              </strong>{" "}
+              · {report.db.foreignKeyViolations}
+              {t("collection.mf64fa49b5f59")}
+              {report.db.mode}
             </li>
             <li>
-              Vault: {report.vault.ok} intact · {report.vault.missing.length} missing ·{" "}
-              {report.vault.mismatched.length} mismatched · {report.vault.extraFiles.length} extra
+              {t("collection.m8a666d864e7d")}
+              {report.vault.ok}
+              {t("collection.m79875376d84e")}
+              {report.vault.missing.length}
+              {t("collection.m9bb7b8a11b56")} {report.vault.mismatched.length}
+              {t("collection.m6710a18824b1")}
+              {report.vault.extraFiles.length}
+              {t("collection.me1baabc53a7a")}
             </li>
           </ul>
           <button
@@ -1407,7 +1447,7 @@ function IntegrityCard({
             data-testid="integrity-rerun"
             onClick={onRun}
           >
-            Re-run
+            {t("collection.m84fa710f52c4")}
           </button>
         </div>
       ) : null}
@@ -1416,6 +1456,7 @@ function IntegrityCard({
 }
 
 function EmptyRow({ message }: { message: string }) {
+  useLocale();
   return (
     <div className="mt-empty" data-testid="maintenance-empty-row">
       <Icon name="checkCircle" size={16} />
@@ -1440,6 +1481,7 @@ function OpenSourceButton({
   region: ClusterRegion;
   onOpenRegion: (region: ClusterRegion) => void;
 }) {
+  useLocale();
   return (
     <button
       type="button"
@@ -1448,7 +1490,7 @@ function OpenSourceButton({
       onClick={() => onOpenRegion(region)}
     >
       <Icon name="link" size={13} />
-      Open source
+      {t("collection.m9595f5c8ccfb")}
     </button>
   );
 }
@@ -1478,9 +1520,10 @@ function ClusterPanel({
   onAccept: (proposal: RereadProposalDto) => void;
   onDismiss: (proposal: RereadProposalDto) => void;
 }) {
+  useLocale();
   // Feature off → the read-only T128 list (navigation only).
   if (!enabled) {
-    if (!clusters) return <p className="mt-muted">Loading…</p>;
+    if (!clusters) return <p className="mt-muted">{t("collection.mba3bbbe10d8b")}</p>;
     if (clusters.clusters.length === 0) {
       return (
         <EmptyRow message="No struggling card groups. Cards that fail together under the same source region will appear here." />
@@ -1488,20 +1531,20 @@ function ClusterPanel({
     }
     return (
       <div data-testid="clusters-panel">
-        <p className="mt-muted mt-clusters__note">
-          These groups are read-only. Open the source to re-read the region the cards share.
-        </p>
+        <p className="mt-muted mt-clusters__note">{t("collection.mdf9fdbca3201")}</p>
         {clusters.clusters.map((cluster) => (
           <div className="mt-cluster" key={cluster.ancestorId} data-testid="cluster-row">
             <div className="mt-cluster__head">
               <span className="mt-cluster__source" title={cluster.sourceTitle}>
-                {cluster.sourceTitle || "Untitled source"}
+                {cluster.sourceTitle || t("collection.m7ef84bb37f45")}
               </span>
               <span className="badge badge--soft">{cluster.region.label}</span>
             </div>
             <div className="mt-cluster__meta">
-              {cluster.affectedCardCount} cards · {cluster.totalWindowLapses} lapses in{" "}
-              {clusters.windowDays}d
+              {cluster.affectedCardCount}
+              {t("collection.m7789d90e1c29")}
+              {cluster.totalWindowLapses}
+              {t("collection.m7efa5c82fdd9")} {clusters.windowDays}d
             </div>
             <div className="mt-bulkbar">
               <OpenSourceButton region={cluster.region} onOpenRegion={onOpenRegion} />
@@ -1512,7 +1555,7 @@ function ClusterPanel({
     );
   }
 
-  if (!proposals) return <p className="mt-muted">Loading…</p>;
+  if (!proposals) return <p className="mt-muted">{t("collection.mba3bbbe10d8b")}</p>;
   if (proposals.proposals.length === 0) {
     return (
       <EmptyRow message="No re-read proposals. When several cards under one source region keep failing together, a quiet re-read suggestion will appear here." />
@@ -1520,23 +1563,22 @@ function ClusterPanel({
   }
   return (
     <div data-testid="clusters-panel">
-      <p className="mt-muted mt-clusters__note">
-        Re-reading a struggling section can repair the encoding. Accept to schedule it, or dismiss —
-        dismissals stick until the group gets worse.
-      </p>
+      <p className="mt-muted mt-clusters__note">{t("collection.ma50cad8e0936")}</p>
       {proposals.proposals.map((proposal) => {
         const busy = busyId === proposal.ancestorId;
         return (
           <div className="mt-cluster" key={proposal.ancestorId} data-testid="cluster-row">
             <div className="mt-cluster__head">
               <span className="mt-cluster__source" title={proposal.sourceTitle}>
-                {proposal.sourceTitle || "Untitled source"}
+                {proposal.sourceTitle || t("collection.m7ef84bb37f45")}
               </span>
               <span className="badge badge--soft">{proposal.region.label}</span>
             </div>
             <div className="mt-cluster__meta">
-              {proposal.affectedCardCount} cards · {proposal.totalWindowLapses} lapses in{" "}
-              {proposals.windowDays}d
+              {proposal.affectedCardCount}
+              {t("collection.m7789d90e1c29")}
+              {proposal.totalWindowLapses}
+              {t("collection.m7efa5c82fdd9")} {proposals.windowDays}d
             </div>
             <div className="mt-bulkbar">
               <button
@@ -1546,7 +1588,7 @@ function ClusterPanel({
                 disabled={busy}
                 onClick={() => onAccept(proposal)}
               >
-                Re-read
+                {t("collection.mbcdb45956f9c")}
               </button>
               <button
                 type="button"
@@ -1555,7 +1597,7 @@ function ClusterPanel({
                 disabled={busy}
                 onClick={() => onDismiss(proposal)}
               >
-                Dismiss
+                {t("collection.medc0fe2d169a")}
               </button>
               <OpenSourceButton region={proposal.region} onOpenRegion={onOpenRegion} />
             </div>

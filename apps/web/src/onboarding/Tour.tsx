@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { Icon, type IconName } from "../components/Icon";
 import { Coachmark, type Placement } from "../help/Contextual";
 import { cx } from "../help/primitives";
+import { t, useLocale } from "../i18n";
 import { Kbd } from "../shell/Kbd";
 
 export interface TourStep {
@@ -30,20 +31,23 @@ export interface TourStep {
 }
 
 function SchedulerDemo() {
+  useLocale();
   return (
     <div className="primer">
       <div className="primer__col">
         <span className="sched sched--fsrs">
-          <Icon name="brain" size={14} /> <b>92%</b> recall
+          <Icon name="brain" size={14} /> <b>92%</b>
+          {t("details.ma3eaa465ea5d")}
         </span>
-        <span className="primer__q">Can you recall this?</span>
-        <span className="primer__who">Cards · FSRS</span>
+        <span className="primer__q">{t("details.m8b2f3bd5d595")}</span>
+        <span className="primer__who">{t("details.m164a490f5c0d")}</span>
       </div>
       <div className="primer__col">
         <span className="sched sched--attn">
-          <Icon name="gauge" size={14} /> Raw extract
+          <Icon name="gauge" size={14} />
+          {t("details.m24282f764a4d")}
         </span>
-        <span className="primer__q">Process this again, when?</span>
+        <span className="primer__q">{t("details.md3ea1103db56")}</span>
         <span className="primer__who">Sources &amp; extracts</span>
       </div>
     </div>
@@ -51,19 +55,24 @@ function SchedulerDemo() {
 }
 
 function ExtractDemo() {
+  useLocale();
   return (
     <div className="coach__demo">
       <div className="coach__demo-card">
         <b style={{ color: "var(--el-extract)" }}>
-          <Icon name="extract" size={14} /> Extract <Kbd keys="E" />
+          <Icon name="extract" size={14} />
+          {t("details.m6874e92c88df")}
+          <Kbd keys="E" />
         </b>
-        <span>New scheduled item, with lineage. Comes back.</span>
+        <span>{t("details.mf1e3c2d719d0")}</span>
       </div>
       <div className="coach__demo-card">
         <b style={{ color: "oklch(0.62 0.13 95)" }}>
-          <Icon name="highlight" size={14} /> Highlight <Kbd keys="H" />
+          <Icon name="highlight" size={14} />
+          {t("details.mec017f02d783")}
+          <Kbd keys="H" />
         </b>
-        <span>Just a mark in place. Goes nowhere.</span>
+        <span>{t("details.m9c1f56735bbf")}</span>
       </div>
     </div>
   );
@@ -79,13 +88,16 @@ export function getTourSteps(): TourStep[] {
       placement: "center",
       icon: "gauge",
       eyebrow: "The one idea to hold",
-      title: "Two questions, two clocks",
+      get title() {
+        return t("supplement.me67c8771bc1c");
+      },
       demo: <SchedulerDemo />,
       body: (
         <>
-          Everything you process answers one of two questions, on two separate schedulers.{" "}
-          <b>Cards</b> ask whether you can recall something. <b>Sources and extracts</b> ask whether
-          it’s worth returning to. They never mix — which is why grade buttons only appear on cards.
+          {t("details.md3ad4ee914da")} <b>{t("details.ma52fcbbc3364")}</b>
+          {t("details.mab080596b417")}
+          <b>{t("details.m9d1ea5d8723c")}</b>
+          {t("details.m58f0e3f6d923")}
         </>
       ),
     },
@@ -97,12 +109,15 @@ export function getTourSteps(): TourStep[] {
       placement: "bottom",
       icon: "inbox",
       eyebrow: "Step 2 · Capture",
-      title: "Get something in",
+      get title() {
+        return t("supplement.m8ef4e1b8afb2");
+      },
       body: (
         <>
-          Paste a URL or text, or import a file. Good candidates are textbooks, overviews, and your
-          own notes — <b>not</b> fiction or breaking news. Everything lands in the Inbox at priority{" "}
-          <b>C</b> and waits for triage — the inbox is a decision gate, not a reading list.
+          {t("details.m12419a5e554a")}
+          <b>{t("details.m254bb97b57f1")}</b>
+          {t("details.m7b1fc64f252f")} <b>C</b>
+          {t("details.m8ddc793cefef")}
         </>
       ),
     },
@@ -114,12 +129,14 @@ export function getTourSteps(): TourStep[] {
       placement: "center",
       icon: "bookmark",
       eyebrow: "Step 3 · Incremental reading",
-      title: "Read a little, mark your spot",
+      get title() {
+        return t("supplement.m6959270def0f");
+      },
       body: (
         <>
-          Open a source, read a paragraph or two, then press <Kbd keys="␣" /> to set a read-point
-          where you stopped — you’ll resume here next time. Reading happens in small increments.
-          (Space only sets the point when your cursor isn’t in the text.)
+          {t("details.m0275bb3f16ea")}
+          <Kbd keys="␣" />
+          {t("details.m5be14e362479")}
         </>
       ),
     },
@@ -131,19 +148,23 @@ export function getTourSteps(): TourStep[] {
       placement: "center",
       icon: "extract",
       eyebrow: "Step 4 · The pivotal gesture",
-      title: "Extract, don’t highlight",
+      get title() {
+        return t("supplement.mb21b2ad3cb7b");
+      },
       demo: <ExtractDemo />,
       body: (
         <>
-          In the reader, select a sentence.{" "}
+          {t("details.mbe175d426933")}{" "}
           <b>
-            Extract <Kbd keys="E" />
+            {t("details.m3c97faf97ccb")}
+            <Kbd keys="E" />
           </b>{" "}
-          lifts it into its own scheduled item that returns to you.{" "}
+          {t("details.m7b1b96f734cf")}{" "}
           <b>
-            Highlight <Kbd keys="H" />
+            {t("details.m32870bd02c07")}
+            <Kbd keys="H" />
           </b>{" "}
-          just marks the text in place. If you only ever highlight, the pipeline never starts.
+          {t("details.m0f5297285ac9")}
         </>
       ),
     },
@@ -155,12 +176,14 @@ export function getTourSteps(): TourStep[] {
       placement: "center",
       icon: "sparkle",
       eyebrow: "Step 5 · Refine",
-      title: "Distill, then make a card",
+      get title() {
+        return t("supplement.m60430f016198");
+      },
       body: (
         <>
-          Across repeated returns, refine an extract — trim, rewrite, split — advancing the stage
-          from <b>raw → clean → atomic</b>. An atomic statement is card-ready. Then Convert to card.
-          Distilling first is how you avoid carding everything.
+          {t("details.m757843d376bc")}
+          <b>{t("details.m572abcbf8e95")}</b>
+          {t("details.mfa7a6520e7b4")}
         </>
       ),
     },
@@ -172,12 +195,18 @@ export function getTourSteps(): TourStep[] {
       placement: "center",
       icon: "review",
       eyebrow: "Step 6 · Close the loop",
-      title: "Review it",
+      get title() {
+        return t("supplement.mb51f98f03334");
+      },
       body: (
         <>
-          Try to recall, press <Kbd keys="␣" /> to reveal, then grade <b>1–4</b>. The text under
-          each button is when the card returns. <b>Again</b> isn’t failure — it just brings the card
-          back sooner. You don’t track anything; the schedule does.
+          {t("details.m81145a66ef26")}
+          <Kbd keys="␣" />
+          {t("details.mc021cc249326")}
+          <b>1–4</b>
+          {t("details.mc8f930af7343")}
+          <b>{t("details.mf72894d8fbb3")}</b>
+          {t("details.m5153d3851956")}
         </>
       ),
     },
@@ -189,12 +218,16 @@ export function getTourSteps(): TourStep[] {
       placement: "bottom",
       icon: "check",
       eyebrow: "That’s the whole loop",
-      title: "This is your command center",
+      get title() {
+        return t("supplement.mbed96967210b");
+      },
       body: (
         <>
-          It shows your day and points you to the next action — the real work happens in{" "}
-          <b>Start session</b>. Press <Kbd keys="?" /> anytime for shortcuts,{" "}
-          <Kbd keys={["⌘", "K"]} /> to do anything, and find the rest in the help center.
+          {t("details.m8c784f03f56d")} <b>{t("details.mb1c52ee3677d")}</b>
+          {t("details.m848bd74c2b03")}
+          <Kbd keys="?" />
+          {t("details.ma5e8b320ace3")} <Kbd keys={["⌘", "K"]} />
+          {t("details.m51c44bee0eb4")}
         </>
       ),
     },
@@ -212,6 +245,7 @@ export function TourLayer({
   onPrev: () => void;
   onSkip: () => void;
 }) {
+  useLocale();
   const steps = getTourSteps();
   if (index == null || index < 0 || index >= steps.length) return null;
   const s = steps[index];
@@ -221,7 +255,7 @@ export function TourLayer({
     <>
       <div className="tour-rail">
         <div className="tour-rail__label">
-          <span className="tour-rail__step">Guided setup</span>
+          <span className="tour-rail__step">{t("details.m8ef7823ca89b")}</span>
           <span className="tour-rail__name">{s.name}</span>
         </div>
         <div className="tour-rail__track">
@@ -237,7 +271,7 @@ export function TourLayer({
           ))}
         </div>
         <button type="button" className="btn btn--ghost btn--sm" onClick={onSkip}>
-          Skip tour
+          {t("details.m1bb6c2bb5cce")}
         </button>
       </div>
       <Coachmark

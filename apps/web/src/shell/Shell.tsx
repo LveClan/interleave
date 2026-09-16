@@ -111,6 +111,7 @@ function NavButton({
   active: boolean;
   badges: NavBadgeCounts;
 }) {
+  useLocale();
   // Live count for this entry (Queue / Inbox / Review), read from window.appApi
   // via useNavBadges — not a hardcoded placeholder. Hidden until loaded and when
   // the count is 0 (a calm sidebar shows no empty "0" pills).
@@ -164,6 +165,7 @@ function Sidebar({
   onOpenCheat: () => void;
   onOpenHelp: () => void;
 }) {
+  useLocale();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuWrapRef = useRef<HTMLDivElement>(null);
   // Real local-vault identity + streak (settings.displayName + analytics), not a
@@ -206,7 +208,7 @@ function Sidebar({
           />
         </span>
         <div className="flex flex-col">
-          <span className="shell-brand__name">Interleave</span>
+          <span className="shell-brand__name">{t("details.m2ad9cfbde853")}</span>
         </div>
       </div>
 
@@ -326,6 +328,7 @@ function Sidebar({
 }
 
 function Topbar({ onOpenCommand }: { onOpenCommand: () => void }) {
+  useLocale();
   return (
     <header className="shell-topbar">
       <button
@@ -344,6 +347,7 @@ function Topbar({ onOpenCommand }: { onOpenCommand: () => void }) {
 }
 
 function StatusBar() {
+  useLocale();
   // The active screen (e.g. the Process session) publishes its per-item action
   // keys here, so they live in this one footer row instead of a second row inside
   // the scrolling card. Empty on screens that publish nothing.
@@ -781,6 +785,7 @@ function ShellInner() {
  * act on the selected element (T048).
  */
 export function Shell() {
+  useLocale();
   return (
     <SelectionProvider>
       <InboxTriagePanelProvider>

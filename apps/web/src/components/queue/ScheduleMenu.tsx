@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * ScheduleMenu (T028/T030) — the explicit reschedule affordance.
  *
@@ -22,9 +23,24 @@ import "./schedule-menu.css";
 
 /** The three preset choices, in kit order, with their human label. */
 const PRESETS: readonly { kind: "tomorrow" | "nextWeek" | "nextMonth"; label: string }[] = [
-  { kind: "tomorrow", label: "Tomorrow" },
-  { kind: "nextWeek", label: "Next week" },
-  { kind: "nextMonth", label: "Next month" },
+  {
+    kind: "tomorrow",
+    get label() {
+      return t("options.m456a73bbcefb");
+    },
+  },
+  {
+    kind: "nextWeek",
+    get label() {
+      return t("options.m21fbde19cfb0");
+    },
+  },
+  {
+    kind: "nextMonth",
+    get label() {
+      return t("options.m74e53211fef4");
+    },
+  },
 ];
 
 /** Today's date as a `YYYY-MM-DD` string, for the manual `<input type="date">` min. */
@@ -57,6 +73,7 @@ export function ScheduleMenu({
   tooltipLabel?: string;
   ariaLabel?: string;
 }) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const [manualDate, setManualDate] = useState("");
   const rootRef = useRef<HTMLSpanElement>(null);
@@ -142,7 +159,7 @@ export function ScheduleMenu({
               min={todayIsoDate()}
               value={manualDate}
               data-testid="schedule-manual-date"
-              aria-label="Pick a manual return date"
+              aria-label={t("details.mfe33b157ade9")}
               onChange={(e) => setManualDate(e.target.value)}
             />
             <button
@@ -152,7 +169,7 @@ export function ScheduleMenu({
               data-testid="schedule-manual-apply"
               onClick={applyManual}
             >
-              Set
+              {t("details.m617ca6384592")}
             </button>
           </div>
         </div>

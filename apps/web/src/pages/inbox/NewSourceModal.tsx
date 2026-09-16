@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * New source modal (T013) — the manual text-import dialog.
  *
@@ -45,6 +46,7 @@ export function NewSourceModal({
   onCreated,
   defaultPriority = "C",
 }: NewSourceModalProps) {
+  useLocale();
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [author, setAuthor] = useState("");
@@ -198,7 +200,7 @@ export function NewSourceModal({
       <button
         type="button"
         className="absolute inset-0 bg-black/30"
-        aria-label="Close New source"
+        aria-label={t("collection.mb373494ed841")}
         tabIndex={-1}
         onClick={onClose}
       />
@@ -206,7 +208,7 @@ export function NewSourceModal({
         className="relative flex max-h-[80vh] w-full max-w-xl flex-col rounded-xl border border-border bg-surface shadow-lg"
         role="dialog"
         aria-modal="true"
-        aria-label="New source"
+        aria-label={t("collection.m65c52e4ee0dd")}
       >
         <form
           className="flex min-h-0 flex-col"
@@ -216,11 +218,11 @@ export function NewSourceModal({
           }}
         >
           <div className="flex items-center justify-between border-border border-b px-4 py-3">
-            <h2 className="font-semibold text-base text-text">New source</h2>
+            <h2 className="font-semibold text-base text-text">{t("collection.m65c52e4ee0dd")}</h2>
             <button
               type="button"
               data-testid="new-source-close"
-              aria-label="Close"
+              aria-label={t("collection.m7d9eb7acb13e")}
               onClick={onClose}
               className="rounded p-1 text-text-3 hover:text-text"
             >
@@ -230,20 +232,24 @@ export function NewSourceModal({
 
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
             <label className="block">
-              <span className="mb-1 block font-medium text-sm text-text-2">Title</span>
+              <span className="mb-1 block font-medium text-sm text-text-2">
+                {t("collection.m7e8cd2056da7")}
+              </span>
               <input
                 ref={inputRef}
                 data-testid="new-source-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Title of the article, note, or idea…"
+                placeholder={t("collection.mf2dd8fb9a5c4")}
                 className={fieldClass}
               />
             </label>
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="mb-1 block font-medium text-sm text-text-2">URL</span>
+                <span className="mb-1 block font-medium text-sm text-text-2">
+                  {t("collection.me7a241debad5")}
+                </span>
                 <input
                   data-testid="new-source-url"
                   value={url}
@@ -253,12 +259,14 @@ export function NewSourceModal({
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block font-medium text-sm text-text-2">Author</span>
+                <span className="mb-1 block font-medium text-sm text-text-2">
+                  {t("collection.md95082a2ee57")}
+                </span>
                 <input
                   data-testid="new-source-author"
                   value={author}
                   onChange={(e) => setAuthor(e.target.value)}
-                  placeholder="Add author…"
+                  placeholder={t("collection.m2ccf962b5862")}
                   className={fieldClass}
                 />
               </label>
@@ -268,13 +276,16 @@ export function NewSourceModal({
                 URL (T014). Provenance only; the renderer never persists it. */}
             {canonicalPreview && canonicalPreview !== url.trim() ? (
               <p className="text-text-3 text-xs" data-testid="new-source-canonical">
-                Canonical: <span className="break-all font-mono">{canonicalPreview}</span>
+                {t("collection.m78d46b4ac263")}
+                <span className="break-all font-mono">{canonicalPreview}</span>
               </p>
             ) : null}
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="mb-1 block font-medium text-sm text-text-2">Published date</span>
+                <span className="mb-1 block font-medium text-sm text-text-2">
+                  {t("collection.m8263cf61debb")}
+                </span>
                 <input
                   data-testid="new-source-date"
                   type="date"
@@ -284,7 +295,9 @@ export function NewSourceModal({
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block font-medium text-sm text-text-2">Accessed date</span>
+                <span className="mb-1 block font-medium text-sm text-text-2">
+                  {t("collection.m21226834baeb")}
+                </span>
                 <input
                   data-testid="new-source-accessed"
                   type="date"
@@ -296,16 +309,16 @@ export function NewSourceModal({
             </div>
 
             <label className="block">
-              <span className="mb-1 block font-medium text-sm text-text-2">Body</span>
+              <span className="mb-1 block font-medium text-sm text-text-2">
+                {t("collection.m6ccaa6415b5e")}
+              </span>
               <textarea
                 data-testid="new-source-body"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 rows={8}
                 placeholder={
-                  asMarkdown
-                    ? "Paste Markdown here. # Headings, **bold**, `code`, - lists are preserved…"
-                    : "Paste the article text here. Blank lines separate paragraphs…"
+                  asMarkdown ? t("collection.m7f0993be2371") : t("collection.m83df760caaa0")
                 }
                 className={`${fieldClass} resize-y font-read leading-relaxed`}
               />
@@ -319,11 +332,13 @@ export function NewSourceModal({
                 onChange={(e) => setAsMarkdown(e.target.checked)}
                 className="size-4 rounded border-border accent-[var(--accent)]"
               />
-              <span className="text-sm text-text-2">Treat body as Markdown</span>
+              <span className="text-sm text-text-2">{t("collection.mced246f8ddf6")}</span>
             </label>
 
             <div>
-              <span className="mb-1.5 block font-medium text-sm text-text-2">Priority</span>
+              <span className="mb-1.5 block font-medium text-sm text-text-2">
+                {t("collection.md60dbba07922")}
+              </span>
               <div className="flex gap-1.5" data-testid="new-source-priority">
                 {PRIORITY_LABELS.map((p) => {
                   const active = priority === p;
@@ -386,7 +401,7 @@ export function NewSourceModal({
               onClick={onClose}
               className="rounded-md border border-border bg-surface px-3 py-1.5 font-medium text-sm text-text-2 hover:text-text"
             >
-              Cancel
+              {t("collection.m0ef70263b054")}
             </button>
             <button
               type="submit"
@@ -394,7 +409,7 @@ export function NewSourceModal({
               disabled={title.trim().length === 0 || submitting}
               className="inline-flex items-center gap-2 rounded-md bg-accent px-3.5 py-1.5 font-medium text-sm text-text-on-accent disabled:opacity-50"
             >
-              Create source
+              {t("collection.mcf30aeca4d0c")}
               <Kbd keys={["⌘", "↵"]} />
             </button>
           </div>

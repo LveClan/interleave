@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../../i18n";
 /**
  * LineageContextMenu (lineage-tree context menu, U5) — the host container that turns a
  * right-clicked {@link LineageNode} into the in-app {@link ContextMenu}, then dispatches
@@ -69,6 +70,7 @@ export function LineageContextMenu({
   /** Re-read the surface after a successful mutation (requestInspectorRefresh). */
   readonly onAfterMutation: () => void;
 }) {
+  useLocale();
   // Delete rides the SAME controller + component as every other delete entry point.
   const { snackbar, setSnackbar, busy, actions } = useLineageDelete({
     onAfter: onAfterMutation,
@@ -226,7 +228,7 @@ export function LineageContextMenu({
             // (this throws out of the success path so the toast is the blocked message).
             throw new Error(
               `Can't delete permanently — ${res.liveDependents} live item${
-                res.liveDependents === 1 ? "" : "s"
+                i18n.language.startsWith("zh") ? "" : res.liveDependents === 1 ? "" : "s"
               } still descend from it`,
             );
           }
@@ -309,6 +311,7 @@ function RenameInput({
   readonly onCommit: (value: string) => void;
   readonly onCancel: () => void;
 }) {
+  useLocale();
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState(state.node.title);
   // Run teardown exactly once: Enter/blur commit (so "edit then click away to save" never
@@ -335,7 +338,7 @@ function RenameInput({
       type="text"
       className="lctx-rename"
       data-testid="lineage-rename-input"
-      aria-label="Rename"
+      aria-label={t("details.m3064d79a295c")}
       value={value}
       style={{ left: state.position.x, top: state.position.y }}
       onChange={(e) => setValue(e.target.value)}

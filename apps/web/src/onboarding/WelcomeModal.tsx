@@ -11,6 +11,7 @@
 import { useEffect } from "react";
 import { Icon } from "../components/Icon";
 import { Btn, Pipeline, Segmented } from "../help/primitives";
+import { t, useLocale } from "../i18n";
 import type { Theme } from "../theme";
 import "./onboarding.css";
 
@@ -31,6 +32,7 @@ export function WelcomeModal({
   onExplore: () => void;
   onDisableTips: () => void;
 }) {
+  useLocale();
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -44,22 +46,25 @@ export function WelcomeModal({
 
   return (
     <div className="welcome-overlay" data-testid="welcome-modal">
-      <div className="welcome" role="dialog" aria-modal="true" aria-label="Welcome to Interleave">
+      <div
+        className="welcome"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("details.mfdddc965c4ae")}
+      >
         <span className="welcome__eyebrow">
-          <Icon name="shield" size={13} /> Local vault · offline-first · no account
+          <Icon name="shield" size={13} />
+          {t("details.m40573ec21458")}
         </span>
-        <h1 className="welcome__title">A refinery for what you read</h1>
+        <h1 className="welcome__title">{t("details.m394093d8d9fa")}</h1>
         <p className="welcome__lede">
-          This isn’t a read-it-later app, a note app, or just flashcards. Raw reading goes in;{" "}
-          <b>most you throw away</b>; a little becomes extracts, less becomes cards you can actually
-          recall, and the best becomes how you think.
+          {t("details.m609d08e0e8d6")} <b>{t("details.md8fb319d566a")}</b>
+          {t("details.mcddddf98e0d2")}
         </p>
 
         <div className="welcome__pipeline">
           <Pipeline active="extract" />
-          <div className="welcome__pipeline-cap">
-            You’ll do this once right now — in about a minute.
-          </div>
+          <div className="welcome__pipeline-cap">{t("details.mcb0954ec2a5e")}</div>
         </div>
 
         <div className="welcome__myths">
@@ -68,8 +73,8 @@ export function WelcomeModal({
               <Icon name="x" size={11} />
             </span>
             <span>
-              <b>You don’t finish what you import.</b> Reading 5% and keeping one durable idea is a
-              win.
+              <b>{t("details.mbaa565991f74")}</b>
+              {t("details.m64b4d763c4a5")}
             </span>
           </div>
           <div className="myth">
@@ -77,8 +82,8 @@ export function WelcomeModal({
               <Icon name="x" size={11} />
             </span>
             <span>
-              <b>A highlight is not an extract.</b> Only extracts come back to you on their own
-              schedule.
+              <b>{t("details.m77dc93defc01")}</b>
+              {t("details.ma4518ee1412f")}
             </span>
           </div>
           <div className="myth">
@@ -86,34 +91,53 @@ export function WelcomeModal({
               <Icon name="x" size={11} />
             </span>
             <span>
-              <b>Don’t card everything.</b> Distill an idea down to one clean statement first.
+              <b>{t("details.mfe2ffc2617c5")}</b>
+              {t("details.m37377b919054")}
             </span>
           </div>
         </div>
 
         <div className="welcome__theme">
-          <span className="welcome__theme-label">Appearance</span>
+          <span className="welcome__theme-label">{t("details.m3907fa7f8072")}</span>
           <Segmented<Theme>
             value={theme}
             onChange={onPickTheme}
             options={[
-              { value: "system", label: "System", icon: "system" },
-              { value: "light", label: "Light", icon: "sun" },
-              { value: "dark", label: "Dark", icon: "moon" },
+              {
+                value: "system",
+                get label() {
+                  return t("options.m6725e7bbcd28");
+                },
+                icon: "system",
+              },
+              {
+                value: "light",
+                get label() {
+                  return t("options.mdbcd5e7bb7a0");
+                },
+                icon: "sun",
+              },
+              {
+                value: "dark",
+                get label() {
+                  return t("options.m60acc53f13a5");
+                },
+                icon: "moon",
+              },
             ]}
           />
         </div>
 
         <div className="welcome__actions">
           <Btn variant="primary" size="lg" icon="play" block onClick={onStartTour}>
-            Start the 60-second tour
+            {t("details.me32c8ffa3225")}
           </Btn>
           <div className="welcome__row2">
             <Btn icon="upload" onClick={onImport}>
-              Import my own source
+              {t("details.m4d667dd60bf8")}
             </Btn>
             <Btn variant="ghost" onClick={onExplore}>
-              Explore on my own
+              {t("details.maa8ac12d50f4")}
             </Btn>
           </div>
         </div>

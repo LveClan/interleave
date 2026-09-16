@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * Inbox bulk action panel (T126 — U5).
  *
@@ -34,10 +35,40 @@ const VERBS: readonly {
   danger?: boolean;
   primary?: boolean;
 }[] = [
-  { kind: "accept", icon: "play", label: "Read now", testid: "inbox-bulk-read-now", primary: true },
-  { kind: "queueSoon", icon: "queue", label: "Queue soon", testid: "inbox-bulk-queue-soon" },
-  { kind: "keepForLater", icon: "bookmark", label: "Save for later", testid: "inbox-bulk-keep" },
-  { kind: "delete", icon: "trash", label: "Delete", testid: "inbox-bulk-delete", danger: true },
+  {
+    kind: "accept",
+    icon: "play",
+    get label() {
+      return t("options.m20d8b246c1cc");
+    },
+    testid: "inbox-bulk-read-now",
+    primary: true,
+  },
+  {
+    kind: "queueSoon",
+    icon: "queue",
+    get label() {
+      return t("options.mf3de9cd4a989");
+    },
+    testid: "inbox-bulk-queue-soon",
+  },
+  {
+    kind: "keepForLater",
+    icon: "bookmark",
+    get label() {
+      return t("options.mce3cf1fbf050");
+    },
+    testid: "inbox-bulk-keep",
+  },
+  {
+    kind: "delete",
+    icon: "trash",
+    get label() {
+      return t("options.me2d0a54968ea");
+    },
+    testid: "inbox-bulk-delete",
+    danger: true,
+  },
 ];
 
 function VerbButton({
@@ -57,6 +88,7 @@ function VerbButton({
   disabled?: boolean | undefined;
   onClick: () => void;
 }) {
+  useLocale();
   const tone = danger
     ? "border-danger-soft bg-danger-soft text-danger hover:opacity-90"
     : primary
@@ -108,6 +140,7 @@ export function BulkActionPanel({
    */
   onApplySuggestions: () => void;
 }) {
+  useLocale();
   return (
     <div className="flex min-w-0 flex-1 flex-col" data-testid="inbox-bulk-panel">
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-7 py-6">
@@ -116,7 +149,8 @@ export function BulkActionPanel({
             className="font-semibold text-text text-xl tracking-tight"
             data-testid="inbox-bulk-headline"
           >
-            {selectedCount} selected
+            {selectedCount}
+            {t("collection.mb3c3e302d835")}
           </h2>
           {breakdown.length > 0 ? (
             <p className="mt-1 text-sm text-text-3" data-testid="inbox-bulk-breakdown">
@@ -127,7 +161,7 @@ export function BulkActionPanel({
 
         <section data-testid="inbox-bulk-priority">
           <div className="mb-2 font-medium text-text-2 text-xs uppercase tracking-wide">
-            Priority
+            {t("collection.m60fdce82f5ba")}
           </div>
           <div className="flex gap-1.5">
             {PRIORITY_LABELS.map((p) => {
@@ -162,12 +196,13 @@ export function BulkActionPanel({
             onClick={onSetPriority}
             className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-3 py-2 font-medium text-sm text-text-2 hover:text-text disabled:cursor-not-allowed disabled:opacity-55"
           >
-            Set priority{pendingPriority ? ` ${pendingPriority}` : ""}
+            {t("collection.m491dc6df71d6")}
+            {pendingPriority ? ` ${pendingPriority}` : ""}
           </button>
           <p className="mt-1.5 text-text-3 text-xs">
             {pendingPriority
-              ? `Band ${pendingPriority} is armed — it rides with the next verb in one sweep, or apply it alone with “Set priority”.`
-              : "Arm a band to combine it with a verb in one sweep, or set it on the selection alone."}
+              ? t("collection.m46158d6a35c2", { value1: String(pendingPriority) })
+              : t("collection.m9842f5411b32")}
           </p>
           <button
             type="button"
@@ -177,17 +212,14 @@ export function BulkActionPanel({
             className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-accent-soft-bd border-dashed bg-accent-soft px-3 py-2 font-medium text-accent-text text-sm hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
           >
             <Icon name="sparkle" size={14} />
-            Apply suggestions
+            {t("collection.mf1609c2c6ed8")}
           </button>
-          <p className="mt-1.5 text-text-3 text-xs">
-            Accepts each selected item’s own suggested band in one sweep. Items with no suggestion
-            are skipped.
-          </p>
+          <p className="mt-1.5 text-text-3 text-xs">{t("collection.m3e1f51f8cdea")}</p>
         </section>
 
         <section data-testid="inbox-bulk-verbs">
           <div className="mb-2 font-medium text-text-2 text-xs uppercase tracking-wide">
-            Apply to selection
+            {t("collection.me4a46ea2a504")}
           </div>
           <div className="space-y-2">
             {VERBS.map((verb) => (

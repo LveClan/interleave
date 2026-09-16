@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 /**
  * Type-aware action-catalog builder for the lineage-tree context menu (U4).
  *
@@ -88,10 +89,34 @@ export interface LineageNodeMenuHandlers {
  * color dot from the `--prio-*` tokens (A red → D grey) so the scale reads at a glance.
  */
 const PRIORITY_LABELS: ReadonlyArray<{ label: PriorityLabel; hint: string; dot: string }> = [
-  { label: "A", hint: "Highest", dot: "var(--prio-a)" },
-  { label: "B", hint: "High", dot: "var(--prio-b)" },
-  { label: "C", hint: "Normal", dot: "var(--prio-c)" },
-  { label: "D", hint: "Low", dot: "var(--prio-d)" },
+  {
+    label: "A",
+    get hint() {
+      return t("options.md402ef10d054");
+    },
+    dot: "var(--prio-a)",
+  },
+  {
+    label: "B",
+    get hint() {
+      return t("options.mc4ebc6d4a583");
+    },
+    dot: "var(--prio-b)",
+  },
+  {
+    label: "C",
+    get hint() {
+      return t("options.ma7248eeb45eb");
+    },
+    dot: "var(--prio-c)",
+  },
+  {
+    label: "D",
+    get hint() {
+      return t("options.mf793de205ead");
+    },
+    dot: "var(--prio-d)",
+  },
 ];
 
 function separator(id: string): ContextMenuSeparator {
@@ -113,7 +138,9 @@ export function buildLineageNodeMenu(
     const purgeConfirm: ContextMenuActionItem = {
       kind: "action",
       id: "purge-confirm",
-      label: "Yes, permanently delete",
+      get label() {
+        return t("options.mb7ec96132dd4");
+      },
       icon: "trash",
       danger: true,
       onSelect: () => handlers.purge(node),
@@ -121,7 +148,9 @@ export function buildLineageNodeMenu(
     const purgeSubmenu: ContextMenuSubmenuItem = {
       kind: "submenu",
       id: "purge",
-      label: "Delete permanently…",
+      get label() {
+        return t("options.m8f632e09d806");
+      },
       icon: "trash",
       danger: true,
       items: [purgeConfirm],
@@ -130,14 +159,18 @@ export function buildLineageNodeMenu(
       {
         kind: "action",
         id: "restore",
-        label: "Restore",
+        get label() {
+          return t("options.ma76e13b98392");
+        },
         icon: "restore",
         onSelect: () => handlers.restore(node),
       },
       {
         kind: "action",
         id: "restore-chain",
-        label: "Restore ancestor chain",
+        get label() {
+          return t("options.md85a3f13e698");
+        },
         icon: "treeBranch",
         onSelect: () => handlers.restoreAncestorChain(node),
       },
@@ -151,21 +184,27 @@ export function buildLineageNodeMenu(
     {
       kind: "action",
       id: "open",
-      label: "Open",
+      get label() {
+        return t("options.med077f3d8125");
+      },
       icon: "external",
       onSelect: () => handlers.open(node),
     },
     {
       kind: "action",
       id: "copy-ref",
-      label: "Copy reference",
+      get label() {
+        return t("options.m141ae3df92ab");
+      },
       icon: "link",
       onSelect: () => handlers.copyReference(node),
     },
     {
       kind: "action",
       id: "copy-text",
-      label: "Copy text",
+      get label() {
+        return t("options.mb0ac9cea8687");
+      },
       icon: "copy",
       onSelect: () => handlers.copyText(node),
     },
@@ -178,28 +217,36 @@ export function buildLineageNodeMenu(
       {
         kind: "action",
         id: "advance-stage",
-        label: "Advance stage",
+        get label() {
+          return t("options.m3e98ff96a6de");
+        },
         icon: "sparkle",
         onSelect: () => handlers.advanceStage(node),
       },
       {
         kind: "action",
         id: "create-card",
-        label: "Create card",
+        get label() {
+          return t("options.m939a6a1b0d27");
+        },
         icon: "plus",
         onSelect: () => handlers.createCard(node),
       },
       {
         kind: "action",
         id: "postpone",
-        label: "Postpone",
+        get label() {
+          return t("options.m63fb48d94634");
+        },
         icon: "pause",
         onSelect: () => handlers.postpone(node),
       },
       {
         kind: "action",
         id: "mark-done",
-        label: "Mark done",
+        get label() {
+          return t("options.m95acc4a22bde");
+        },
         icon: "checkCircle",
         onSelect: () => handlers.markDone(node),
       },
@@ -210,21 +257,27 @@ export function buildLineageNodeMenu(
       {
         kind: "action",
         id: "suspend",
-        label: "Suspend",
+        get label() {
+          return t("options.m4948e134182f");
+        },
         icon: "pause2",
         onSelect: () => handlers.suspend(node),
       },
       {
         kind: "action",
         id: "flag-leech",
-        label: "Flag leech",
+        get label() {
+          return t("options.md12aca99dca2");
+        },
         icon: "leech",
         onSelect: () => handlers.flagLeech(node),
       },
       {
         kind: "action",
         id: "retire",
-        label: "Retire",
+        get label() {
+          return t("options.mda8597f3f278");
+        },
         icon: "archive",
         onSelect: () => handlers.retire(node),
       },
@@ -238,7 +291,9 @@ export function buildLineageNodeMenu(
   const prioritySubmenu: ContextMenuSubmenuItem = {
     kind: "submenu",
     id: "priority",
-    label: "Set priority",
+    get label() {
+      return t("options.m491dc6df71d6");
+    },
     icon: "arrowUp",
     items: PRIORITY_LABELS.map(({ label, hint, dot }) => ({
       kind: "action",
@@ -256,7 +311,9 @@ export function buildLineageNodeMenu(
     items.push({
       kind: "action",
       id: "rename",
-      label: "Rename…",
+      get label() {
+        return t("options.m6fa62b3dba2f");
+      },
       icon: "edit",
       onSelect: () => rename(node),
     });
@@ -265,7 +322,9 @@ export function buildLineageNodeMenu(
   items.push({
     kind: "action",
     id: "delete",
-    label: "Delete",
+    get label() {
+      return t("options.me2d0a54968ea");
+    },
     icon: "trash",
     danger: true,
     onSelect: () => handlers.delete(node),

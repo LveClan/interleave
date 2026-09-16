@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * In-review card repair row + inline editor + context drawer (T038).
  *
@@ -101,6 +102,7 @@ export function ReviewRepairBar({
   drawerOpen,
   onDrawerOpenChange,
 }: ReviewRepairBarProps) {
+  useLocale();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -466,7 +468,7 @@ export function ReviewRepairBar({
         <div className="rv-edit" data-testid="review-edit">
           {isOcclusion ? (
             <label className="rv-edit__field">
-              <span className="rv-edit__label">Reveal label</span>
+              <span className="rv-edit__label">{t("learning.ma97b886b9d75")}</span>
               <textarea
                 className="rv-edit__textarea"
                 data-testid="review-edit-occlusion-label"
@@ -478,7 +480,7 @@ export function ReviewRepairBar({
             </label>
           ) : isCloze ? (
             <label className="rv-edit__field">
-              <span className="rv-edit__label">Cloze text</span>
+              <span className="rv-edit__label">{t("learning.mc787c15e64f5")}</span>
               <textarea
                 className="rv-edit__textarea"
                 data-testid="review-edit-cloze"
@@ -491,7 +493,7 @@ export function ReviewRepairBar({
           ) : (
             <>
               <label className="rv-edit__field">
-                <span className="rv-edit__label">Prompt</span>
+                <span className="rv-edit__label">{t("learning.m5c39123805ff")}</span>
                 <textarea
                   className="rv-edit__textarea"
                   data-testid="review-edit-prompt"
@@ -502,7 +504,7 @@ export function ReviewRepairBar({
                 />
               </label>
               <label className="rv-edit__field">
-                <span className="rv-edit__label">Answer</span>
+                <span className="rv-edit__label">{t("learning.mb2a3aa602762")}</span>
                 <textarea
                   className="rv-edit__textarea"
                   data-testid="review-edit-answer"
@@ -541,7 +543,7 @@ export function ReviewRepairBar({
                 data-testid="review-edit-done"
                 onClick={() => void closeEditor()}
               >
-                Done
+                {t("learning.m5be7899a3a1f")}
               </button>
             </div>
           )}
@@ -571,7 +573,7 @@ export function ReviewRepairBar({
           onClick={openEditor}
         >
           <Icon name="edit" size={14} />
-          Edit
+          {t("learning.m4a683d9ac9f3")}
         </button>
         <button
           type="button"
@@ -581,7 +583,7 @@ export function ReviewRepairBar({
           onClick={onOpenSource}
         >
           <Icon name="source" size={14} />
-          Open source
+          {t("learning.m9595f5c8ccfb")}
         </button>
         <button
           type="button"
@@ -591,7 +593,7 @@ export function ReviewRepairBar({
           onClick={() => onDrawerOpenChange(true)}
         >
           <Icon name="context" size={14} />
-          Add context
+          {t("learning.m91e830f0b0a5")}
         </button>
         <button
           type="button"
@@ -601,18 +603,18 @@ export function ReviewRepairBar({
           onClick={() => void suspend()}
         >
           <Icon name="pause" size={14} />
-          Suspend
+          {t("learning.m64cf0482cf8b")}
         </button>
         <button
           type="button"
           className="rv-repair__btn"
           data-testid="review-repair-retire"
-          title="Retire (low-value, keep for reference)"
+          title={t("learning.m94c5c04cf0d0")}
           disabled={disabled}
           onClick={() => void retire()}
         >
           <Icon name="archive" size={14} />
-          Retire
+          {t("learning.mff4474b29560")}
         </button>
         <button
           type="button"
@@ -623,7 +625,7 @@ export function ReviewRepairBar({
           onClick={() => void toggleFlag()}
         >
           <Icon name="flag" size={14} />
-          {card.flagged ? "Flagged" : "Flag as bad"}
+          {card.flagged ? t("learning.m2f1978c6166e") : t("learning.m345436b22bea")}
         </button>
         <button
           type="button"
@@ -634,7 +636,7 @@ export function ReviewRepairBar({
           onClick={() => void toggleLeech()}
         >
           <Icon name="leech" size={14} />
-          {card.leech ? "Leech" : "Mark leech"}
+          {card.leech ? t("learning.me27f3a289ceb") : t("learning.m819f85e79d98")}
         </button>
         <button
           type="button"
@@ -644,7 +646,7 @@ export function ReviewRepairBar({
           onClick={() => void remove()}
         >
           <Icon name="trash" size={14} />
-          Delete
+          {t("learning.m85941fb9c992")}
         </button>
       </div>
 
@@ -653,13 +655,13 @@ export function ReviewRepairBar({
           <button
             type="button"
             className="drawer-overlay"
-            aria-label="Close source context"
+            aria-label={t("learning.m5a687c4b934f")}
             data-testid="review-drawer-overlay"
             onClick={() => onDrawerOpenChange(false)}
           />
           <aside className="drawer" data-testid="review-context-drawer">
             <div className="drawer__head">
-              <span className="drawer__title">Source context</span>
+              <span className="drawer__title">{t("learning.mf37735652b96")}</span>
               <button
                 type="button"
                 className="rv-repair__btn"
@@ -673,7 +675,9 @@ export function ReviewRepairBar({
               <div className="drawer__src">
                 <TypeIcon type="source" />
                 <div className="drawer__src-meta">
-                  <span className="drawer__src-title">{card.sourceTitle ?? "Source"}</span>
+                  <span className="drawer__src-title">
+                    {card.sourceTitle ?? t("learning.m0e570ca6fabe")}
+                  </span>
                   {card.sourceLocationLabel ? (
                     <span className="drawer__src-loc">{card.sourceLocationLabel}</span>
                   ) : null}
@@ -691,7 +695,7 @@ export function ReviewRepairBar({
                 }}
               >
                 <Icon name="external" size={14} />
-                Open source at this location
+                {t("learning.m3471de2fc07d")}
               </button>
             </div>
           </aside>

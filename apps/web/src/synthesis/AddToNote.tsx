@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * AddToNote (T095) — the "collect into a synthesis note" picker.
  *
@@ -30,6 +31,7 @@ export function AddToNote({
   readonly onPick: (targetId: string) => void;
   readonly onClose: () => void;
 }) {
+  useLocale();
   const [all, setAll] = useState<readonly ElementSummary[]>([]);
   const [query, setQuery] = useState("");
 
@@ -65,7 +67,7 @@ export function AddToNote({
       <button
         type="button"
         className="shell-overlay-backdrop"
-        aria-label="Close add-to-note picker"
+        aria-label={t("collection.mc29ab37dfe3b")}
         tabIndex={-1}
         onClick={onClose}
       />
@@ -73,14 +75,14 @@ export function AddToNote({
         className="synthesis-picker"
         role="dialog"
         aria-modal="true"
-        aria-label="Add an extract or card to this note"
+        aria-label={t("collection.ma77a5f82161e")}
       >
         <div className="synthesis-picker__head">
-          <span className="synthesis-picker__title">Add to note</span>
+          <span className="synthesis-picker__title">{t("collection.m33d83ef907b9")}</span>
           <button
             type="button"
             className="synthesis-picker__close"
-            aria-label="Close"
+            aria-label={t("collection.m7d9eb7acb13e")}
             onClick={onClose}
           >
             <Icon name="x" size={16} />
@@ -94,13 +96,13 @@ export function AddToNote({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter extracts &amp; cards…"
-            aria-label="Filter extracts and cards"
+            aria-label={t("collection.m184f833ca9d8")}
             data-testid="synthesis-picker-filter"
           />
         </div>
         <div className="synthesis-picker__list">
           {candidates.length === 0 ? (
-            <p className="dimmed synthesis-picker__empty">No extracts or cards to add.</p>
+            <p className="dimmed synthesis-picker__empty">{t("collection.mcc0ee4bae87b")}</p>
           ) : (
             candidates.map((c) => (
               <button

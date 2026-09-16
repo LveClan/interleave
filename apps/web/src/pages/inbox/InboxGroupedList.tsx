@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * Inbox grouped left list (T126 — U5).
  *
@@ -55,9 +56,24 @@ function rowSuggestion(
 export type InboxGroupBy = "origin" | "domain" | "type";
 
 export const INBOX_GROUP_BY_OPTIONS: readonly { id: InboxGroupBy; label: string }[] = [
-  { id: "origin", label: "Origin" },
-  { id: "domain", label: "Domain" },
-  { id: "type", label: "Type" },
+  {
+    id: "origin",
+    get label() {
+      return t("options.md3e1c5f8a6e2");
+    },
+  },
+  {
+    id: "domain",
+    get label() {
+      return t("options.m79fa33618d8e");
+    },
+  },
+  {
+    id: "type",
+    get label() {
+      return t("options.mbaaddf70fb5d");
+    },
+  },
 ];
 
 /** The stable bucket key that absorbs a null origin/domain (never drops a row). */
@@ -137,6 +153,7 @@ function GroupedRow({
   suggestion: InboxRowSuggestion;
   onSelect: (id: string, modifiers: { shift: boolean; toggle: boolean }) => void;
 }) {
+  useLocale();
   // A single 1px border carries both cues — no stacked ring — so the row's edge
   // matches the queue's active-row treatment (one thin edge, never a doubled
   // border+ring). Selection (in the set) wins the border color + soft fill; the
@@ -251,6 +268,7 @@ export function InboxGroupedList({
   onSelectGroup: (ids: readonly string[]) => void;
   onSelectAll: () => void;
 }) {
+  useLocale();
   return (
     <div
       className="flex w-[360px] flex-none flex-col overflow-hidden border-border border-r"
@@ -260,7 +278,7 @@ export function InboxGroupedList({
       <div className="flex items-center justify-between gap-2 border-border border-b px-2 py-2">
         <fieldset
           className="flex gap-1.5 border-0 p-0"
-          aria-label="Group inbox by"
+          aria-label={t("collection.me663c59250d7")}
           data-testid="inbox-group-by"
         >
           {INBOX_GROUP_BY_OPTIONS.map((opt) => {
@@ -289,7 +307,8 @@ export function InboxGroupedList({
           onClick={onSelectAll}
           className="rounded-md border border-transparent px-2 py-1 font-medium text-accent-text text-xs hover:bg-surface-2"
         >
-          Select all{totalCount > 0 ? ` (${totalCount})` : ""}
+          {t("collection.m1fc9a387654d")}
+          {totalCount > 0 ? ` (${totalCount})` : ""}
         </button>
       </div>
 
@@ -316,7 +335,7 @@ export function InboxGroupedList({
                   onClick={() => onSelectGroup(groupIds)}
                   className="rounded-md px-1.5 py-0.5 font-medium text-accent-text text-xs hover:bg-surface-2"
                 >
-                  Select group
+                  {t("collection.mf704d2fee781")}
                 </button>
               </header>
               <div className="space-y-1">

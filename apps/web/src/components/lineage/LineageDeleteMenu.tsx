@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../../i18n";
 /**
  * LineageDeleteMenu (T135 / U7) — the descendant-aware delete intent surface.
  *
@@ -40,15 +41,18 @@ import "./lineage-delete-menu.css";
 export function blastRadiusLabel(count: ElementsCountDescendantsResult): string {
   const parts: string[] = [];
   if (count.extracts > 0) {
-    parts.push(`${count.extracts} extract${count.extracts === 1 ? "" : "s"}`);
+    parts.push(
+      `${count.extracts} extract${i18n.language.startsWith("zh") ? "" : count.extracts === 1 ? "" : "s"}`,
+    );
   }
   if (count.cards > 0) {
-    const base = `${count.cards} card${count.cards === 1 ? "" : "s"}`;
+    const base = `${count.cards} card${i18n.language.startsWith("zh") ? "" : count.cards === 1 ? "" : "s"}`;
     parts.push(
       count.cardsWithHistory > 0 ? `${base} (${count.cardsWithHistory} with review history)` : base,
     );
   }
-  if (parts.length === 0) return `${count.total} item${count.total === 1 ? "" : "s"}`;
+  if (parts.length === 0)
+    return `${count.total} item${i18n.language.startsWith("zh") ? "" : count.total === 1 ? "" : "s"}`;
   return parts.join(", ");
 }
 
@@ -80,6 +84,7 @@ export function LineageDeleteMenu({
   tooltipLabel?: string;
   triggerAriaLabel?: string;
 }) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState<ElementsCountDescendantsResult | null>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
@@ -233,12 +238,17 @@ export function LineageDeleteMenu({
           ref={popRef}
           role="dialog"
           aria-modal="false"
-          aria-label={`Delete — ${radius} beneath this ${target.type}`}
+          aria-label={t("details.m65e7535832bc", {
+            value1: String(radius),
+            value2: String(target.type),
+          })}
           data-testid="lineage-delete-pop"
         >
           <div className="lindel__head">
             <span className="lindel__count" data-testid="lineage-delete-radius">
-              {radius} beneath this {target.type}
+              {radius}
+              {t("details.mfae9db94d161")}
+              {target.type}
             </span>
           </div>
           <div className="lindel__choices">
@@ -256,12 +266,10 @@ export function LineageDeleteMenu({
                 <Icon name="checkCircle" size={15} />
                 <span className="lindel__choice-text">
                   <span className="lindel__choice-title">
-                    <span className="lindel__choice-label">Mark processed</span>
-                    <span className="lindel__choice-badge">Recommended</span>
+                    <span className="lindel__choice-label">{t("details.m8f3954416abd")}</span>
+                    <span className="lindel__choice-badge">{t("details.md70604e84304")}</span>
                   </span>
-                  <span className="lindel__choice-hint">
-                    Keep it as provenance, drop from queue
-                  </span>
+                  <span className="lindel__choice-hint">{t("details.m7c6528abf36d")}</span>
                 </span>
               </button>
             ) : isTopic ? (
@@ -276,10 +284,10 @@ export function LineageDeleteMenu({
                 <Icon name="pause" size={15} />
                 <span className="lindel__choice-text">
                   <span className="lindel__choice-title">
-                    <span className="lindel__choice-label">Rest topic</span>
-                    <span className="lindel__choice-badge">Recommended</span>
+                    <span className="lindel__choice-label">{t("details.m9ddac197957a")}</span>
+                    <span className="lindel__choice-badge">{t("details.md70604e84304")}</span>
                   </span>
-                  <span className="lindel__choice-hint">Let it lie fallow instead of deleting</span>
+                  <span className="lindel__choice-hint">{t("details.me55e0034f313")}</span>
                 </span>
               </button>
             ) : null}
@@ -297,10 +305,14 @@ export function LineageDeleteMenu({
               <Icon name="layers" size={15} />
               <span className="lindel__choice-text">
                 <span className="lindel__choice-title">
-                  <span className="lindel__choice-label">Keep descendants</span>
+                  <span className="lindel__choice-label">{t("details.mb78608196b26")}</span>
                 </span>
                 <span className="lindel__choice-hint">
-                  Delete this only; its {count.total} item{count.total === 1 ? "" : "s"} stay
+                  {t("details.m429f117bcdc5")}
+                  {count.total}
+                  {t("details.ma5f3c2e9f903")}
+                  {i18n.language.startsWith("zh") ? "" : count.total === 1 ? "" : "s"}
+                  {t("details.m79e2fe392aa7")}
                 </span>
               </span>
             </button>
@@ -317,10 +329,14 @@ export function LineageDeleteMenu({
               <Icon name="trash" size={15} />
               <span className="lindel__choice-text">
                 <span className="lindel__choice-title">
-                  <span className="lindel__choice-label">Delete the whole branch</span>
+                  <span className="lindel__choice-label">{t("details.m33fbed9ba261")}</span>
                 </span>
                 <span className="lindel__choice-hint">
-                  Remove this and all {count.total} item{count.total === 1 ? "" : "s"} (recoverable)
+                  {t("details.m023365ddc8bc")}
+                  {count.total}
+                  {t("details.ma5f3c2e9f903")}
+                  {i18n.language.startsWith("zh") ? "" : count.total === 1 ? "" : "s"}
+                  {t("details.mcf171777e150")}
                 </span>
               </span>
             </button>
@@ -339,7 +355,7 @@ export function LineageDeleteMenu({
               <Icon name="x" size={15} />
               <span className="lindel__choice-text">
                 <span className="lindel__choice-title">
-                  <span className="lindel__choice-label">Cancel</span>
+                  <span className="lindel__choice-label">{t("details.m19766ed6ccb2")}</span>
                 </span>
               </span>
             </button>

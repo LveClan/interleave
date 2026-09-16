@@ -30,7 +30,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../../components/Icon";
 import { appApi, isDesktop, type SourcesGetMediaDataResult } from "../../lib/appApi";
 import "./media-reader.css";
-import { t } from "../../i18n";
+import { t, useLocale } from "../../i18n";
 import { sourceReadingChanged } from "../../lib/sourceReadingEvents";
 import { ProcessingUnitControls } from "./ProcessingUnitControls";
 import { useMediaCoverage } from "./useMediaCoverage";
@@ -125,6 +125,7 @@ export function MediaReader({
   onClipExtracted,
   toast,
 }: MediaReaderProps) {
+  useLocale();
   const desktop = isDesktop();
   const [media, setMedia] = useState<SourcesGetMediaDataResult | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -457,10 +458,7 @@ export function MediaReader({
         <span className="reader-state__icon">
           <Icon name="media" size={26} />
         </span>
-        <p className="max-w-sm">
-          The media reader plays through the desktop bridge — open the Electron app to watch a video
-          or audio source.
-        </p>
+        <p className="max-w-sm">{t("learning.ma3809b5f71c7")}</p>
       </div>
     );
   }
@@ -487,26 +485,29 @@ export function MediaReader({
           data-testid="media-set-readpoint"
           onClick={() => void setReadPoint()}
         >
-          <Icon name="bookmark" size={14} /> Set read-point
+          <Icon name="bookmark" size={14} />
+          {t("learning.m3e86639d2e5c")}
         </button>
         <span className="media-reader-clip-controls">
           <button
             type="button"
             className="reader-btn"
             data-testid="media-clip-in"
-            title="Set clip in-point ( [ )"
+            title={t("learning.me65073aa5bc8")}
             onClick={setClipIn}
           >
-            [ In{clipInMs != null ? ` ${fmtTime(clipInMs)}` : ""}
+            {t("learning.mf91dde36b36d")}
+            {clipInMs != null ? ` ${fmtTime(clipInMs)}` : ""}
           </button>
           <button
             type="button"
             className="reader-btn"
             data-testid="media-clip-out"
-            title="Set clip out-point ( ] )"
+            title={t("learning.m3fc9d9996432")}
             onClick={setClipOut}
           >
-            Out{clipOutMs != null ? ` ${fmtTime(clipOutMs)}` : ""} ]
+            {t("learning.m9a3c5460432b")}
+            {clipOutMs != null ? ` ${fmtTime(clipOutMs)}` : ""} ]
           </button>
         </span>
         <span className="media-reader-time" data-testid="media-current-time">
@@ -518,13 +519,14 @@ export function MediaReader({
       {pendingClip ? (
         <div className="media-reader-clip-popover" data-testid="media-clip-popover">
           <div className="media-reader-clip-range">
-            Clip {fmtTime(pendingClip.startMs)}–{fmtTime(pendingClip.endMs)}
+            {t("learning.md9d04fdeb2f4")}
+            {fmtTime(pendingClip.startMs)}–{fmtTime(pendingClip.endMs)}
           </div>
           <input
             type="text"
             className="media-reader-clip-caption"
             data-testid="media-clip-caption"
-            placeholder="Caption (optional)"
+            placeholder={t("learning.ma5665337e8cf")}
             value={clipCaption}
             onChange={(e) => setClipCaption(e.target.value)}
           />
@@ -536,7 +538,7 @@ export function MediaReader({
               disabled={clipBusy || !clipAnchor}
               onClick={() => void createClip()}
             >
-              {clipBusy ? "Creating topic…" : "Clip this segment as a topic"}
+              {clipBusy ? t("learning.md1f0947e2930") : t("learning.m992047a1633b")}
             </button>
             <button
               type="button"
@@ -544,7 +546,7 @@ export function MediaReader({
               data-testid="media-clip-cancel"
               onClick={clearClip}
             >
-              Cancel
+              {t("learning.m0ef70263b054")}
             </button>
           </div>
         </div>
@@ -563,13 +565,13 @@ export function MediaReader({
       >
         <div className="media-reader-player">
           {media == null ? (
-            <div className="media-reader-loading">Loading media…</div>
+            <div className="media-reader-loading">{t("learning.m07a23e03ef54")}</div>
           ) : media.mediaSource === "youtube" && media.youtubeId ? (
             <iframe
               className="media-reader-iframe"
               data-testid="media-reader-iframe"
               src={`https://www.youtube.com/embed/${media.youtubeId}`}
-              title="YouTube video"
+              title={t("learning.m4d78938a8a28")}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
@@ -593,14 +595,14 @@ export function MediaReader({
             />
           ) : (
             <div className="media-reader-loading" data-testid="media-reader-unplayable">
-              This media source has no playable data.
+              {t("learning.mde87aa27c111")}
             </div>
           )}
         </div>
 
         {hasTranscript ? (
           <div className="media-reader-transcript" data-testid="media-reader-transcript">
-            <div className="media-reader-transcript-head">Transcript</div>
+            <div className="media-reader-transcript-head">{t("learning.m721164f0dc70")}</div>
             <ol className="media-reader-cues">
               {cues.map((cue, i) => (
                 <li key={cue.blockId}>
@@ -613,7 +615,7 @@ export function MediaReader({
                     }
                     data-testid="media-reader-cue"
                     data-active={i === activeCueIndex ? "true" : undefined}
-                    title="Click to seek · Shift-click to set a clip in/out point"
+                    title={t("learning.m98839fd529ad")}
                     onClick={(e) => {
                       // Shift-click is the transcript-cue alternate entry to clip
                       // selection (T074): first Shift-click sets the in-point, the
@@ -647,8 +649,7 @@ export function MediaReader({
           </div>
         ) : (
           <div className="media-reader-noscript" data-testid="media-reader-noscript">
-            No transcript available — play the media and set timestamp read-points; clip a segment
-            by setting an in-point ( [ ) and an out-point ( ] ), then save it as a topic.
+            {t("learning.mdb4171dfef85")}
           </div>
         )}
       </div>

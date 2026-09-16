@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * The floating text-selection toolbar (T019).
  *
@@ -40,19 +41,103 @@ export interface SelectionToolbarItem {
 }
 
 export const SOURCE_SELECTION_ACTIONS: readonly SelectionToolbarItem[] = [
-  { action: "extract", label: "Extract", icon: "extract", keys: "E", accent: true },
-  { action: "cloze", label: "Cloze", icon: "cloze", keys: "C" },
-  { action: "highlight", label: "Highlight", icon: "highlight", keys: "H" },
-  { action: "copy", label: "Copy", icon: "copy", title: "Copy selection", dividerBefore: true },
-  { action: "cancel", label: "", icon: "x", title: "Cancel (Esc)", ariaLabel: "Cancel" },
+  {
+    action: "extract",
+    get label() {
+      return t("options.mc15301c0e647");
+    },
+    icon: "extract",
+    keys: "E",
+    accent: true,
+  },
+  {
+    action: "cloze",
+    get label() {
+      return t("options.mde503889179e");
+    },
+    icon: "cloze",
+    keys: "C",
+  },
+  {
+    action: "highlight",
+    get label() {
+      return t("options.m07ccd15df32a");
+    },
+    icon: "highlight",
+    keys: "H",
+  },
+  {
+    action: "copy",
+    get label() {
+      return t("options.me21f935f11d7");
+    },
+    icon: "copy",
+    get title() {
+      return t("supplement.m63a5c4dc2952");
+    },
+    dividerBefore: true,
+  },
+  {
+    action: "cancel",
+    label: "",
+    icon: "x",
+    get title() {
+      return t("supplement.m862c2324686b");
+    },
+    get ariaLabel() {
+      return t("supplement.m19766ed6ccb2");
+    },
+  },
 ];
 
 export const EXTRACT_SELECTION_ACTIONS: readonly SelectionToolbarItem[] = [
-  { action: "extract", label: "Sub-extract", icon: "extract", keys: "E", accent: true },
-  { action: "cloze", label: "Cloze", icon: "cloze", keys: "C" },
-  { action: "highlight", label: "Highlight", icon: "highlight", keys: "H" },
-  { action: "copy", label: "Copy", icon: "copy", title: "Copy selection", dividerBefore: true },
-  { action: "cancel", label: "", icon: "x", title: "Cancel (Esc)", ariaLabel: "Cancel" },
+  {
+    action: "extract",
+    get label() {
+      return t("options.m1ec9e137171d");
+    },
+    icon: "extract",
+    keys: "E",
+    accent: true,
+  },
+  {
+    action: "cloze",
+    get label() {
+      return t("options.mde503889179e");
+    },
+    icon: "cloze",
+    keys: "C",
+  },
+  {
+    action: "highlight",
+    get label() {
+      return t("options.m07ccd15df32a");
+    },
+    icon: "highlight",
+    keys: "H",
+  },
+  {
+    action: "copy",
+    get label() {
+      return t("options.me21f935f11d7");
+    },
+    icon: "copy",
+    get title() {
+      return t("supplement.m63a5c4dc2952");
+    },
+    dividerBefore: true,
+  },
+  {
+    action: "cancel",
+    label: "",
+    icon: "x",
+    get title() {
+      return t("supplement.m862c2324686b");
+    },
+    get ariaLabel() {
+      return t("supplement.m19766ed6ccb2");
+    },
+  },
 ];
 
 /** Where to anchor the toolbar: the top + horizontal-centre of the visible selection rect. */
@@ -120,6 +205,7 @@ export function SelectionToolbar({
   onAction,
   actions = SOURCE_SELECTION_ACTIONS,
 }: SelectionToolbarProps): React.ReactElement | null {
+  useLocale();
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const [renderedPosition, setRenderedPosition] = useState(position);
 
@@ -164,7 +250,7 @@ export function SelectionToolbar({
       className="sel-toolbar fade-up"
       data-testid="selection-toolbar"
       role="toolbar"
-      aria-label="Selection actions"
+      aria-label={t("learning.mb847ffdd0a1b")}
       style={{
         position: "fixed",
         top: renderedPosition?.top ?? position.top,

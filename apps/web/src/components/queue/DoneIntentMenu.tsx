@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * DoneIntentMenu — the partial-source "Done" intent surface.
  *
@@ -51,22 +52,34 @@ const CHOICES: readonly {
   {
     intent: "later",
     icon: "postpone",
-    label: "Return later",
-    hint: "Keep it in rotation",
+    get label() {
+      return t("options.m56d85add8b9d");
+    },
+    get hint() {
+      return t("options.mb903cb88e400");
+    },
     testId: "done-intent-later",
   },
   {
     intent: "finished",
     icon: "checkCircle",
-    label: "Finished",
-    hint: "Done with this source",
+    get label() {
+      return t("options.m7804f7a79a9e");
+    },
+    get hint() {
+      return t("options.m8076ea541e41");
+    },
     testId: "done-intent-finished",
   },
   {
     intent: "abandon",
     icon: "x",
-    label: "Abandon",
-    hint: "Drop it from the queue",
+    get label() {
+      return t("options.md09252c46a7b");
+    },
+    get hint() {
+      return t("options.m72880c1a7268");
+    },
     testId: "done-intent-abandon",
     danger: true,
   },
@@ -116,6 +129,7 @@ export function DoneIntentMenu({
   tooltipLabel?: string;
   triggerAriaLabel?: string;
 }) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const [summary, setSummary] = useState<SourceBlockProcessingSummaryPayload | null>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
@@ -284,12 +298,15 @@ export function DoneIntentMenu({
           className="doneintent__pop"
           role="dialog"
           aria-modal="false"
-          aria-label={`Mark done — ${pluralizeBlocks(summary.unresolvedBlocks)} still open`}
+          aria-label={t("details.me719491850b5", {
+            value1: String(pluralizeBlocks(summary.unresolvedBlocks)),
+          })}
           data-testid="done-intent-pop"
         >
           <div className="doneintent__head">
             <span className="doneintent__count">
-              {pluralizeBlocks(summary.unresolvedBlocks)} still open
+              {pluralizeBlocks(summary.unresolvedBlocks)}
+              {t("details.m0339534adeef")}
             </span>
             {resumeLabel ? (
               <span className="doneintent__resume" data-testid="done-intent-resume">
@@ -327,7 +344,7 @@ export function DoneIntentMenu({
                   <span className="doneintent__choice-title">
                     <span className="doneintent__choice-label">{c.label}</span>
                     {suggestedIntent === c.intent ? (
-                      <span className="doneintent__choice-badge">Suggested</span>
+                      <span className="doneintent__choice-badge">{t("details.m93b63bab4c3a")}</span>
                     ) : null}
                   </span>
                   <span className="doneintent__choice-hint">{c.hint}</span>

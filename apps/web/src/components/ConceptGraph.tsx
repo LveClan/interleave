@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * ConceptGraph — the read-only concept Map shared by `/search` (LibraryScreen),
  * `/library` (BrowseScreen), and the dedicated `/concepts` knowledge-map screen.
@@ -27,6 +28,7 @@ export function ConceptGraph({
   /** The verb in each node's aria-label ("Filter by" on search/library, "Explore" on /concepts). */
   pickVerb?: string;
 }) {
+  useLocale();
   const W = 620;
   const H = 420;
   const cx = W / 2;
@@ -64,7 +66,7 @@ export function ConceptGraph({
 
   return (
     <div className="graph" data-testid="concept-graph">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Concept map">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t("details.m09554dc709f8")}>
         {concepts.map((c) => {
           if (!c.parentConceptId) return null;
           const a = placed.get(c.id);
@@ -129,7 +131,9 @@ export function ConceptGraph({
                 {c.name}
               </text>
               <text className="gnode__count" x={p.x} y={p.y + 12} textAnchor="middle" fontSize="9">
-                {c.memberCount} member{c.memberCount === 1 ? "" : "s"}
+                {c.memberCount}
+                {t("details.m262e18060309")}
+                {i18n.language.startsWith("zh") ? "" : c.memberCount === 1 ? "" : "s"}
               </text>
             </g>
           );

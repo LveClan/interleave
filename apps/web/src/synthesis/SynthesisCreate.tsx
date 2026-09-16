@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * SynthesisCreate (T095) — the "New synthesis note" entry point at `/synthesis/new`.
  *
@@ -15,6 +16,7 @@ import { appApi, isDesktop } from "../lib/appApi";
 import "./synthesis.css";
 
 export function SynthesisCreate() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
@@ -46,10 +48,10 @@ export function SynthesisCreate() {
         <span className="reader-state__icon">
           <Icon name="synthesis" size={26} />
         </span>
-        <h1 className="font-semibold text-text text-xl tracking-tight">New synthesis note</h1>
-        <p className="max-w-sm">
-          Synthesis notes are created through the desktop bridge — open the Electron app.
-        </p>
+        <h1 className="font-semibold text-text text-xl tracking-tight">
+          {t("collection.m2ab180ff0231")}
+        </h1>
+        <p className="max-w-sm">{t("collection.md594458e3181")}</p>
       </div>
     );
   }
@@ -60,7 +62,7 @@ export function SynthesisCreate() {
         <span className="synthesis-create__icon">
           <Icon name="synthesis" size={22} />
         </span>
-        <h1 className="synthesis-create__title">New synthesis note</h1>
+        <h1 className="synthesis-create__title">{t("collection.m2ab180ff0231")}</h1>
         <p className="synthesis-create__hint">
           A long-lived writing surface that collects extracts &amp; cards and returns for
           incremental refinement.
@@ -73,8 +75,8 @@ export function SynthesisCreate() {
           onKeyDown={(e) => {
             if (e.key === "Enter") void create();
           }}
-          placeholder="What are you weaving together?"
-          aria-label="Synthesis note title"
+          placeholder={t("collection.m48638f1fcf9e")}
+          aria-label={t("collection.m42dea0867741")}
           data-testid="synthesis-create-title"
           maxLength={256}
         />
@@ -89,7 +91,7 @@ export function SynthesisCreate() {
             className="reader-btn"
             onClick={() => void navigate({ to: "/library" })}
           >
-            Cancel
+            {t("collection.m0ef70263b054")}
           </button>
           <button
             type="button"
@@ -98,7 +100,8 @@ export function SynthesisCreate() {
             disabled={busy || title.trim().length === 0}
             onClick={() => void create()}
           >
-            <Icon name="plus" size={14} /> Create note
+            <Icon name="plus" size={14} />
+            {t("collection.m77474af78e49")}
           </button>
         </div>
       </div>

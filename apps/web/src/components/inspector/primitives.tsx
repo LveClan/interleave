@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * Inspector design primitives (T010).
  *
@@ -19,14 +20,62 @@ import { Icon, type IconName } from "../Icon";
 
 /** Canonical element-type → kit type-icon name + tone class suffix. */
 const TYPE_ICON: Record<string, { icon: IconName; tone: string; label: string }> = {
-  source: { icon: "source", tone: "source", label: "Source" },
-  topic: { icon: "topic", tone: "topic", label: "Topic" },
-  extract: { icon: "extract", tone: "extract", label: "Extract" },
-  card: { icon: "card", tone: "card", label: "Card" },
-  task: { icon: "task", tone: "task", label: "Task" },
-  concept: { icon: "concept", tone: "concept", label: "Concept" },
-  media_fragment: { icon: "media", tone: "media", label: "Media fragment" },
-  synthesis_note: { icon: "synthesis", tone: "synthesis", label: "Synthesis note" },
+  source: {
+    icon: "source",
+    tone: "source",
+    get label() {
+      return t("options.m0e570ca6fabe");
+    },
+  },
+  topic: {
+    icon: "topic",
+    tone: "topic",
+    get label() {
+      return t("options.m7e61847d61d6");
+    },
+  },
+  extract: {
+    icon: "extract",
+    tone: "extract",
+    get label() {
+      return t("options.mc15301c0e647");
+    },
+  },
+  card: {
+    icon: "card",
+    tone: "card",
+    get label() {
+      return t("options.mbe3702e3f1af");
+    },
+  },
+  task: {
+    icon: "task",
+    tone: "task",
+    get label() {
+      return t("options.m4bc74b21357c");
+    },
+  },
+  concept: {
+    icon: "concept",
+    tone: "concept",
+    get label() {
+      return t("options.m54287be80625");
+    },
+  },
+  media_fragment: {
+    icon: "media",
+    tone: "media",
+    get label() {
+      return t("options.m8fd210793181");
+    },
+  },
+  synthesis_note: {
+    icon: "synthesis",
+    tone: "synthesis",
+    get label() {
+      return t("options.m320884ef56cd");
+    },
+  },
 };
 
 /** Human label for a canonical element type. */
@@ -36,6 +85,7 @@ export function typeLabel(type: string): string {
 
 /** Element-type chip (8 types), colored by `--el-*` token. */
 export function TypeIcon({ type, lg }: { type: string; lg?: boolean }) {
+  useLocale();
   const entry = TYPE_ICON[type] ?? TYPE_ICON.source;
   return (
     <span className={`tico tico--${entry?.tone}${lg ? " tico--lg" : ""}`}>
@@ -55,25 +105,72 @@ export function priorityLabel(priority: number): "A" | "B" | "C" | "D" {
 
 /** Priority A/B/C/D badge. */
 export function Prio({ priority }: { priority: number }) {
+  useLocale();
   const label = priorityLabel(priority);
   return <span className={`badge prio prio--${label.toLowerCase()}`}>{label}</span>;
 }
 
 /** Lifecycle status → kit badge variant + display label. */
 const STATUS_BADGE: Record<string, { cls: string; label: string }> = {
-  inbox: { cls: "badge--new", label: "Inbox" },
-  pending: { cls: "badge--soft", label: "Pending" },
-  active: { cls: "badge--due", label: "Active" },
-  scheduled: { cls: "badge--soft", label: "Scheduled" },
-  done: { cls: "badge--done", label: "Done" },
-  parked: { cls: "badge--parked", label: "Parked" },
-  dismissed: { cls: "badge--dismissed", label: "Dismissed" },
-  suspended: { cls: "badge--suspended", label: "Suspended" },
-  deleted: { cls: "badge--trashed", label: "Trashed" },
+  inbox: {
+    cls: "badge--new",
+    get label() {
+      return t("options.m94835ea2fcf7");
+    },
+  },
+  pending: {
+    cls: "badge--soft",
+    get label() {
+      return t("options.m331551b0de41");
+    },
+  },
+  active: {
+    cls: "badge--due",
+    get label() {
+      return t("options.m92340695899b");
+    },
+  },
+  scheduled: {
+    cls: "badge--soft",
+    get label() {
+      return t("options.m4724f344c1c0");
+    },
+  },
+  done: {
+    cls: "badge--done",
+    get label() {
+      return t("options.m11a6767d5674");
+    },
+  },
+  parked: {
+    cls: "badge--parked",
+    get label() {
+      return t("options.mf32a2c334c3b");
+    },
+  },
+  dismissed: {
+    cls: "badge--dismissed",
+    get label() {
+      return t("options.m9d74727714db");
+    },
+  },
+  suspended: {
+    cls: "badge--suspended",
+    get label() {
+      return t("options.me392a3891c07");
+    },
+  },
+  deleted: {
+    cls: "badge--trashed",
+    get label() {
+      return t("options.m4ec0b99444af");
+    },
+  },
 };
 
 /** Status badge. */
 export function Status({ status }: { status: string }) {
+  useLocale();
   const entry = STATUS_BADGE[status] ?? { cls: "badge--soft", label: status };
   return <span className={`badge ${entry.cls}`}>{entry.label}</span>;
 }
@@ -85,15 +182,60 @@ export function statusLabel(status: string): string {
 
 /** Canonical distillation stage → kit display label + dot color token. */
 const STAGE_META: Record<string, { label: string; dot: string }> = {
-  raw_source: { label: "Reading", dot: "var(--el-source)" },
-  rough_topic: { label: "Topic", dot: "var(--el-topic)" },
-  raw_extract: { label: "Raw extract", dot: "var(--text-3)" },
-  clean_extract: { label: "Clean extract", dot: "var(--el-extract)" },
-  atomic_statement: { label: "Atomic statement", dot: "var(--accent)" },
-  card_draft: { label: "Card draft", dot: "var(--el-card)" },
-  active_card: { label: "Active card", dot: "var(--el-card)" },
-  mature_card: { label: "Mature card", dot: "var(--ok)" },
-  synthesis: { label: "Synthesis", dot: "var(--el-synthesis)" },
+  raw_source: {
+    get label() {
+      return t("options.m463816d07097");
+    },
+    dot: "var(--el-source)",
+  },
+  rough_topic: {
+    get label() {
+      return t("options.m7e61847d61d6");
+    },
+    dot: "var(--el-topic)",
+  },
+  raw_extract: {
+    get label() {
+      return t("options.m896feb478608");
+    },
+    dot: "var(--text-3)",
+  },
+  clean_extract: {
+    get label() {
+      return t("options.m23d32889d303");
+    },
+    dot: "var(--el-extract)",
+  },
+  atomic_statement: {
+    get label() {
+      return t("options.m345a3181eedb");
+    },
+    dot: "var(--accent)",
+  },
+  card_draft: {
+    get label() {
+      return t("options.m5fd7831e65f2");
+    },
+    dot: "var(--el-card)",
+  },
+  active_card: {
+    get label() {
+      return t("options.m957ecf461c8b");
+    },
+    dot: "var(--el-card)",
+  },
+  mature_card: {
+    get label() {
+      return t("options.m2fca7a22025e");
+    },
+    dot: "var(--ok)",
+  },
+  synthesis: {
+    get label() {
+      return t("options.m7de5a138fd9b");
+    },
+    dot: "var(--el-synthesis)",
+  },
 };
 
 /** Human label for a canonical distillation stage. */
@@ -103,6 +245,7 @@ export function stageLabel(stage: string): string {
 
 /** Stage badge with a colored dot. */
 export function Stage({ stage }: { stage: string }) {
+  useLocale();
   const entry = STAGE_META[stage] ?? { label: stage, dot: "var(--text-3)" };
   return (
     <span className="stage">
@@ -125,6 +268,7 @@ function retrColor(r: number): string {
  * `--sched-attn` accent, stage + postponed ×N.
  */
 export function SchedulerChip({ scheduler }: { scheduler: SchedulerSignals }) {
+  useLocale();
   if (scheduler.kind === "fsrs") {
     const r = scheduler.retrievability;
     return (
@@ -132,20 +276,21 @@ export function SchedulerChip({ scheduler }: { scheduler: SchedulerSignals }) {
         className="sched sched--fsrs"
         data-scheduler="fsrs"
         data-testid="scheduler-chip"
-        title="FSRS · spaced repetition"
+        title={t("details.m8fe6f61e79d5")}
       >
         <Icon name="brain" size={12} />
         {r !== null ? (
           <span>
-            <b>{Math.round(r * 100)}%</b> recall
+            <b>{Math.round(r * 100)}%</b>
+            {t("details.ma3eaa465ea5d")}
           </span>
         ) : (
-          <span>new</span>
+          <span>{t("details.m11507a0e2f5e")}</span>
         )}
         {scheduler.stability !== null && (
           <>
             <span className="sched__sep">·</span>
-            <span title={`Stability ${scheduler.stability} days`}>
+            <span title={t("details.mc01d10fe58fa", { value1: String(scheduler.stability) })}>
               S {formatStability(scheduler.stability)}d
             </span>
           </>
@@ -158,14 +303,17 @@ export function SchedulerChip({ scheduler }: { scheduler: SchedulerSignals }) {
       className="sched sched--attn"
       data-scheduler="attention"
       data-testid="scheduler-chip"
-      title="Attention scheduler · when to process again"
+      title={t("details.m14638b81f687")}
     >
       <Icon name="gauge" size={12} />
       <span>{stageLabel(scheduler.stage)}</span>
       {scheduler.postponed > 0 && (
         <>
           <span className="sched__sep">·</span>
-          <span>postponed ×{scheduler.postponed}</span>
+          <span>
+            {t("details.mcd17c9cad56e")}
+            {scheduler.postponed}
+          </span>
         </>
       )}
     </span>
@@ -187,7 +335,7 @@ export function formatAttentionScheduleReason(scheduler: SchedulerSignals): stri
         ? `Returning sooner: last visit produced ${reason.productiveOutputCount} output(s).`
         : null;
     case "yield_lengthened":
-      return "Receding: recent visit produced no output.";
+      return t("supplement.md8ce80d825be");
     case "recency_damped":
       return hasFiniteEvidence(reason.daysSinceLastSeen)
         ? `Returning sooner: untouched for ${reason.daysSinceLastSeen}d.`
@@ -197,9 +345,9 @@ export function formatAttentionScheduleReason(scheduler: SchedulerSignals): stri
         ? `Receding after postpone x${reason.postponeCount}.`
         : null;
     case "source_unresolved_shortened":
-      return "Returning sooner: source still has unresolved blocks.";
+      return t("supplement.mc51071e3e2e5");
     case "source_exhausted_lengthened":
-      return "Receding: source produced no extractable output.";
+      return t("supplement.ma6321be6b3b4");
     case "descendant_lapses":
       return hasFiniteEvidence(reason.descendantLapseCount) &&
         hasFiniteEvidence(reason.affectedCardCount) &&
@@ -222,6 +370,7 @@ export function ScheduleReasonLine({
   id?: string;
   className?: string;
 }) {
+  useLocale();
   const text = formatAttentionScheduleReason(scheduler);
   if (!text) return null;
   return (
@@ -237,6 +386,7 @@ export function ScheduleReasonLine({
 
 /** The FSRS three-stat readout (Stability / Difficulty / Retrievability). */
 export function FsrsStats({ scheduler }: { scheduler: SchedulerSignals }) {
+  useLocale();
   const stability = scheduler.stability ?? 0;
   const difficulty = scheduler.difficulty ?? 0;
   const r = scheduler.retrievability;
@@ -244,11 +394,14 @@ export function FsrsStats({ scheduler }: { scheduler: SchedulerSignals }) {
   return (
     <div className="fsrs-stats" data-testid="fsrs-stats">
       <div className="fstat">
-        <span className="fstat__v" title={`${stability} days`}>
+        <span
+          className="fstat__v"
+          title={t("details.mf766f83db1f4", { value1: String(stability) })}
+        >
           {formatStability(stability)}
           <span style={{ fontSize: "var(--t-xs)", color: "var(--text-3)" }}>d</span>
         </span>
-        <span className="fstat__l">Stability</span>
+        <span className="fstat__l">{t("details.m1e42d0c86af7")}</span>
         <span className="fstat__bar">
           <i
             style={{
@@ -263,7 +416,7 @@ export function FsrsStats({ scheduler }: { scheduler: SchedulerSignals }) {
           {formatDifficulty(difficulty)}
           <span style={{ fontSize: "var(--t-xs)", color: "var(--text-3)" }}>/10</span>
         </span>
-        <span className="fstat__l">Difficulty</span>
+        <span className="fstat__l">{t("details.mbe44133ed57f")}</span>
         <span className="fstat__bar">
           <i
             style={{
@@ -277,7 +430,7 @@ export function FsrsStats({ scheduler }: { scheduler: SchedulerSignals }) {
         <span className="fstat__v" style={{ color: r === null ? "var(--text-3)" : retrColor(r) }}>
           {r === null ? "—" : `${rPct}%`}
         </span>
-        <span className="fstat__l">Retrievability</span>
+        <span className="fstat__l">{t("details.mc3fdbba41560")}</span>
         <span className="fstat__bar">
           <i
             style={{
@@ -293,6 +446,7 @@ export function FsrsStats({ scheduler }: { scheduler: SchedulerSignals }) {
 
 /** Inspector key/value row. */
 export function MetaRow({ k, children }: { k: string; children: React.ReactNode }) {
+  useLocale();
   return (
     <div className="meta-row">
       <span className="meta-key">{k}</span>
@@ -303,6 +457,7 @@ export function MetaRow({ k, children }: { k: string; children: React.ReactNode 
 
 /** Flat tag pill. */
 export function Tag({ name }: { name: string }) {
+  useLocale();
   return <span className="tag">{name}</span>;
 }
 
@@ -312,6 +467,7 @@ export function Tag({ name }: { name: string }) {
  * concept). Distinct from {@link Tag} (the flat `#`-prefixed label).
  */
 export function ConceptTag({ name, onClick }: { name: string; onClick?: () => void }) {
+  useLocale();
   if (onClick) {
     return (
       <button type="button" className="concept-tag concept-tag--btn" onClick={onClick}>

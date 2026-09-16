@@ -37,6 +37,7 @@ import {
   TypeIcon,
 } from "../../components/inspector/primitives";
 import { BudgetMeter } from "../../components/queue/BudgetMeter";
+import { format, t, useLocale } from "../../i18n";
 import "../../components/inspector/inspector.css";
 import {
   type AnalyticsGetResult,
@@ -77,46 +78,14 @@ function retentionPct(value: number | null): number | null {
 /** A greeting keyed to the local hour (morning / afternoon / evening). */
 function greeting(): string {
   const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 12) return t("home.greetingMorning");
+  if (h < 18) return t("home.greetingAfternoon");
+  return t("home.greetingEvening");
 }
 
 /** How many top-due rows the read-only preview shows (a glance, not the full list). */
 const PREVIEW_LIMIT = 5;
 const EMPTY_GRADUATION_EVENTS: readonly KnowledgeGraduationEvent[] = [];
-
-/** A quick-navigation tile (calm at-a-glance affordance into a key surface). */
-const TILES: readonly {
-  to: string;
-  icon: "inbox" | "review" | "library" | "analytics";
-  label: string;
-  sub: string;
-  testId: string;
-}[] = [
-  { to: "/inbox", icon: "inbox", label: "Inbox", sub: "Triage imports", testId: "home-tile-inbox" },
-  {
-    to: "/review",
-    icon: "review",
-    label: "Review",
-    sub: "Active recall",
-    testId: "home-tile-review",
-  },
-  {
-    to: "/library",
-    icon: "library",
-    label: "Library",
-    sub: "Browse your collection",
-    testId: "home-tile-library",
-  },
-  {
-    to: "/analytics",
-    icon: "analytics",
-    label: "Analytics",
-    sub: "Learning health",
-    testId: "home-tile-analytics",
-  },
-];
 
 /**
  * One read-only top-due preview row — a slim variant of the kit's `qitem`. It shows
@@ -216,7 +185,7 @@ function GraduationReceipts({
               onClick={() => onOpenConcept(event.subjectId)}
             >
               <span>{event.title}</span>
-              <small>concept reached mature knowledge state</small>
+              <small>{t("home.graduationConcept")}</small>
               <Icon name="chevronRight" size={13} />
             </button>
           ) : (
@@ -226,7 +195,7 @@ function GraduationReceipts({
               data-testid="home-graduation-line"
             >
               <span>{event.title}</span>
-              <small>topic reached mature knowledge state</small>
+              <small>{t("home.graduationTopic")}</small>
             </span>
           ),
         )}
@@ -236,6 +205,7 @@ function GraduationReceipts({
 }
 
 export function HomeScreen() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const { select } = useSelection();
@@ -371,11 +341,10 @@ export function HomeScreen() {
         <div className="grid size-12 place-items-center rounded-lg bg-accent-soft text-accent-text">
           <Icon name="layers" size={26} />
         </div>
-        <h1 className="font-semibold text-2xl text-text tracking-tight">Home</h1>
-        <p className="max-w-sm text-base text-text-2">
-          Your daily command center — the queue, streak, and next actions — reads through the
-          desktop bridge. Open the Electron app to see your day at a glance.
-        </p>
+        <h1 className="font-semibold text-2xl text-text tracking-tight">
+          {t("home.desktopOnlyTitle")}
+        </h1>
+        <p className="max-w-sm text-base text-text-2">{t("home.desktopOnlyBody")}</p>
       </div>
     );
   }
@@ -388,14 +357,14 @@ export function HomeScreen() {
   const hasQueue = queue !== null;
   const hasAnalytics = analytics !== null;
   const hasDailyWork = dailyWork !== null;
-  /** Render a metric value: the number when its source loaded, else an em-dash. */
+  /** Render a metric value: the localized number when its source loaded, else an em-dash. */
   const num = (present: boolean, value: number | undefined): string =>
-    present ? String(value ?? 0) : "—";
+    present ? format.number(value ?? 0) : "—";
 
   const counts = queue?.counts;
   const dueCount = counts?.all ?? 0;
   const estimateLabel = formatQueueTimeEstimate(queue?.timeEstimate);
-  const today = new Date().toLocaleDateString("en-US", {
+  const today = format.date(new Date(), {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -403,17 +372,18 @@ export function HomeScreen() {
 
   const streak = analytics?.dayStreak ?? 0;
   const retPct = retentionPct(analytics?.retention30d ?? null);
+  const retLabel = retPct === null ? null : format.number(retPct / 100, { style: "percent" });
   const spark = analytics?.reviewsByDay ?? [];
   const sparkMax = spark.reduce((m, d) => Math.max(m, d.count), 0);
   const topDue = (queue?.items ?? []).slice(0, PREVIEW_LIMIT);
   const primaryLabel =
     dailyWork?.recommendedAction === "triage_inbox"
-      ? "Triage inbox"
+      ? t("home.triageInbox")
       : dailyWork?.recommendedAction === "resume_unscheduled_source"
-        ? "Resume source"
+        ? t("home.resumeSource")
         : dailyWork?.recommendedAction === "clear"
-          ? "Open inbox"
-          : "Start session";
+          ? t("home.openInbox")
+          : t("home.startSession");
   const primaryIcon =
     dailyWork?.recommendedAction === "triage_inbox"
       ? "inbox"
@@ -424,12 +394,43 @@ export function HomeScreen() {
           : "play";
   const sessionNote =
     dailyWork?.recommendedAction === "triage_inbox"
-      ? `${dailyWork.inboxSources} inbox source${dailyWork.inboxSources === 1 ? "" : "s"} awaiting triage.`
+      ? t("home.sessionNoteTriage", { count: dailyWork.inboxSources })
       : dailyWork?.recommendedAction === "resume_unscheduled_source" && dailyWork.resumeSource
-        ? `Resume ${dailyWork.resumeSource.title}.`
+        ? t("home.sessionNoteResumeTitle", { title: dailyWork.resumeSource.title })
         : dailyWork?.recommendedAction === "clear"
-          ? "No due queue or inbox work right now."
-          : "Process one item at a time — sorted by priority, then due date.";
+          ? t("home.sessionNoteClear")
+          : t("home.sessionNoteDefault");
+
+  const tiles = [
+    {
+      to: "/inbox",
+      icon: "inbox" as const,
+      label: t("home.tileInbox"),
+      sub: t("home.tileInboxSub"),
+      testId: "home-tile-inbox",
+    },
+    {
+      to: "/review",
+      icon: "review" as const,
+      label: t("home.tileReview"),
+      sub: t("home.tileReviewSub"),
+      testId: "home-tile-review",
+    },
+    {
+      to: "/library",
+      icon: "library" as const,
+      label: t("home.tileLibrary"),
+      sub: t("home.tileLibrarySub"),
+      testId: "home-tile-library",
+    },
+    {
+      to: "/analytics",
+      icon: "analytics" as const,
+      label: t("home.tileAnalytics"),
+      sub: t("home.tileAnalyticsSub"),
+      testId: "home-tile-analytics",
+    },
+  ];
 
   return (
     <div className="q-page" data-testid="route-home">
@@ -440,11 +441,11 @@ export function HomeScreen() {
             <p className="q-sub" data-testid="home-subtitle">
               {hasQueue ? (
                 <>
-                  {today} · {dueCount} item{dueCount === 1 ? "" : "s"} due
+                  {t("home.subtitleDue", { date: today, count: dueCount })}
                   {estimateLabel ? (
                     <>
                       {" "}
-                      · est.{" "}
+                      {t("home.subtitleEstimate")}{" "}
                       <span>
                         {estimateLabel.text}
                         <span className="sr-only"> {estimateLabel.ariaLabel}</span>
@@ -467,7 +468,7 @@ export function HomeScreen() {
 
         {loading ? (
           <p className="q-sub" data-testid="home-loading">
-            Loading…
+            {t("home.loading")}
           </p>
         ) : null}
 
@@ -485,7 +486,7 @@ export function HomeScreen() {
               <span className="q-metric__v" data-testid="home-due-today">
                 {num(hasQueue, counts?.all)}
               </span>
-              <span className="q-metric__l">due today</span>
+              <span className="q-metric__l">{t("home.dueToday")}</span>
             </div>
             <div className="q-metric">
               <span
@@ -494,13 +495,13 @@ export function HomeScreen() {
               >
                 {num(hasQueue, counts?.overdue)}
               </span>
-              <span className="q-metric__l">overdue</span>
+              <span className="q-metric__l">{t("home.overdue")}</span>
             </div>
             <div className="q-metric">
               <span className="q-metric__v" data-testid="home-protected-count">
                 {num(hasQueue, counts?.protected)}
               </span>
-              <span className="q-metric__l">protected</span>
+              <span className="q-metric__l">{t("home.protected")}</span>
             </div>
           </div>
         </div>
@@ -511,10 +512,10 @@ export function HomeScreen() {
             <span className="home-streak__icon">
               <Icon name="flame" size={16} />
             </span>
-            <span className="home-streak__n">{streak}-day streak</span>
-            {retPct !== null ? (
+            <span className="home-streak__n">{t("home.streakDays", { count: streak })}</span>
+            {retLabel !== null ? (
               <span className="home-streak__l" data-testid="home-streak-retention">
-                {retPct}% retention · last 30d
+                {t("home.retention30d", { percent: retLabel })}
               </span>
             ) : null}
           </div>
@@ -539,7 +540,7 @@ export function HomeScreen() {
             onClick={() => void navigate({ to: "/queue" })}
           >
             <Icon name="queue" size={14} />
-            Open queue
+            {t("home.openQueue")}
           </button>
           <button
             type="button"
@@ -548,7 +549,7 @@ export function HomeScreen() {
             onClick={() => void navigate({ to: "/convert" })}
           >
             <Icon name="target" size={14} />
-            Convert statements
+            {t("home.convertStatements")}
           </button>
           {/* Gated on `hasAnalytics` (not just `> 0`): when the analytics read FAILS the
               due-card count is unknown, not a real zero, so the Review affordance hides as
@@ -562,7 +563,7 @@ export function HomeScreen() {
               onClick={() => void navigate({ to: "/review" })}
             >
               <Icon name="review" size={14} />
-              Review
+              {t("home.review")}
             </button>
           ) : null}
           <span className="sessionbar__note">{sessionNote}</span>
@@ -610,19 +611,19 @@ export function HomeScreen() {
             data-testid="metric-due"
           >
             <span className="an-metric__val">{num(hasAnalytics, analytics?.dueCards)}</span>
-            <span className="an-metric__label">Due cards</span>
+            <span className="an-metric__label">{t("home.dueCards")}</span>
           </div>
           <div className="an-metric an-metric--sm" data-testid="metric-topics">
             <span className="an-metric__val">{num(hasAnalytics, analytics?.dueTopics)}</span>
-            <span className="an-metric__label">Due topics</span>
+            <span className="an-metric__label">{t("home.dueTopics")}</span>
           </div>
           <div className="an-metric an-metric--sm" data-testid="metric-new-cards">
             <span className="an-metric__val">{num(hasAnalytics, analytics?.newCards)}</span>
-            <span className="an-metric__label">New cards</span>
+            <span className="an-metric__label">{t("home.newCards")}</span>
           </div>
           <div className="an-metric an-metric--sm" data-testid="metric-new-extracts">
             <span className="an-metric__val">{num(hasAnalytics, analytics?.newExtracts)}</span>
-            <span className="an-metric__label">New extracts</span>
+            <span className="an-metric__label">{t("home.newExtracts")}</span>
           </div>
         </div>
 
@@ -630,14 +631,14 @@ export function HomeScreen() {
         {topDue.length > 0 ? (
           <div className="home-section">
             <div className="home-section__head">
-              <span className="home-section__title">Top due</span>
+              <span className="home-section__title">{t("home.topDue")}</span>
               <button
                 type="button"
                 className="home-section__link"
                 data-testid="home-see-queue"
                 onClick={() => void navigate({ to: "/queue" })}
               >
-                See full queue
+                {t("home.seeFullQueue")}
                 <Icon name="chevronRight" size={13} />
               </button>
             </div>
@@ -657,11 +658,9 @@ export function HomeScreen() {
               <div className="q-empty__icon q-empty__icon--filter">
                 <Icon name="inbox" size={24} />
               </div>
-              <h2 className="q-empty__title">Inbox needs triage</h2>
+              <h2 className="q-empty__title">{t("home.inboxTriageTitle")}</h2>
               <p className="q-empty__body">
-                {dailyWork.inboxSources} imported source
-                {dailyWork.inboxSources === 1 ? "" : "s"} waiting. Triage them before starting a
-                due-queue session.
+                {t("home.inboxTriageBody", { count: dailyWork.inboxSources })}
               </p>
               <button
                 type="button"
@@ -670,7 +669,7 @@ export function HomeScreen() {
                 onClick={() => void navigate({ to: "/inbox" })}
               >
                 <Icon name="inbox" size={14} />
-                Triage inbox
+                {t("home.triageInbox")}
               </button>
             </div>
           </div>
@@ -685,9 +684,9 @@ export function HomeScreen() {
               <div className="q-empty__icon q-empty__icon--filter">
                 <Icon name="source" size={24} />
               </div>
-              <h2 className="q-empty__title">Resume unscheduled source</h2>
+              <h2 className="q-empty__title">{t("home.resumeUnscheduledTitle")}</h2>
               <p className="q-empty__body">
-                {dailyWork.resumeSource.title} is active without a return date.
+                {t("home.resumeUnscheduledBody", { title: dailyWork.resumeSource.title })}
               </p>
               <button
                 type="button"
@@ -705,7 +704,7 @@ export function HomeScreen() {
                 }}
               >
                 <Icon name="source" size={14} />
-                Resume source
+                {t("home.resumeSource")}
               </button>
             </div>
           </div>
@@ -719,11 +718,8 @@ export function HomeScreen() {
               <div className="q-empty__icon">
                 <Icon name="checkCircle" size={26} />
               </div>
-              <h2 className="q-empty__title">Queue clear for today</h2>
-              <p className="q-empty__body">
-                You've processed everything due. Import or triage something new to keep the pipeline
-                moving.
-              </p>
+              <h2 className="q-empty__title">{t("home.queueClearTitle")}</h2>
+              <p className="q-empty__body">{t("home.queueClearBody")}</p>
               <button
                 type="button"
                 className="sessionbar__start"
@@ -731,7 +727,7 @@ export function HomeScreen() {
                 onClick={() => void navigate({ to: "/inbox" })}
               >
                 <Icon name="inbox" size={14} />
-                Go to inbox
+                {t("home.goToInbox")}
               </button>
             </div>
           </div>
@@ -740,8 +736,10 @@ export function HomeScreen() {
         {/* Reviews-per-day spark (analytics chrome). */}
         <div className="an-panel" style={{ marginTop: 14 }}>
           <div className="an-panel__head">
-            <span className="an-panel__title">Reviews per day</span>
-            <span className="an-panel__meta">{analytics?.windowDays ?? 30} days</span>
+            <span className="an-panel__title">{t("home.reviewsPerDay")}</span>
+            <span className="an-panel__meta">
+              {t("home.windowDays", { count: analytics?.windowDays ?? 30 })}
+            </span>
           </div>
           <div className="an-spark" data-testid="home-spark">
             {spark.map((d, i) => (
@@ -752,7 +750,7 @@ export function HomeScreen() {
                     ? "an-spark__bar an-spark__bar--hot"
                     : "an-spark__bar"
                 }
-                title={`${d.date}: ${d.count}`}
+                title={t("home.sparkBarTitle", { date: d.date, count: d.count })}
                 style={{ height: `${sparkMax > 0 ? (d.count / sparkMax) * 100 : 0}%` }}
               />
             ))}
@@ -770,7 +768,7 @@ export function HomeScreen() {
           >
             <Icon name="leech" size={16} />
             <span className="an-banner__title">
-              {analytics?.leeches} leech{analytics?.leeches === 1 ? "" : "es"} to repair
+              {t("home.leechesToRepair", { count: analytics?.leeches ?? 0 })}
             </span>
             <Icon name="chevronRight" size={14} />
           </button>
@@ -779,10 +777,10 @@ export function HomeScreen() {
         {/* Quick-navigation tiles — calm at-a-glance affordances into key surfaces. */}
         <div className="home-section">
           <div className="home-section__head">
-            <span className="home-section__title">Jump to</span>
+            <span className="home-section__title">{t("home.jumpTo")}</span>
           </div>
           <div className="home-tiles" data-testid="home-tiles">
-            {TILES.map((tile) => (
+            {tiles.map((tile) => (
               <button
                 type="button"
                 key={tile.to + tile.label}
@@ -805,14 +803,16 @@ export function HomeScreen() {
             review is omitted when nothing is stale (the button resolves its own count). */}
         <div className="home-section">
           <div className="home-section__head">
-            <span className="home-section__title">Targeted review</span>
+            <span className="home-section__title">{t("home.targetedReview")}</span>
           </div>
           <div className="home-review-modes" data-testid="home-review-modes">
             <ReviewModeButton
               selector={randomAuditSelector}
               {...(asOf ? { asOf } : {})}
               icon="target"
-              label={(n) => `Audit ${Math.min(n, DEFAULT_RANDOM_AUDIT_SIZE)} random cards`}
+              label={(n) =>
+                t("home.auditRandomCards", { count: Math.min(n, DEFAULT_RANDOM_AUDIT_SIZE) })
+              }
               testId="home-review-random"
             />
             <ReviewModeButton
@@ -820,7 +820,7 @@ export function HomeScreen() {
               {...(asOf ? { asOf } : {})}
               hideWhileLoading
               icon="clock"
-              label={(n) => `Review ${n} stale card${n === 1 ? "" : "s"}`}
+              label={(n) => t("home.reviewStaleCards", { count: n })}
               testId="home-review-stale"
             />
           </div>

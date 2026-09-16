@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon } from "../../components/Icon";
 import { Prio, SchedulerChip, Stage, typeLabel } from "../../components/inspector/primitives";
 import { RefBlock } from "../../components/RefBlock";
+import { t, useLocale } from "../../i18n";
 import {
   appApi,
   type ConversionDraftSummary,
@@ -143,6 +144,7 @@ function isBuilderDirty(builder: BuilderState | undefined): boolean {
 }
 
 export function ConversionSession() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const [preview, setPreview] = useState<ConversionSessionPreviewResult | null>(null);
@@ -403,11 +405,8 @@ export function ConversionSession() {
       <main className="convert-shell">
         <div className="convert-empty" data-testid="convert-non-desktop">
           <Icon name="warning" size={18} />
-          <h1>Desktop app required</h1>
-          <p>
-            Batch conversion uses the local database bridge and is unavailable in renderer-only
-            mode.
-          </p>
+          <h1>{t("learning.m57375514747f")}</h1>
+          <p>{t("learning.m800b77576e3e")}</p>
         </div>
       </main>
     );
@@ -418,7 +417,7 @@ export function ConversionSession() {
       <main className="convert-shell">
         <div className="convert-empty" data-testid="convert-loading">
           <Icon name="hourglass" size={18} />
-          <h1>Loading conversion session</h1>
+          <h1>{t("learning.m0faf4a283eea")}</h1>
         </div>
       </main>
     );
@@ -429,7 +428,7 @@ export function ConversionSession() {
       <main className="convert-shell">
         <div className="convert-empty convert-empty--error" data-testid="convert-error">
           <Icon name="warning" size={18} />
-          <h1>Could not load conversion session</h1>
+          <h1>{t("learning.m0290e669e1e8")}</h1>
           <p>{error}</p>
           <div className="convert-empty__actions">
             <button
@@ -437,14 +436,14 @@ export function ConversionSession() {
               className="convert-btn convert-btn--primary"
               onClick={() => void load()}
             >
-              Retry
+              {t("learning.m9b3bc3dcdc2e")}
             </button>
             <button
               type="button"
               className="convert-btn"
               onClick={() => void navigate({ to: "/queue" })}
             >
-              Back to queue
+              {t("learning.md1ecf20848f4")}
             </button>
           </div>
         </div>
@@ -457,14 +456,14 @@ export function ConversionSession() {
       <main className="convert-shell">
         <div className="convert-empty" data-testid="convert-empty">
           <Icon name="checkCircle" size={18} />
-          <h1>No atomic statements ready</h1>
-          <p>The conversion backlog is clear for this snapshot.</p>
+          <h1>{t("learning.meb063857cd26")}</h1>
+          <p>{t("learning.mb5726d5bf64a")}</p>
           <button
             type="button"
             className="convert-btn convert-btn--primary"
             onClick={() => void navigate({ to: "/queue" })}
           >
-            Back to queue
+            {t("learning.md1ecf20848f4")}
           </button>
         </div>
       </main>
@@ -492,15 +491,21 @@ export function ConversionSession() {
           onClick={() => void navigate({ to: "/queue" })}
         >
           <Icon name="chevronLeft" size={14} />
-          Queue
+          {t("learning.mb6f6fb930c39")}
         </button>
         <div className="convert-progress" data-testid="convert-session-meta">
           <div className="convert-progress__nums">
             <span>
-              Session {preview.sessionId} · {preview.candidateCount} candidates · item{" "}
-              {currentNumber} of {preview.items.length}
+              {t("learning.m168693de068b")}
+              {preview.sessionId} · {preview.candidateCount}
+              {t("learning.m177731caa4d5")} {currentNumber}
+              {t("learning.ma4282e4b2298")}
+              {preview.items.length}
             </span>
-            <span>expires {formatDateTime(preview.expiresAt)}</span>
+            <span>
+              {t("learning.m22206a2566e5")}
+              {formatDateTime(preview.expiresAt)}
+            </span>
           </div>
           <span className="convert-progress__bar">
             <i style={{ width: `${progressPct}%` }} />
@@ -514,14 +519,18 @@ export function ConversionSession() {
           onClick={() => void load("refresh", preview.sessionId)}
         >
           <Icon name="review" size={14} />
-          {refreshing ? "Refreshing" : "Refresh"}
+          {refreshing ? t("learning.mf92e2ad582c0") : t("learning.m0e9161011702")}
         </button>
       </header>
 
       {notice ? (
         <div className="convert-notice" data-testid="convert-notice" role="status">
           {notice}
-          <button type="button" aria-label="Dismiss notice" onClick={() => setNotice(null)}>
+          <button
+            type="button"
+            aria-label={t("learning.ma17991767970")}
+            onClick={() => setNotice(null)}
+          >
             <Icon name="x" size={13} />
           </button>
         </div>
@@ -531,22 +540,19 @@ export function ConversionSession() {
         <section className="convert-consent" data-testid="convert-ai-consent">
           <Icon name="sparkle" size={16} />
           <div>
-            <h2>Draft cards for this session</h2>
-            <p>
-              AI drafts are generated only for this frozen session snapshot. They stay inert until
-              copied into the builder and submitted.
-            </p>
+            <h2>{t("learning.m3304586c3340")}</h2>
+            <p>{t("learning.m8a9372d7a3aa")}</p>
           </div>
           <div className="convert-consent__actions">
             <select
-              aria-label="AI draft action"
+              aria-label={t("learning.ma996863f5869")}
               value={aiAction}
               onChange={(event) =>
                 setAiAction(event.target.value as "suggest_qa" | "suggest_cloze")
               }
             >
-              <option value="suggest_qa">Q&A drafts</option>
-              <option value="suggest_cloze">Cloze drafts</option>
+              <option value="suggest_qa">{t("learning.m4712a46b2d8f")}</option>
+              <option value="suggest_cloze">{t("learning.mcc3f4e419669")}</option>
             </select>
             <button
               type="button"
@@ -555,10 +561,10 @@ export function ConversionSession() {
               disabled={aiBusy || mutationPending}
               onClick={() => void requestAiDrafts()}
             >
-              {aiBusy ? "Queueing" : "Start AI drafts"}
+              {aiBusy ? t("learning.mf7564284eaed") : t("learning.m499c44b35f8c")}
             </button>
             <button type="button" className="convert-btn" onClick={() => setConsentOpen(false)}>
-              Cancel
+              {t("learning.m0ef70263b054")}
             </button>
           </div>
         </section>
@@ -566,8 +572,11 @@ export function ConversionSession() {
 
       {aiResult ? (
         <div className="convert-ai-result" data-testid="convert-ai-result">
-          {aiResult.queued} queued · {aiResult.alreadyDrafted} already drafted ·{" "}
-          {aiResult.skipped.length} skipped
+          {aiResult.queued}
+          {t("learning.m5398051dd8d3")}
+          {aiResult.alreadyDrafted}
+          {t("learning.m7271555119f6")} {aiResult.skipped.length}
+          {t("learning.m3edf252701c2")}
           {aiResult.skipped.length > 0 ? (
             <span>
               {" "}
@@ -578,7 +587,7 @@ export function ConversionSession() {
       ) : null}
 
       <div className="convert-grid">
-        <aside className="convert-list" aria-label="Conversion candidates">
+        <aside className="convert-list" aria-label={t("learning.m666ef03eb3e2")}>
           {items.map((item, index) => (
             <button
               type="button"
@@ -594,7 +603,7 @@ export function ConversionSession() {
                 <Prio priority={item.priority} />
                 <span>{formatDateTime(item.dueAt)}</span>
                 {isBuilderDirty(builders[item.id]) ? (
-                  <span className="badge badge--soft">draft</span>
+                  <span className="badge badge--soft">{t("learning.m7743ce348d92")}</span>
                 ) : null}
               </span>
             </button>
@@ -652,21 +661,21 @@ export function ConversionSession() {
           />
 
           <div className="convert-grounding" data-testid="convert-grounding">
-            <span>Grounding</span>
-            <code>{selected.aiGrounding.blockIds.join(", ") || "no blocks"}</code>
+            <span>{t("learning.m758fc8da297a")}</span>
+            <code>{selected.aiGrounding.blockIds.join(", ") || t("learning.m0f50e36e17a2")}</code>
             <span>{selected.aiGrounding.selectedText}</span>
           </div>
 
           {builder.status === "stale" ? (
             <div className="convert-stale" data-testid="convert-stale">
               <Icon name="warning" size={14} />
-              This item may already be converted or no longer eligible.
+              {t("learning.m8f939b73010b")}
               <button
                 type="button"
                 className="convert-link"
                 onClick={() => void load("refresh", preview.sessionId)}
               >
-                Refresh
+                {t("learning.m6230f7a0536b")}
               </button>
             </div>
           ) : null}
@@ -680,7 +689,7 @@ export function ConversionSession() {
               disabled={cursor === 0 || mutationPending}
             >
               <Icon name="chevronLeft" size={14} />
-              Previous
+              {t("learning.m2ca8838498bd")}
             </button>
             <button
               type="button"
@@ -689,7 +698,7 @@ export function ConversionSession() {
               onClick={advance}
               disabled={items.length <= 1 || mutationPending}
             >
-              Skip
+              {t("learning.m790e6ac0a844")}
               <Icon name="chevronRight" size={14} />
             </button>
             <button
@@ -700,7 +709,7 @@ export function ConversionSession() {
               onClick={() => setConsentOpen(true)}
             >
               <Icon name="sparkle" size={14} />
-              Draft with AI
+              {t("learning.m727847778311")}
             </button>
             <button
               type="button"
@@ -709,7 +718,7 @@ export function ConversionSession() {
               disabled={mutationPending}
               onClick={() => void applyFate("reference")}
             >
-              Reference
+              {t("learning.mab0cedb8fbaa")}
             </button>
             <button
               type="button"
@@ -718,13 +727,17 @@ export function ConversionSession() {
               disabled={mutationPending}
               onClick={() => void applyFate("done_without_card")}
             >
-              Done without card
+              {t("learning.me7ad0bcacb83")}
             </button>
           </div>
         </section>
 
         <aside className="convert-builder" data-testid="convert-builder">
-          <div className="convert-builder__tabs" role="tablist" aria-label="Card type">
+          <div
+            className="convert-builder__tabs"
+            role="tablist"
+            aria-label={t("learning.m2a855d548016")}
+          >
             <button
               type="button"
               role="tab"
@@ -747,14 +760,14 @@ export function ConversionSession() {
               disabled={mutationPending}
               onClick={() => markEdited(selected.id, { mode: "cloze" })}
             >
-              Cloze
+              {t("learning.mf73553733277")}
             </button>
           </div>
 
           {builder.mode === "qa" ? (
             <>
               <label className="convert-field">
-                <span>Front · question</span>
+                <span>{t("learning.m5dd9d6582512")}</span>
                 <textarea
                   rows={3}
                   data-testid="convert-prompt"
@@ -764,7 +777,7 @@ export function ConversionSession() {
                 />
               </label>
               <label className="convert-field">
-                <span>Back · answer</span>
+                <span>{t("learning.ma48dc8d305d4")}</span>
                 <textarea
                   rows={4}
                   data-testid="convert-answer"
@@ -776,7 +789,7 @@ export function ConversionSession() {
             </>
           ) : (
             <label className="convert-field">
-              <span>Cloze text</span>
+              <span>{t("learning.mc787c15e64f5")}</span>
               <textarea
                 rows={6}
                 data-testid="convert-cloze"
@@ -788,7 +801,7 @@ export function ConversionSession() {
           )}
 
           <fieldset className="convert-priority">
-            <legend className="sr-only">Priority</legend>
+            <legend className="sr-only">{t("learning.md60dbba07922")}</legend>
             {PRIORITIES.map((priority) => (
               <button
                 key={priority}
@@ -807,8 +820,8 @@ export function ConversionSession() {
           <div className="convert-preview" data-testid="convert-card-preview">
             {builder.mode === "qa" ? (
               <>
-                <strong>{builder.prompt.trim() || "Question"}</strong>
-                <span>{builder.answer.trim() || "Answer"}</span>
+                <strong>{builder.prompt.trim() || t("learning.m289aff12b042")}</strong>
+                <span>{builder.answer.trim() || t("learning.mb2a3aa602762")}</span>
               </>
             ) : (
               <span>
@@ -835,7 +848,7 @@ export function ConversionSession() {
             {!quality.hasBlocker ? (
               <span className="qc qc--ok">
                 <Icon name="checkCircle" size={13} />
-                Ready
+                {t("learning.m81b77be44c1f")}
               </span>
             ) : null}
           </div>
@@ -849,23 +862,27 @@ export function ConversionSession() {
           >
             <Icon name="card" size={14} />
             {builder.status === "creating"
-              ? "Creating"
-              : `Create ${builder.mode === "qa" ? "Q&A" : "cloze"} card`}
+              ? t("learning.m3b951ebd7c96")
+              : t("learning.mbb6f1f457f5b", {
+                  value1: String(builder.mode === "qa" ? "Q&A" : "cloze"),
+                })}
           </button>
 
           <section className="convert-drafts" data-testid="convert-drafts">
             <div className="convert-drafts__head">
-              <h2>Drafts</h2>
+              <h2>{t("learning.mf592e6a4db3c")}</h2>
               <span>{draftCount}</span>
             </div>
             {selected.drafts.length === 0 ? (
-              <p>No live drafts for this statement.</p>
+              <p>{t("learning.md3ca5602b1ab")}</p>
             ) : (
               selected.drafts.map((draft) => (
                 <article key={draft.id} className="convert-draft" data-testid="convert-draft">
                   <div>
                     <strong>
-                      {draft.action === "suggest_cloze" ? "Cloze draft" : "Q&A draft"}
+                      {draft.action === "suggest_cloze"
+                        ? t("learning.m09cd4c132106")
+                        : t("learning.m14d883315798")}
                     </strong>
                     <span>{draft.providerKind}</span>
                   </div>
@@ -877,7 +894,7 @@ export function ConversionSession() {
                     disabled={mutationPending}
                     onClick={() => applyDraft(draft)}
                   >
-                    Use draft
+                    {t("learning.m9a11b3bb2e03")}
                   </button>
                 </article>
               ))
@@ -894,10 +911,8 @@ export function ConversionSession() {
           aria-modal="true"
         >
           <div>
-            <strong>Replace current builder text?</strong>
-            <p>
-              This statement has session-local edits. Replacing copies the AI draft into the form.
-            </p>
+            <strong>{t("learning.m4b99f4edbb07")}</strong>
+            <p>{t("learning.m16792b7c1c03")}</p>
           </div>
           <button
             type="button"
@@ -905,10 +920,10 @@ export function ConversionSession() {
             data-testid="convert-replace-confirm-yes"
             onClick={() => applyDraft(pendingReplacement, true)}
           >
-            Replace
+            {t("learning.m71b576825729")}
           </button>
           <button type="button" className="convert-btn" onClick={() => setPendingReplacement(null)}>
-            Keep edits
+            {t("learning.m50a625e146fe")}
           </button>
         </div>
       ) : null}

@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * ConflictSection (T089) — the calm "possible conflict" surface.
  *
@@ -65,6 +66,7 @@ function ConflictFlag({
   flag: ContradictionFlagView;
   onOpen?: (id: string) => void;
 }) {
+  useLocale();
   // Dismiss is LOCAL UI state for now (deferred persisted acknowledgement) — see the
   // module docblock. A dismissed flag re-derives after an app restart.
   const [dismissed, setDismissed] = useState(false);
@@ -81,9 +83,9 @@ function ConflictFlag({
         onClick={() => setExpanded((v) => !v)}
       >
         <Icon name="warning" size={13} />
-        <span className="conflict-flag__label">Possible conflict</span>
+        <span className="conflict-flag__label">{t("details.m4b51abc68100")}</span>
         <span className="conflict-flag__title" title={flag.otherTitle}>
-          {flag.otherTitle || "Untitled"}
+          {flag.otherTitle || t("details.mf59ab8d1331b")}
         </span>
         <Icon name={expanded ? "chevronDown" : "chevronRight"} size={13} />
       </button>
@@ -96,11 +98,13 @@ function ConflictFlag({
 
           <div className="conflict-flag__sides">
             <div className="conflict-flag__side">
-              <div className="conflict-flag__side-label">This item</div>
+              <div className="conflict-flag__side-label">{t("details.m10ceeb1a4b3b")}</div>
               <RefBlock ref={flag.selfRef} testId="conflict-self-ref" showSnippet={false} />
             </div>
             <div className="conflict-flag__side">
-              <div className="conflict-flag__side-label">{flag.otherTitle || "Related item"}</div>
+              <div className="conflict-flag__side-label">
+                {flag.otherTitle || t("details.mb23021e9e6d1")}
+              </div>
               <RefBlock ref={flag.otherRef} testId="conflict-other-ref" showSnippet={false} />
             </div>
           </div>
@@ -114,7 +118,7 @@ function ConflictFlag({
                 onClick={() => onOpen(flag.otherId)}
               >
                 <Icon name="external" size={12} />
-                Open related item
+                {t("details.mf460ff6aba4c")}
               </button>
             ) : null}
             <button
@@ -124,7 +128,7 @@ function ConflictFlag({
               onClick={() => setDismissed(true)}
             >
               <Icon name="x" size={12} />
-              Dismiss
+              {t("details.medc0fe2d169a")}
             </button>
           </div>
         </div>
@@ -156,6 +160,7 @@ export function ConflictSection({
   /** Navigate to the conflicting element (open-both affordance). */
   readonly onOpen?: (id: string) => void;
 }) {
+  useLocale();
   const [fetched, setFetched] = useState<readonly ContradictionFlagView[] | null>(
     providedFlags ?? null,
   );
@@ -204,7 +209,7 @@ export function ConflictSection({
 
   return (
     <div className="insp-sec" data-testid="conflict-section">
-      <div className="insp-sec__title">Possible conflicts</div>
+      <div className="insp-sec__title">{t("details.mbe25c6b66cc2")}</div>
       {body}
     </div>
   );

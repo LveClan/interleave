@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Isolated, memoized `/search` input (U1).
  *
@@ -42,6 +43,7 @@ function LibrarySearchFieldImpl({
   syncToken,
   onDebouncedChange,
 }: LibrarySearchFieldProps) {
+  useLocale();
   const [value, setValue] = useState(syncQuery);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -80,7 +82,7 @@ function LibrarySearchFieldImpl({
         data-testid="library-search-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search sources, extracts, cards, concepts…"
+        placeholder={t("collection.m3a08f9bbe712")}
         // biome-ignore lint/a11y/noAutofocus: search is the screen's primary action
         autoFocus
       />

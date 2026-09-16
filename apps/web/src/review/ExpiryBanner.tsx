@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Expiry banner (T090) — the calm, POST-REVEAL "this fact may be out of date" line a
  * stale card shows in review. It rides the existing reveal gate (rendered only inside
@@ -38,6 +39,7 @@ export function ExpiryBanner({
   /** When supplied (T092), render a "Create verify task" button that calls this. */
   onCreateTask?: () => void | Promise<void>;
 }) {
+  useLocale();
   const expired = expiry.status === "expired";
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -72,9 +74,7 @@ export function ExpiryBanner({
       <div>
         <div className="banner__title">{title}</div>
         <div className="banner__body">
-          {expired
-            ? "Verify the claim is still current before relying on it."
-            : "Re-check this claim — it may have changed since it was last verified."}
+          {expired ? t("learning.mf1367afad4bb") : t("learning.m7dbf8da3feb3")}
           {context ? ` (${context})` : ""}
         </div>
         {onCreateTask ? (
@@ -86,7 +86,7 @@ export function ExpiryBanner({
             onClick={() => void handleCreate()}
           >
             <Icon name="task" size={13} />
-            {done ? "Verify task created" : "Create verify task"}
+            {done ? t("learning.m527964b15aa8") : t("learning.maa6f02c3736c")}
           </button>
         ) : null}
       </div>

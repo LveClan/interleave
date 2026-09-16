@@ -73,6 +73,7 @@ function nonCardValue(row: SourceYieldListResult["rows"][number]) {
 }
 
 export function SourceYield() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const [data, setData] = useState<SourceYieldListResult | null>(null);
@@ -113,11 +114,8 @@ export function SourceYield() {
           <div className="sy-empty__icon">
             <Icon name="analytics" size={26} />
           </div>
-          <h1 className="sy-empty__title">Source yield</h1>
-          <p className="sy-empty__body">
-            See, per source, what it actually produced — read %, extracts, cards, and review time —
-            so you can tell which sources to abandon. Open the Electron app to see the numbers.
-          </p>
+          <h1 className="sy-empty__title">{t("collection.m877e5fce86e0")}</h1>
+          <p className="sy-empty__body">{t("collection.ma0a523ff7f9a")}</p>
         </div>
       </div>
     );
@@ -131,16 +129,14 @@ export function SourceYield() {
         <div>
           <h1 className="sy-title">
             <Icon name="library" size={18} />
-            Source yield
+            {t("collection.ma152a3b0007f")}
           </h1>
-          <p className="sy-sub">
-            What each source actually produced, ranked lowest-yield first. Time is review time on
-            the source's cards.
-          </p>
+          <p className="sy-sub">{t("collection.m4858aee05395")}</p>
         </div>
         {data ? (
           <span className="sy-count" data-testid="source-yield-low-count">
-            {data.lowYieldCount} low-yield
+            {data.lowYieldCount}
+            {t("collection.m3790a31c4a6a")}
           </span>
         ) : null}
       </div>
@@ -153,33 +149,30 @@ export function SourceYield() {
 
       {loading ? (
         <p className="sy-loading" data-testid="source-yield-loading">
-          Loading…
+          {t("collection.m0a5afbeee779")}
         </p>
       ) : rows.length === 0 ? (
         <div className="sy-empty" data-testid="source-yield-empty">
           <div className="sy-empty__icon">
             <Icon name="checkCircle" size={26} />
           </div>
-          <h2 className="sy-empty__title">No sources yet</h2>
-          <p className="sy-empty__body">
-            Import a source and start reading — its yield (read %, extracts, cards, review time)
-            will appear here so you can see which sources pay off.
-          </p>
+          <h2 className="sy-empty__title">{t("collection.m95be0e356dd9")}</h2>
+          <p className="sy-empty__body">{t("collection.m213e455daae5")}</p>
         </div>
       ) : (
         <div className="sy-body" data-testid="source-yield-body">
           <div className="sy-table">
             <div className="sy-row sy-row--head">
-              <span className="sy-cell sy-cell--src">Source</span>
-              <span className="sy-cell sy-cell--read">Read</span>
-              <span className="sy-cell sy-cell--blocks">Blocks</span>
-              <span className="sy-cell sy-cell--num">Extracts</span>
-              <span className="sy-cell sy-cell--value">Non-card value</span>
-              <span className="sy-cell sy-cell--num">Cards</span>
-              <span className="sy-cell sy-cell--num">Mature</span>
-              <span className="sy-cell sy-cell--num">Leeches</span>
-              <span className="sy-cell sy-cell--time">Review time</span>
-              <span className="sy-cell sy-cell--band">Yield</span>
+              <span className="sy-cell sy-cell--src">{t("collection.m0e570ca6fabe")}</span>
+              <span className="sy-cell sy-cell--read">{t("collection.m9b9a8d05a7ec")}</span>
+              <span className="sy-cell sy-cell--blocks">{t("collection.m1cd5a6687bb7")}</span>
+              <span className="sy-cell sy-cell--num">{t("collection.m877e04b7e7ed")}</span>
+              <span className="sy-cell sy-cell--value">{t("collection.m9f300e521d11")}</span>
+              <span className="sy-cell sy-cell--num">{t("collection.ma52fcbbc3364")}</span>
+              <span className="sy-cell sy-cell--num">{t("collection.m2cc08418a5a0")}</span>
+              <span className="sy-cell sy-cell--num">{t("collection.meb105f601c13")}</span>
+              <span className="sy-cell sy-cell--time">{t("collection.meff56409ea56")}</span>
+              <span className="sy-cell sy-cell--band">{t("collection.m347de0eefc8c")}</span>
               <span className="sy-cell sy-cell--act" />
             </div>
 
@@ -218,7 +211,10 @@ export function SourceYield() {
 
                   <span className="sy-cell sy-cell--blocks">
                     {formatPct(row.processedBlockRatio)}
-                    <span className="sy-cell__sub">{row.unresolvedBlocks} open</span>
+                    <span className="sy-cell__sub">
+                      {row.unresolvedBlocks}
+                      {t("collection.mdee82cf50f32")}
+                    </span>
                   </span>
                   <span className="sy-cell sy-cell--num">{row.extractsCreated}</span>
                   <span className="sy-cell sy-cell--value" data-testid="source-yield-non-card">
@@ -226,8 +222,15 @@ export function SourceYield() {
                       {value.productive}
                     </span>
                     <span className="sy-value__detail" data-testid="source-yield-non-card-detail">
-                      Ref {value.reference} · Synth {value.synthesized} · Done {value.done} · Linked{" "}
-                      {value.synthesisReferenced} · Notes {value.notes}
+                      {t("collection.m83c0a4b91603")}
+                      {value.reference}
+                      {t("collection.m4ffb7e362eb9")}
+                      {value.synthesized}
+                      {t("collection.m49e268e803e2")}
+                      {value.done}
+                      {t("collection.m8e7ff2d366f7")} {value.synthesisReferenced}
+                      {t("collection.mf652d83fe366")}
+                      {value.notes}
                     </span>
                   </span>
                   <span className="sy-cell sy-cell--num">{row.cardsCreated}</span>
@@ -261,7 +264,7 @@ export function SourceYield() {
                         void navigate({ to: "/source/$id", params: { id: row.source.id } })
                       }
                     >
-                      Open
+                      {t("collection.mb8039d1d54bf")}
                       <Icon name="chevronRight" size={13} />
                     </button>
                   </span>
@@ -275,4 +278,4 @@ export function SourceYield() {
   );
 }
 
-import { t } from "../i18n";
+import { t, useLocale } from "../i18n";

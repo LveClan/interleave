@@ -1,11 +1,10 @@
 # Desktop Internationalization
 
-Interleave's desktop app has an offline i18next foundation. The only released language is
-English. Simplified Chinese translations for the seven migrated modules are prepared under
-`packages/i18n/src/locales/zh-CN/`, but are not registered or available in the app yet. Their
-resource contracts are tested directly; Chinese UI layout and Electron integration still need
-validation when the language is enabled. This is a partial migration, not a claim that every
-screen is translated.
+Interleave's desktop app has an offline i18next foundation with English and Simplified Chinese
+registered. Choose Settings > Language > 简体中文 to switch; the preference persists across
+restart and a compatible Chinese system locale selects Chinese automatically in system mode.
+Translations live under `packages/i18n/src/locales/zh-CN/`. This is a partial migration:
+unmigrated screens still contain English text.
 
 ## Research And Selection
 
@@ -67,7 +66,7 @@ React text and native menu labels, not permission to render arbitrary HTML.
    is preserved for future versions but displays English fallback.
 3. `system` uses Electron's `app.getLocale()` after readiness.
 4. Match a registered BCP 47 tag exactly, then a compatible language/script variant, then `en`.
-   `zh-Hans-SG` can match a future `zh-CN`; `zh-TW` does not silently become Simplified Chinese.
+   `zh-Hans-SG` matches `zh-CN`; `zh-TW` does not silently become Simplified Chinese.
 5. A missing or empty translated message falls back to the English message.
 
 Main reads SQLite and initializes its menu before creating the window. Renderer subscribes to
@@ -97,7 +96,7 @@ the actual artifact. Native Intl units may use `kB` and grouping such as `5,000 
 
 ## Add A Language
 
-To add or enable a language (`zh-CN` already has translations prepared in step 1):
+To add another language (use the registered `zh-CN` resources as an example):
 
 1. Add real translations under `packages/i18n/src/locales/zh-CN/`, using the English modules as
    reference. A module can export a `Record<string, string>` checked by `pnpm i18n:check`.
@@ -138,11 +137,11 @@ message IDs and required arguments. `typecheck.ts` contains compile-only negativ
 unknown IDs and misspelled interpolation. Tests discover resources through the registry, without
 a second key manifest.
 
-The unregistered Chinese resources have a separate check:
-`pnpm exec vitest run packages/i18n/src/zh-CN.test.ts`. It directly imports all seven modules,
+The Chinese resources have an additional check:
+`pnpm exec vitest run packages/i18n/src/zh-CN.test.ts`. It directly imports all resource modules,
 compares their keys with English, validates interpolation and plural contracts, and exercises
-Chinese plural rendering with user content. `pnpm test` includes this check; `pnpm i18n:check`
-only covers registered languages and does not establish Chinese translation coverage yet.
+Chinese plural rendering with user content through the shipped registry. `pnpm test` includes
+this check; `pnpm i18n:check` validates both registered languages.
 
 On a resource-constrained machine, `pnpm test -- --maxWorkers=4 --testTimeout=180000`
 keeps every test and property iteration while limiting concurrent workers and allowing the
@@ -169,14 +168,25 @@ Settings including AI/provider controls, search readiness, system diagnostics, b
 capture settings, optimization/workload panels, custom application menus and the backup picker,
 Trash grouping/restoration/purge confirmation/notifications/errors/relative dates. Shared Undo and
 help-link labels are migrated where used by these surfaces. Source titles remain user content.
+Home-owned dashboard labels, greetings, dates, counts, budget meter and queue-time estimates,
+plus the Inspector header and unselected/empty/loading states, are also migrated. Stored titles
+(including previously generated task titles) remain unchanged.
+
+The desktop migration now also covers static controls, labels, placeholders and empty states
+across Inbox/import dialogs, Queue/Process, source/PDF/media readers, extraction/card builders,
+Review, Library/Search, Concepts, Analytics, maintenance, weekly review, synthesis, onboarding,
+and selected-element Inspector panels. Resources are grouped in `learning`, `collection`,
+`details`, `options`, and `supplement`; their stable `m`-prefixed IDs identify extracted messages.
+Components subscribe to locale updates, while static option labels resolve through getters.
+English text is retained as the fallback. This does not translate stored content or certify
+that every dynamic sentence and nested help article has been migrated.
 
 Still to migrate:
 
-- Home, Queue and Process sessions, review/card creation, extraction and reader surfaces.
-- Inbox/import modals, PDF/EPUB/media/Markdown/Anki picker text, import jobs and progress.
-- Library, search results and facets, inspector/lineage, concepts, analytics and source yield.
-- Maintenance, stagnant extracts, retired cards, weekly review and synthesis.
-- First-run onboarding, guided tours, contextual coaching and HelpCenter article content.
+- Remaining computed UI sentences, formatter output and asynchronously stored notifications
+  across these surfaces; English metadata returned by domain services.
+- Native import picker text, background job progress details and provider diagnostics.
+- HelpCenter article bodies/catalogue and remaining guided-tour/contextual coaching prose.
 - Domain-service English result details and legacy error text; Settings translates the error
   wrapper while retaining original diagnostic details. Introduce structured error codes per
   workflow before translating those details, rather than parsing arbitrary error strings.

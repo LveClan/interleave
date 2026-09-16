@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * ClipMiniPlayer (T074) — a looping mini player for a media `media_fragment` clip.
  *
@@ -41,6 +42,7 @@ function fmt(ms: number): string {
 }
 
 export function ClipMiniPlayer({ sourceElementId, startMs, endMs }: ClipMiniPlayerProps) {
+  useLocale();
   const desktop = isDesktop();
   const [media, setMedia] = useState<SourcesGetMediaDataResult | null>(null);
   const elRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
@@ -98,10 +100,10 @@ export function ClipMiniPlayer({ sourceElementId, startMs, endMs }: ClipMiniPlay
   }, [media?.mediaSource, media?.mediaUrl, startMs, endMs]);
 
   if (!desktop) {
-    return <p className="dimmed">Clip plays through the desktop bridge.</p>;
+    return <p className="dimmed">{t("learning.mc8460ef0a8bb")}</p>;
   }
   if (media == null) {
-    return <p className="dimmed">Loading clip…</p>;
+    return <p className="dimmed">{t("learning.m2f1f8de03784")}</p>;
   }
   if (media.mediaSource === "youtube") {
     // A clip is a time window on the original — for a YouTube source the bytes never
@@ -114,7 +116,8 @@ export function ClipMiniPlayer({ sourceElementId, startMs, endMs }: ClipMiniPlay
       : null;
     return (
       <p className="dimmed" data-testid="clip-mini-youtube">
-        YouTube clip {fmt(startMs)}–{fmt(endMs)}
+        {t("learning.m6c0658e6def3")}
+        {fmt(startMs)}–{fmt(endMs)}
         {watchUrl ? (
           <>
             {" — "}
@@ -125,17 +128,17 @@ export function ClipMiniPlayer({ sourceElementId, startMs, endMs }: ClipMiniPlay
               className="extract-clip__youtube-link"
               data-testid="clip-mini-youtube-link"
             >
-              play the segment on YouTube
+              {t("learning.me77e78d69703")}
             </a>
           </>
         ) : (
-          " — open the reader to play the embedded segment."
+          t("learning.m2968099dce9f")
         )}
       </p>
     );
   }
   if (!media.mediaUrl) {
-    return <p className="dimmed">This media source has no playable data.</p>;
+    return <p className="dimmed">{t("learning.m762b65919a23")}</p>;
   }
   return media.mediaKind === "audio" ? (
     // biome-ignore lint/a11y/useMediaCaption: the clip is the transcript segment shown beside it (T074)

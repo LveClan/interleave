@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * Inbox triage section (rendered inside the shell inspector, above Properties).
  *
@@ -52,6 +53,7 @@ function TriageButton({
   testid: string;
   buttonRef?: Ref<HTMLButtonElement>;
 }) {
+  useLocale();
   const tone = danger
     ? "border-danger-soft bg-danger-soft text-danger hover:opacity-90"
     : primary
@@ -91,6 +93,7 @@ export function InboxTriageSection({
   registerSection: (node: HTMLElement | null) => void;
   registerReadNowButton: (node: HTMLButtonElement | null) => void;
 }) {
+  useLocale();
   const { busy, suggestion } = panel;
   const current = priorityToLabel(panel.priority);
   // A banded suggestion drives the accept affordance + justification + placement;
@@ -108,7 +111,7 @@ export function InboxTriageSection({
       data-highlighted={panel.triageHighlighted ? "true" : undefined}
     >
       <div className="insp-sec__title">
-        <span>Triage</span>
+        <span>{t("collection.m4ffbef3c08ed")}</span>
         <span className="font-normal text-text-3 normal-case tracking-normal">1 · 2 · 3 · 6</span>
       </div>
 
@@ -118,7 +121,7 @@ export function InboxTriageSection({
           testid="inbox-read-now"
           buttonRef={registerReadNowButton}
           icon="play"
-          label="Read now"
+          label={t("collection.m20d8b246c1cc")}
           hint="1"
           ariaLabel="Read now: activate and open in reader"
           primary
@@ -128,7 +131,7 @@ export function InboxTriageSection({
         <TriageButton
           testid="inbox-queue-soon"
           icon="queue"
-          label="Queue soon"
+          label={t("collection.mf3de9cd4a989")}
           hint="2"
           ariaLabel="Queue soon: schedule in the due queue without opening"
           disabled={busy}
@@ -137,7 +140,7 @@ export function InboxTriageSection({
         <TriageButton
           testid="inbox-keep"
           icon="bookmark"
-          label="Save for later"
+          label={t("collection.mce3cf1fbf050")}
           hint="3"
           disabled={busy}
           onClick={() => panel.onTriage("keepForLater")}
@@ -145,7 +148,7 @@ export function InboxTriageSection({
         <TriageButton
           testid="inbox-delete"
           icon="trash"
-          label="Delete"
+          label={t("collection.me2d0a54968ea")}
           hint="6"
           danger
           disabled={busy}
@@ -158,7 +161,8 @@ export function InboxTriageSection({
           control so inbox priority writes preserve their suggestion provenance. */}
       <div data-testid="inbox-priority">
         <div className="mb-2 flex items-center gap-1.5 font-medium text-text-2 text-xs uppercase tracking-wide">
-          Priority <HelpLink slug="priority-abcd" />
+          {t("collection.m60fdce82f5ba")}
+          <HelpLink slug="priority-abcd" />
         </div>
         <div className="flex gap-1.5">
           {PRIORITY_LABELS.map((p: PriorityLabelInput) => {
@@ -194,7 +198,7 @@ export function InboxTriageSection({
           <div className="mt-3 flex flex-col gap-1.5" data-testid="inbox-suggestion">
             <div className="flex items-center gap-2">
               <SuggestionChip band={banded.band} onAccept={panel.onAcceptSuggestion} busy={busy} />
-              <span className="text-text-3 text-xs">Press Enter to accept</span>
+              <span className="text-text-3 text-xs">{t("collection.m6dc03959ccb2")}</span>
             </div>
             {justification ? (
               <p className="text-text-3 text-xs" data-testid="inbox-suggestion-justification">
@@ -210,7 +214,7 @@ export function InboxTriageSection({
       {placement ? (
         <div data-testid="inbox-suggestion-placement">
           <div className="mb-2 font-medium text-text-2 text-xs uppercase tracking-wide">
-            Suggested placement
+            {t("collection.m48faf2fd6955")}
           </div>
           {panel.placementAssigned ? (
             <span
@@ -218,7 +222,8 @@ export function InboxTriageSection({
               data-testid="inbox-suggestion-placement-assigned"
             >
               <Icon name="check" size={13} />
-              Assigned to {placement.conceptName}
+              {t("collection.m90b64ea6658a")}
+              {placement.conceptName}
             </span>
           ) : (
             <button
@@ -229,7 +234,8 @@ export function InboxTriageSection({
               className="inline-flex items-center gap-1.5 rounded-md border border-accent-soft-bd border-dashed bg-accent-soft px-2 py-1 text-accent-text text-xs hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
             >
               <Icon name="sparkle" size={13} />
-              Place in {placement.conceptName}
+              {t("collection.m15d839f3b648")}
+              {placement.conceptName}
             </button>
           )}
         </div>

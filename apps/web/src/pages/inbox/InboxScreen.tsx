@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../../i18n";
 /**
  * Import & Inbox screen (T012) — the first capture/triage surface.
  *
@@ -106,23 +107,76 @@ const IMPORT_OPTS: {
   /** When set, clicking opens the matching modal / picker (or routes to Settings). */
   action?: "manual" | "url" | "capture" | "pdf" | "file" | "media";
 }[] = [
-  { icon: "link", label: "Paste URL", hint: "Fetch & clean the page", action: "url" },
-  { icon: "paste", label: "Paste text", hint: "Plain text", action: "manual" },
-  { icon: "source", label: "Import PDF", hint: "Read a PDF incrementally", action: "pdf" },
+  {
+    icon: "link",
+    get label() {
+      return t("options.m48b716be6d8e");
+    },
+    get hint() {
+      return t("options.mc9495e29945a");
+    },
+    action: "url",
+  },
+  {
+    icon: "paste",
+    get label() {
+      return t("options.m9328724b4cf1");
+    },
+    get hint() {
+      return t("options.mcf4166250b80");
+    },
+    action: "manual",
+  },
+  {
+    icon: "source",
+    get label() {
+      return t("options.med4badc048ec");
+    },
+    get hint() {
+      return t("options.m3597985b0203");
+    },
+    action: "pdf",
+  },
   {
     icon: "media",
-    label: "Import media",
-    hint: "Video / audio, watched incrementally",
+    get label() {
+      return t("options.m60b73087f7ea");
+    },
+    get hint() {
+      return t("options.mc4cf57889c47");
+    },
     action: "media",
   },
   {
     icon: "library",
-    label: "Import file",
-    hint: "EPUB, Markdown, HTML, highlights, Anki",
+    get label() {
+      return t("options.m6a9e73cf0d42");
+    },
+    get hint() {
+      return t("options.m94fe434e1038");
+    },
     action: "file",
   },
-  { icon: "globe", label: "Browser capture", hint: "Pair the extension", action: "capture" },
-  { icon: "text", label: "Manual note", hint: "Your own idea", action: "manual" },
+  {
+    icon: "globe",
+    get label() {
+      return t("options.m48642ebbaa4c");
+    },
+    get hint() {
+      return t("options.m606cdbcc0a8b");
+    },
+    action: "capture",
+  },
+  {
+    icon: "text",
+    get label() {
+      return t("options.mb173e984a162");
+    },
+    get hint() {
+      return t("options.m154b12f6135d");
+    },
+    action: "manual",
+  },
 ];
 
 /** Map a thrown PDF-import `code: message` error line to a friendly message. */
@@ -174,6 +228,7 @@ function validBodyDoc(value: unknown): unknown | null {
  * owner with the prose centered at the reader measure for comfortable lines.
  */
 function PreviewPane({ detail }: { detail: InboxItemDetail }) {
+  useLocale();
   const { summary, provenance } = detail;
   const bodyDoc = validBodyDoc(detail.bodyDoc);
   const fallbackText = detail.bodyText ?? detail.bodyPreview ?? null;
@@ -187,7 +242,10 @@ function PreviewPane({ detail }: { detail: InboxItemDetail }) {
           {summary.accessedAt ? (
             <>
               <span aria-hidden>·</span>
-              <span>imported {summary.accessedAt.slice(0, 10)}</span>
+              <span>
+                {t("collection.m82a7af92dfeb")}
+                {summary.accessedAt.slice(0, 10)}
+              </span>
             </>
           ) : null}
         </div>
@@ -231,7 +289,7 @@ function PreviewPane({ detail }: { detail: InboxItemDetail }) {
           </div>
         ) : (
           <p className="text-sm text-text-3" data-testid="inbox-preview-empty">
-            No body yet. Add one from the New source modal.
+            {t("collection.mdddeea2326be")}
           </p>
         )}
       </div>
@@ -240,6 +298,7 @@ function PreviewPane({ detail }: { detail: InboxItemDetail }) {
 }
 
 export function InboxScreen() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const { selectedId, select } = useSelection();
@@ -1194,7 +1253,9 @@ export function InboxScreen() {
   // Announce the selection count politely on every change (size >= 1).
   useEffect(() => {
     if (selectedIds.size > 0) {
-      setAnnounce(`${selectedIds.size} item${selectedIds.size === 1 ? "" : "s"} selected`);
+      setAnnounce(
+        `${selectedIds.size} item${i18n.language.startsWith("zh") ? "" : selectedIds.size === 1 ? "" : "s"} selected`,
+      );
     }
   }, [selectedIds.size]);
 
@@ -1245,11 +1306,10 @@ export function InboxScreen() {
         <div className="grid size-12 place-items-center rounded-lg bg-accent-soft text-accent-text">
           <Icon name="inbox" size={26} />
         </div>
-        <h1 className="font-semibold text-2xl text-text tracking-tight">Inbox</h1>
-        <p className="max-w-sm text-base text-text-2">
-          The inbox reads + writes sources through the desktop bridge — open the Electron app to
-          triage captures.
-        </p>
+        <h1 className="font-semibold text-2xl text-text tracking-tight">
+          {t("collection.m94835ea2fcf7")}
+        </h1>
+        <p className="max-w-sm text-base text-text-2">{t("collection.m0d1c664bd8cc")}</p>
       </div>
     );
   }
@@ -1259,10 +1319,17 @@ export function InboxScreen() {
       {/* import strip */}
       <div className="border-border border-b px-6 py-4">
         <div className="mb-3 flex items-end justify-between">
-          <h1 className="font-semibold text-text text-xl tracking-tight">Import &amp; Inbox</h1>
+          <h1 className="font-semibold text-text text-xl tracking-tight">
+            {t("supplement.inboxTitle")}
+          </h1>
           <span className="text-sm text-text-3" data-testid="inbox-count">
-            {items.length} item{items.length !== 1 ? "s" : ""} awaiting triage
-            {selectedIds.size > 0 ? ` · ${selectedIds.size} selected` : ""}
+            {items.length}
+            {t("collection.ma5f3c2e9f903")}
+            {i18n.language.startsWith("zh") ? "" : items.length !== 1 ? "s" : ""}
+            {t("collection.m177efd1d698d")}
+            {selectedIds.size > 0
+              ? t("collection.mff4b416ff87c", { value1: String(selectedIds.size) })
+              : ""}
           </span>
         </div>
         <div className="flex flex-wrap gap-2.5" data-coach="import">
@@ -1295,7 +1362,7 @@ export function InboxScreen() {
                 type="button"
                 data-testid={`inbox-import-${o.label === "Manual note" ? "manual" : o.label.toLowerCase().replace(/[^a-z]+/g, "-")}`}
                 disabled={!enabled}
-                title={enabled ? undefined : "Coming soon"}
+                title={enabled ? undefined : t("collection.m4f7d64017689")}
                 onClick={onClick}
                 className={
                   enabled
@@ -1315,9 +1382,8 @@ export function InboxScreen() {
           })}
         </div>
         <div className="mt-2.5">
-          <InlineHint slug="what-to-import" slugLabel="What to import">
-            Good candidates: textbooks, overviews, technical explainers, your own notes — not
-            fiction, breaking news, or do-it-to-learn tutorials.
+          <InlineHint slug="what-to-import" slugLabel={t("supplement.whatToImport")}>
+            {t("collection.m7557b448978f")}
           </InlineHint>
         </div>
       </div>
@@ -1347,10 +1413,10 @@ export function InboxScreen() {
             <div className="grid size-12 place-items-center rounded-lg bg-ok-soft text-ok">
               <Icon name="checkCircle" size={26} />
             </div>
-            <h2 className="font-semibold text-text text-xl tracking-tight">Inbox zero</h2>
-            <p className="max-w-sm text-base text-text-2">
-              Every captured item has been triaged. New manual notes appear here.
-            </p>
+            <h2 className="font-semibold text-text text-xl tracking-tight">
+              {t("collection.ma5a38b88668f")}
+            </h2>
+            <p className="max-w-sm text-base text-text-2">{t("collection.m2550995f9b7e")}</p>
             <button
               type="button"
               data-testid="inbox-empty-new"
@@ -1358,7 +1424,7 @@ export function InboxScreen() {
               className="mt-1 inline-flex items-center gap-2 rounded-md bg-accent px-3.5 py-2 font-medium text-sm text-text-on-accent"
             >
               <Icon name="plus" size={14} />
-              New source
+              {t("collection.mc08163dae6d0")}
             </button>
           </div>
         ) : (
@@ -1391,7 +1457,7 @@ export function InboxScreen() {
               <PreviewPane detail={detail} />
             ) : (
               <div className="flex flex-1 items-center justify-center text-sm text-text-3">
-                Loading…
+                {t("collection.m0a5afbeee779")}
               </div>
             )}
           </>

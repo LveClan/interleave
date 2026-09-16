@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Standalone card detail route. Unlike `/review`, this route opens ONE card by
  * id, so queue/library clicks inspect and repair the clicked `active_card` instead
@@ -11,6 +12,7 @@ import { CardDetailPanel } from "./CardDetailPanel";
 import "./review.css";
 
 export function CardScreen() {
+  useLocale();
   const { id } = useParams({ from: "/card/$id" });
   const desktop = isDesktop();
   const navigate = useNavigate();
@@ -23,10 +25,8 @@ export function CardScreen() {
             <div className="rv-empty__icon">
               <Icon name="brain" size={26} />
             </div>
-            <h1 className="rv-empty__title">Card</h1>
-            <p className="rv-empty__body">
-              Card detail reads through the desktop bridge — open the Electron app to view it.
-            </p>
+            <h1 className="rv-empty__title">{t("learning.mbe3702e3f1af")}</h1>
+            <p className="rv-empty__body">{t("learning.m21cbbbbd1ecf")}</p>
           </div>
         </div>
       </div>

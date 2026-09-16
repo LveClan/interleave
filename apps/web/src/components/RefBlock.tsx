@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * RefBlock (T043) — the shared source-reference (`refblock`) component.
  *
@@ -95,13 +96,14 @@ export function RefBlock({
   testId = "refblock",
   style,
 }: RefBlockProps) {
+  useLocale();
   const f = formatSourceRef(ref);
 
   // Orphaned / source-less: a calm placeholder, never a broken link or a crash.
   if (!f.hasSource) {
     return (
       <div className="refblock refblock--empty" data-testid={`${testId}-empty`} style={style}>
-        <span className="dimmed">Source unavailable</span>
+        <span className="dimmed">{t("details.ma3feb81f9af3")}</span>
       </div>
     );
   }
@@ -180,7 +182,7 @@ export function RefBlock({
           onClick={onOpenSource}
         >
           <Icon name="external" size={12} />
-          Open source at this location
+          {t("details.m3471de2fc07d")}
         </button>
       ) : null}
     </div>

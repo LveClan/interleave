@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Concepts knowledge-map screen (`/concepts`).
  *
@@ -47,14 +48,30 @@ import "./concepts.css";
  * so a topic/synthesis_note/task member still appears.
  */
 const PRIMARY_GROUPS: readonly { type: string; title: string }[] = [
-  { type: "source", title: "Sources" },
-  { type: "extract", title: "Extracts" },
-  { type: "card", title: "Cards" },
+  {
+    type: "source",
+    get title() {
+      return t("supplement.mcaf85b0888d7");
+    },
+  },
+  {
+    type: "extract",
+    get title() {
+      return t("supplement.m877e04b7e7ed");
+    },
+  },
+  {
+    type: "card",
+    get title() {
+      return t("supplement.ma52fcbbc3364");
+    },
+  },
 ];
 const PRIMARY_TYPES = new Set(PRIMARY_GROUPS.map((g) => g.type));
 
 /** A due-state badge (overdue / today / soon) — matches the queue/library `DueBadge`. */
 function DueBadge({ member }: { member: ConceptMemberSummary }) {
+  useLocale();
   const cls =
     member.due === "overdue"
       ? "badge--overdue"
@@ -99,6 +116,7 @@ function ConceptRetentionEditor({
   target: number | null;
   onChanged: () => void;
 }) {
+  useLocale();
   const [busy, setBusy] = useState(false);
   const set = useCallback(
     async (next: number | null) => {
@@ -115,7 +133,7 @@ function ConceptRetentionEditor({
   const pct = target === null ? null : Math.round(target * 100);
   return (
     <div className="cm-retention" data-testid="concept-retention">
-      <span className="cm-retention__label">Retention</span>
+      <span className="cm-retention__label">{t("collection.m3b1f58d94eac")}</span>
       <input
         type="range"
         min={Math.round(DESIRED_RETENTION_MIN * 100)}
@@ -128,7 +146,7 @@ function ConceptRetentionEditor({
         className="cm-retention__range"
       />
       <span className="cm-retention__value" data-testid="concept-retention-value">
-        {pct === null ? "Inherit" : `${pct}%`}
+        {pct === null ? t("collection.m3f72f0385768") : `${pct}%`}
       </span>
       <button
         type="button"
@@ -137,7 +155,7 @@ function ConceptRetentionEditor({
         onClick={() => void set(null)}
         className="cm-retention__reset"
       >
-        Reset
+        {t("collection.m7021bd4b7276")}
       </button>
     </div>
   );
@@ -173,10 +191,11 @@ function ConceptMaturityPanel({
   loading: boolean;
   error: string | null;
 }) {
+  useLocale();
   return (
     <div className="cm-maturity" data-testid="concept-maturity-panel">
       <div className="cm-maturity__head">
-        <span className="cm-maturity__title">Knowledge state</span>
+        <span className="cm-maturity__title">{t("collection.mc1b06a4be599")}</span>
         {subject ? (
           <span
             className={`cm-maturity__status cm-maturity__status--${subject.graduationState.status}`}
@@ -187,7 +206,7 @@ function ConceptMaturityPanel({
       </div>
       {loading && !subject ? (
         <p className="lib-loading" data-testid="concept-maturity-loading">
-          Loading maturity…
+          {t("collection.m79424bcc5311")}
         </p>
       ) : error ? (
         <p className="lib-error" data-testid="concept-maturity-error">
@@ -198,28 +217,47 @@ function ConceptMaturityPanel({
           <div className="cm-maturity__grid">
             <div className="cm-maturity__metric">
               <span>{pct(subject.funnel.extractedOfRead)}</span>
-              <small>extracted / read</small>
+              <small>{t("collection.m8e5d7079ae91")}</small>
             </div>
             <div className="cm-maturity__metric">
               <span>{pct(subject.funnel.matureOfCarded)}</span>
               <small>
-                {subject.funnel.mature}/{subject.funnel.carded} mature
+                {subject.funnel.mature}/{subject.funnel.carded}
+                {t("collection.mace6de3c6478")}
               </small>
             </div>
             <div className="cm-maturity__metric">
               <span>{pct(subject.retention.measuredRetention)}</span>
-              <small>target {pct(subject.retention.retentionTarget)}</small>
+              <small>
+                {t("collection.m7c51bfc4180d")}
+                {pct(subject.retention.retentionTarget)}
+              </small>
             </div>
           </div>
           <div className="cm-maturity__buckets" data-testid="concept-maturity-buckets">
-            <span>Young {subject.stability.young}</span>
-            <span>Maturing {subject.stability.maturing}</span>
-            <span>Mature {subject.stability.mature}</span>
-            <span>Retired {subject.stability.retired}</span>
+            <span>
+              {t("collection.m741d85a901fa")}
+              {subject.stability.young}
+            </span>
+            <span>
+              {t("collection.m6c6dcac76958")}
+              {subject.stability.maturing}
+            </span>
+            <span>
+              {t("collection.m3eb9e0ebece7")}
+              {subject.stability.mature}
+            </span>
+            <span>
+              {t("collection.md1cd7e9ee7d3")}
+              {subject.stability.retired}
+            </span>
           </div>
           {subject.staleness.staleItems > 0 || subject.staleness.needsReverify > 0 ? (
             <p className="cm-maturity__note" data-testid="concept-maturity-flags">
-              {subject.staleness.staleItems} stale · {subject.staleness.needsReverify} need reverify
+              {subject.staleness.staleItems}
+              {t("collection.me86eb1928a67")}
+              {subject.staleness.needsReverify}
+              {t("collection.m07f71bf6ce1e")}
             </p>
           ) : null}
           <p className="cm-maturity__note">{subject.graduationState.reason}</p>
@@ -229,7 +267,9 @@ function ConceptMaturityPanel({
                 selector={{ kind: "concept", conceptId }}
                 hideWhileLoading
                 icon="target"
-                label={(n) => `Review ${n} weak-topic card${n === 1 ? "" : "s"}`}
+                label={(n) =>
+                  `Review ${n} weak-topic card${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "s"}`
+                }
                 testId="concept-maturity-review"
               />
             </div>
@@ -237,7 +277,7 @@ function ConceptMaturityPanel({
         </>
       ) : (
         <p className="cm-maturity__note" data-testid="concept-maturity-empty">
-          No maturity receipt for this concept yet.
+          {t("collection.m4a8288e8ebcb")}
         </p>
       )}
     </div>
@@ -245,6 +285,7 @@ function ConceptMaturityPanel({
 }
 
 export function ConceptsScreen() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const routeSearch = useSearch({ strict: false }) as { conceptId?: string };
@@ -388,8 +429,8 @@ export function ConceptsScreen() {
           <div className="lib-empty__icon">
             <Icon name="concepts" size={26} />
           </div>
-          <h1 className="lib-empty__title">Concept map</h1>
-          <p className="lib-empty__body">Open the Electron app to explore your concept map.</p>
+          <h1 className="lib-empty__title">{t("collection.m09554dc709f8")}</h1>
+          <p className="lib-empty__body">{t("collection.m3e0fbda1ceef")}</p>
         </div>
       </div>
     );
@@ -399,9 +440,12 @@ export function ConceptsScreen() {
     <div className="lib-shell" data-testid="route-concepts">
       <div className="lib-topbar">
         <div>
-          <h1 className="cm-title">Concepts</h1>
+          <h1 className="cm-title">{t("collection.m0d0a8c6df3ac")}</h1>
           <span className="lib-count" data-testid="concepts-count">
-            {concepts.length} concept{concepts.length === 1 ? "" : "s"} · click a node to explore
+            {concepts.length}
+            {t("collection.m3760744d1cce")}
+            {i18n.language.startsWith("zh") ? "" : concepts.length === 1 ? "" : "s"}
+            {t("collection.md55c55fc0734")}
           </span>
         </div>
         <div className="lib-grow" />
@@ -411,10 +455,10 @@ export function ConceptsScreen() {
         {/* LEFT — the concept hierarchy filterbar (indented by parent depth). */}
         <div className="filterbar" data-testid="concepts-filterbar">
           <div className="filter-group">
-            <div className="filter-group__title">Concepts</div>
+            <div className="filter-group__title">{t("collection.m0d0a8c6df3ac")}</div>
             {concepts.length === 0 ? (
               <span className="filter-opt filter-opt--disabled">
-                <span>No concepts yet</span>
+                <span>{t("collection.md51c13ba35a7")}</span>
               </span>
             ) : (
               concepts.map((c) => (
@@ -439,9 +483,11 @@ export function ConceptsScreen() {
         <div className="cm-main">
           <div className="lib-map__canvas">
             <div className="lib-map__head">
-              <h2 className="lib-map__title">Concept map</h2>
+              <h2 className="lib-map__title">{t("collection.m09554dc709f8")}</h2>
               <span className="lib-map__hint">
-                {selected ? `Exploring “${selected.name}”` : "Click a node to explore its members"}
+                {selected
+                  ? t("collection.m8a3d2fb34a9c", { value1: String(selected.name) })
+                  : t("collection.m25680f2ebfd6")}
               </span>
             </div>
             <div className="lib-map__panel">
@@ -451,7 +497,7 @@ export function ConceptsScreen() {
                 </p>
               ) : loading && concepts.length === 0 ? (
                 <p className="lib-loading" data-testid="concepts-loading">
-                  Loading concepts…
+                  {t("collection.m0796e721638c")}
                 </p>
               ) : concepts.length > 0 ? (
                 <ConceptGraph
@@ -465,10 +511,8 @@ export function ConceptsScreen() {
                   <div className="lib-empty__icon">
                     <Icon name="concepts" size={26} />
                   </div>
-                  <h2 className="lib-empty__title">No concepts yet</h2>
-                  <p className="lib-empty__body">
-                    Assign concepts to your sources, extracts, and cards to grow the map.
-                  </p>
+                  <h2 className="lib-empty__title">{t("collection.md51c13ba35a7")}</h2>
+                  <p className="lib-empty__body">{t("collection.m422f1ee7bb3c")}</p>
                 </div>
               )}
             </div>
@@ -480,14 +524,18 @@ export function ConceptsScreen() {
               <div className="cm-members__head">
                 <ConceptTag name={selected.name} />
                 <span className="cm-members__count">
-                  {members.length} member{members.length === 1 ? "" : "s"}
+                  {members.length}
+                  {t("collection.m262e18060309")}
+                  {i18n.language.startsWith("zh") ? "" : members.length === 1 ? "" : "s"}
                 </span>
                 {/* T096 — review every CARD in this concept (outside scheduling). Omitted
                     when the concept has no live cards (the button resolves its own count). */}
                 <ReviewModeButton
                   selector={{ kind: "concept", conceptId: selected.id }}
                   hideWhileLoading
-                  label={(n) => `Review ${n} card${n === 1 ? "" : "s"}`}
+                  label={(n) =>
+                    `Review ${n} card${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "s"}`
+                  }
                   testId="concepts-review-mode"
                 />
               </div>
@@ -505,15 +553,19 @@ export function ConceptsScreen() {
               <div className="cm-members__list">
                 {membersLoading && members.length === 0 ? (
                   <p className="lib-loading" data-testid="concepts-members-loading">
-                    Loading members…
+                    {t("collection.mcc285b28472b")}
                   </p>
                 ) : members.length === 0 ? (
                   <div className="lib-empty" data-testid="concepts-members-empty">
                     <div className="lib-empty__icon">
                       <Icon name="layers" size={22} />
                     </div>
-                    <h3 className="lib-empty__title">No live members</h3>
-                    <p className="lib-empty__body">Nothing is assigned to “{selected.name}” yet.</p>
+                    <h3 className="lib-empty__title">{t("collection.mbe43e49e53f3")}</h3>
+                    <p className="lib-empty__body">
+                      {t("collection.m4e98b295e92e")}
+                      {selected.name}
+                      {t("collection.md4e2a1d21387")}
+                    </p>
                   </div>
                 ) : (
                   <MemberGroups members={members} onOpen={open} />
@@ -525,7 +577,7 @@ export function ConceptsScreen() {
 
         {/* RIGHT — "Concepts by volume" rail. */}
         <div className="lib-map__side" data-testid="concepts-rail">
-          <div className="filter-group__title">Concepts by volume</div>
+          <div className="filter-group__title">{t("collection.mca72467726cc")}</div>
           {[...concepts]
             .sort((a, b) => b.memberCount - a.memberCount)
             .map((c) => (
@@ -544,10 +596,14 @@ export function ConceptsScreen() {
                 </div>
                 <div className="lib-map__concept-counts">
                   <span>
-                    <b>{c.memberCount}</b> member{c.memberCount === 1 ? "" : "s"}
+                    <b>{c.memberCount}</b>
+                    {t("collection.m262e18060309")}
+                    {i18n.language.startsWith("zh") ? "" : c.memberCount === 1 ? "" : "s"}
                   </span>
                   <span>
-                    <b>{c.childCount}</b> child{c.childCount === 1 ? "" : "ren"}
+                    <b>{c.childCount}</b>
+                    {t("collection.m7892cfe0edf9")}
+                    {c.childCount === 1 ? "" : t("collection.mdb1a748b23cf")}
                   </span>
                 </div>
               </button>
@@ -566,6 +622,7 @@ function MemberGroups({
   members: readonly ConceptMemberSummary[];
   onOpen: (m: ConceptMemberSummary) => void;
 }) {
+  useLocale();
   const otherMembers = members.filter((m) => !PRIMARY_TYPES.has(m.type));
   return (
     <>
@@ -584,7 +641,7 @@ function MemberGroups({
       })}
       {otherMembers.length > 0 ? (
         <MemberSection
-          title="Other"
+          title={t("collection.mf97e9da0e3b8")}
           rows={otherMembers}
           onOpen={onOpen}
           testId="concepts-members-group-other"
@@ -605,6 +662,7 @@ function MemberSection({
   onOpen: (m: ConceptMemberSummary) => void;
   testId: string;
 }) {
+  useLocale();
   return (
     <div className="lib-sec" data-testid={testId}>
       <div className="lib-sec__head">

@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * AI-assisted distillation surface (T093/T094).
  *
@@ -49,13 +50,48 @@ function locationFromGrounding(g: AiGroundingLocation): LocationSummary {
 
 /** The seven actions + their human labels, in display order. */
 const AI_ACTIONS: ReadonlyArray<{ action: AiActionType; label: string }> = [
-  { action: "explain", label: "Explain" },
-  { action: "simplify", label: "Simplify" },
-  { action: "suggest_qa", label: "Suggest Q&A" },
-  { action: "suggest_cloze", label: "Suggest cloze" },
-  { action: "detect_ambiguity", label: "Detect ambiguity" },
-  { action: "propose_prerequisites", label: "Prerequisites" },
-  { action: "summarize", label: "Summarize" },
+  {
+    action: "explain",
+    get label() {
+      return t("options.m3b61e4e93652");
+    },
+  },
+  {
+    action: "simplify",
+    get label() {
+      return t("options.m7102ac344b4a");
+    },
+  },
+  {
+    action: "suggest_qa",
+    get label() {
+      return t("options.md203d9b725e2");
+    },
+  },
+  {
+    action: "suggest_cloze",
+    get label() {
+      return t("options.m3f5ba3d110b3");
+    },
+  },
+  {
+    action: "detect_ambiguity",
+    get label() {
+      return t("options.ma6a6987c2dd3");
+    },
+  },
+  {
+    action: "propose_prerequisites",
+    get label() {
+      return t("options.m865514682d01");
+    },
+  },
+  {
+    action: "summarize",
+    get label() {
+      return t("options.me2683724d3ee");
+    },
+  },
 ];
 
 /** The grounding span the AI action runs over (the extract's own anchor). */
@@ -75,6 +111,7 @@ export interface AiAssistProps {
 }
 
 export function AiAssist({ owningElementId, grounding }: AiAssistProps): React.ReactElement | null {
+  useLocale();
   const [status, setStatus] = useState<AiStatusResult | null>(null);
   const [suggestions, setSuggestions] = useState<readonly AiSuggestionView[]>([]);
   const [busyAction, setBusyAction] = useState<AiActionType | null>(null);
@@ -167,10 +204,9 @@ export function AiAssist({ owningElementId, grounding }: AiAssistProps): React.R
   if (status && !status.enabled) {
     return (
       <section className="ai-assist" data-testid="ai-assist-disabled">
-        <div className="insp-sec__title">AI assistance</div>
+        <div className="insp-sec__title">{t("learning.m22a65461bf9b")}</div>
         <p className="dimmed text-sm" style={{ marginTop: 6 }}>
-          Turn on AI assistance in Settings → to draft cards from this extract. Every suggestion is
-          a draft — it never schedules a card.
+          {t("learning.m4e4a9f8040da")}
         </p>
       </section>
     );
@@ -178,11 +214,11 @@ export function AiAssist({ owningElementId, grounding }: AiAssistProps): React.R
 
   return (
     <section className="ai-assist" data-testid="ai-assist">
-      <div className="insp-sec__title">AI assistance</div>
+      <div className="insp-sec__title">{t("learning.m22a65461bf9b")}</div>
 
       {status?.managedProxyEnabled ? (
         <div className="ai-assist__disclosure text-sm" data-testid="ai-assist-proxy-disclosure">
-          Managed proxy is on — your selected text is sent off-device to generate suggestions.
+          {t("learning.m9ba35196b7d6")}
         </div>
       ) : null}
 
@@ -200,7 +236,7 @@ export function AiAssist({ owningElementId, grounding }: AiAssistProps): React.R
             disabled={busyAction != null || !grounding}
             onClick={() => void onRun(action)}
           >
-            {busyAction === action ? "Thinking…" : label}
+            {busyAction === action ? t("learning.ma02f1cea3c1d") : label}
           </button>
         ))}
       </div>
@@ -213,7 +249,7 @@ export function AiAssist({ owningElementId, grounding }: AiAssistProps): React.R
 
       <div className="ai-assist__drafts" data-testid="ai-assist-drafts" style={{ marginTop: 10 }}>
         {suggestions.length === 0 ? (
-          <p className="dimmed text-sm">No AI drafts yet. Run an action above.</p>
+          <p className="dimmed text-sm">{t("learning.m3a3181b9b15d")}</p>
         ) : (
           suggestions.map((s) => (
             <article
@@ -291,7 +327,7 @@ export function AiAssist({ owningElementId, grounding }: AiAssistProps): React.R
                     data-testid="ai-draft-approve"
                     onClick={() => void onApprove(s.id)}
                   >
-                    Approve → card draft
+                    {t("learning.mc2cd6a1fb254")}
                   </button>
                 ) : null}
                 <button
@@ -300,7 +336,7 @@ export function AiAssist({ owningElementId, grounding }: AiAssistProps): React.R
                   data-testid="ai-draft-dismiss"
                   onClick={() => void onDismiss(s.id)}
                 >
-                  Dismiss
+                  {t("learning.medc0fe2d169a")}
                 </button>
               </div>
             </article>

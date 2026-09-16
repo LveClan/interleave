@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Icon } from "../../components/Icon";
 import { TypeIcon } from "../../components/inspector/primitives";
+import { i18n, t, useLocale } from "../../i18n";
 import {
   appApi,
   type QueueSessionPlanRequest,
@@ -18,9 +19,27 @@ const PRESETS = [15, 25, 45] as const;
  * `TypeIcon` tone.
  */
 const CATEGORIES = [
-  { minutesKey: "distillationMinutes", label: "Distillation", color: "var(--el-extract)" },
-  { minutesKey: "cardMinutes", label: "Cards", color: "var(--el-card)" },
-  { minutesKey: "otherMinutes", label: "Other work", color: "var(--el-source)" },
+  {
+    minutesKey: "distillationMinutes",
+    get label() {
+      return t("options.me68a9a3d4152");
+    },
+    color: "var(--el-extract)",
+  },
+  {
+    minutesKey: "cardMinutes",
+    get label() {
+      return t("options.ma52fcbbc3364");
+    },
+    color: "var(--el-card)",
+  },
+  {
+    minutesKey: "otherMinutes",
+    get label() {
+      return t("options.m47f776453fbe");
+    },
+    color: "var(--el-source)",
+  },
 ] as const;
 
 export function SessionAssemblyPreview({
@@ -36,6 +55,7 @@ export function SessionAssemblyPreview({
   request?: Omit<QueueSessionPlanRequest, "targetMinutes">;
   onClose: () => void;
 }) {
+  useLocale();
   const navigate = useNavigate();
   const titleId = useId();
   const [target, setTarget] = useState(defaultTargetMinutes);
@@ -176,16 +196,14 @@ export function SessionAssemblyPreview({
       <div className="q-session-preview__head">
         <div>
           <h2 id={titleId} className="q-session-preview__title">
-            Session forecast
+            {t("learning.m4b564f5f3704")}
           </h2>
-          <p className="q-session-preview__sub">
-            Set a time box to preview what's ahead; starting serves the live queue.
-          </p>
+          <p className="q-session-preview__sub">{t("learning.m0034f7ade1af")}</p>
         </div>
         <button
           type="button"
           className="q-session-preview__close"
-          aria-label="Close session preview"
+          aria-label={t("learning.m8a59dadf05d1")}
           onClick={onClose}
         >
           <Icon name="x" size={15} />
@@ -195,12 +213,12 @@ export function SessionAssemblyPreview({
       <div className="q-session-preview__split">
         <div className="q-session-preview__rail">
           <fieldset className="q-session-preview__presets">
-            <legend className="q-session-preview__rail-label">Time box</legend>
+            <legend className="q-session-preview__rail-label">{t("learning.m933be42a1f31")}</legend>
             <div className="q-session-preview__cards">
               {PRESETS.map((minutes) => {
                 const outcome = presetOutcomes.get(minutes);
                 const items = outcome
-                  ? `${outcome.plannedCount} item${outcome.plannedCount === 1 ? "" : "s"}`
+                  ? `${outcome.plannedCount} item${i18n.language.startsWith("zh") ? "" : outcome.plannedCount === 1 ? "" : "s"}`
                   : null;
                 const pct =
                   outcome && outcome.targetMinutes > 0
@@ -217,7 +235,7 @@ export function SessionAssemblyPreview({
                   >
                     <span className="q-session-preview__card-min">
                       {minutes}
-                      <i>min</i>
+                      <i>{t("learning.m1f6fa6f69d18")}</i>
                     </span>
                     <span className="q-session-preview__card-meta">{meta}</span>
                   </button>
@@ -230,7 +248,7 @@ export function SessionAssemblyPreview({
                   <input
                     ref={inputRef}
                     data-testid="session-target-minutes"
-                    aria-label="Custom session minutes"
+                    aria-label={t("learning.m23e7fd23cbc3")}
                     inputMode="numeric"
                     type="number"
                     min={0}
@@ -238,9 +256,9 @@ export function SessionAssemblyPreview({
                     value={target}
                     onChange={(event) => setTarget(Number(event.currentTarget.value))}
                   />
-                  <i>min</i>
+                  <i>{t("learning.m1f6fa6f69d18")}</i>
                 </span>
-                <span className="q-session-preview__card-meta">custom box</span>
+                <span className="q-session-preview__card-meta">{t("learning.ma5e53b222914")}</span>
               </label>
             </div>
           </fieldset>
@@ -250,10 +268,13 @@ export function SessionAssemblyPreview({
               <div className="q-session-preview__meter">
                 <div className="q-session-preview__meter-head">
                   <span>
-                    <b>{sessionMinuteLabel(plan.plannedMinutes, approximate)}</b> planned
+                    <b>{sessionMinuteLabel(plan.plannedMinutes, approximate)}</b>
+                    {t("learning.m5ed0f9bb209c")}
                   </span>
                   <span className="q-session-preview__meter-free">
-                    {freeMinutes > 0 ? `${freeMinutes} min free` : "box full"}
+                    {freeMinutes > 0
+                      ? t("learning.m7cba295a27f0", { value1: String(freeMinutes) })
+                      : t("learning.mb1d61188a9aa")}
                   </span>
                 </div>
                 <div className="q-session-preview__bar">
@@ -277,7 +298,10 @@ export function SessionAssemblyPreview({
                       style={{ left: pctOf(composition.quotaFloorMinutes) }}
                     >
                       <i />
-                      <em>floor {composition.quotaFloorMinutes}m</em>
+                      <em>
+                        {t("learning.me6f88d9d3a5b")}
+                        {composition.quotaFloorMinutes}m
+                      </em>
                     </span>
                   ) : null}
                 </div>
@@ -299,7 +323,9 @@ export function SessionAssemblyPreview({
               {composition.status === "active" ? (
                 <p className="q-session-preview__floornote">
                   <Icon name="flame" size={12} />
-                  Distillation floor active — {composition.quotaFloorMinutes} min held.
+                  {t("learning.mea2c9f4b00ab")}
+                  {composition.quotaFloorMinutes}
+                  {t("learning.maca71a39f275")}
                 </p>
               ) : null}
             </>
@@ -318,10 +344,10 @@ export function SessionAssemblyPreview({
               className="q-session-preview__state q-session-preview__state--error"
               data-testid="session-preview-error"
             >
-              Enter a whole number of minutes.
+              {t("learning.m281bd5108f35")}
             </div>
           ) : loading ? (
-            <div className="q-session-preview__state">Planning session...</div>
+            <div className="q-session-preview__state">{t("learning.md0f1b8de1e70")}</div>
           ) : error ? (
             <div
               className="q-session-preview__state q-session-preview__state--error"
@@ -338,28 +364,27 @@ export function SessionAssemblyPreview({
               ) : null}
               <div className="q-session-preview__summary">
                 <span className="q-session-preview__summary-title">
-                  Plan <b>{plan.plannedCount}</b> of {plan.candidateCount} due item
-                  {plan.candidateCount === 1 ? "" : "s"}
+                  {t("learning.maf56fe657b85")}
+                  <b>{plan.plannedCount}</b>
+                  {t("learning.ma4282e4b2298")}
+                  {plan.candidateCount}
+                  {t("learning.mc22d64101ff5")}
+                  {i18n.language.startsWith("zh") ? "" : plan.candidateCount === 1 ? "" : "s"}
                 </span>
                 <strong className="q-session-preview__total" data-testid="session-planned-minutes">
                   {sessionMinuteLabel(plan.plannedMinutes, approximate)}
                 </strong>
               </div>
               {plan.overTarget ? (
-                <p className="q-session-preview__note">
-                  The first item is larger than the target, so this session starts with that one
-                  item.
-                </p>
+                <p className="q-session-preview__note">{t("learning.mee26ae83fcbb")}</p>
               ) : approximate ? (
-                <p className="q-session-preview__note">
-                  Minute estimates include documented defaults.
-                </p>
+                <p className="q-session-preview__note">{t("learning.m310f8430708d")}</p>
               ) : null}
 
               {plan.items.length === 0 ? (
-                <div className="q-session-preview__empty">No due work fits this target.</div>
+                <div className="q-session-preview__empty">{t("learning.m11edba3d8f48")}</div>
               ) : (
-                <ul className="q-session-preview__list" aria-label="Planned session items">
+                <ul className="q-session-preview__list" aria-label={t("learning.m3821159569b7")}>
                   {plan.items.map((row) => (
                     <li key={row.item.id} className="q-session-preview__row">
                       <TypeIcon type={row.item.type} />
@@ -383,12 +408,15 @@ export function SessionAssemblyPreview({
               <div className="q-session-preview__leftout">
                 <div className="q-session-preview__leftout-head" data-testid="session-cut-list">
                   <span data-testid="session-cut-count">
-                    Left out {plan.cut.totalCount} item{plan.cut.totalCount === 1 ? "" : "s"}
+                    {t("learning.m6b2c8f4e6639")}
+                    {plan.cut.totalCount}
+                    {t("learning.ma5f3c2e9f903")}
+                    {i18n.language.startsWith("zh") ? "" : plan.cut.totalCount === 1 ? "" : "s"}
                   </span>
                   <strong>{sessionMinuteLabel(plan.cut.totalMinutes, approximate)}</strong>
                 </div>
                 {plan.cut.items.length > 0 ? (
-                  <ul className="q-session-preview__list" aria-label="Left-out session items">
+                  <ul className="q-session-preview__list" aria-label={t("learning.m597f31b28995")}>
                     {plan.cut.items.map((row) => (
                       <li
                         key={row.item.id}
@@ -400,7 +428,7 @@ export function SessionAssemblyPreview({
                         </span>
                         <span className="q-session-preview__tag">
                           <Icon name="ban" size={11} />
-                          {row.reason === "did_not_fit" ? "Didn't fit" : row.reason}
+                          {row.reason === "did_not_fit" ? t("learning.m9d69cfceeff6") : row.reason}
                         </span>
                       </li>
                     ))}
@@ -419,7 +447,7 @@ export function SessionAssemblyPreview({
           disabled={confirming}
           onClick={onClose}
         >
-          Cancel
+          {t("learning.m0ef70263b054")}
         </button>
         <button
           type="button"
@@ -439,7 +467,7 @@ export function SessionAssemblyPreview({
           }}
         >
           <Icon name="play" size={14} />
-          Start
+          {t("learning.m23b7532db30a")}
         </button>
       </div>
     </section>

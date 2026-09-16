@@ -1,4 +1,11 @@
 export const shell = {
+  inspector: "详情面板",
+  inspectorSelect: "选择一个条目，查看其详情、来源关系和调度信息。",
+  inspectorElements: "条目",
+  inspectorEmpty: "暂无条目。导入一份来源即可开始。",
+  inspectorDesktop: "详情面板通过桌面接口读取条目数据，请打开 Electron 应用查看。",
+  inspectorMissing: "该条目已不可用。",
+  inspectorLoading: "加载中…",
   localVault: "本地库",
   undid_one: "已撤销 {{count, number}} 项更改",
   undid_other: "已撤销 {{count, number}} 项更改",

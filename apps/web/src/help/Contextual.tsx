@@ -74,6 +74,7 @@ export function InlineHint({
   slugLabel?: string;
   warn?: boolean;
 }) {
+  useLocale();
   return (
     <div className={cx("inline-hint", warn && "inline-hint--warn")}>
       <Icon name={icon} size={13} />
@@ -195,6 +196,7 @@ export function Coachmark({
   onPrev,
   onDismiss,
 }: CoachmarkProps) {
+  useLocale();
   const rect = useAnchorRect(targetSel, true);
   const cardRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: lg ? 360 : 312, h: 200 });
@@ -263,7 +265,7 @@ export function Coachmark({
         ref={cardRef}
         style={{ top: pos.top, left: pos.left }}
         role="dialog"
-        aria-label={typeof title === "string" ? title : "Tip"}
+        aria-label={typeof title === "string" ? title : t("details.ma4245a3c4f56")}
       >
         <div className="coach__top">
           <span className="coach__icon">
@@ -278,7 +280,7 @@ export function Coachmark({
               type="button"
               className="btn btn--ghost btn--sm btn--icon coach__close"
               onClick={onDismiss}
-              aria-label="Dismiss"
+              aria-label={t("details.m48845bff334a")}
             >
               <Icon name="x" size={14} />
             </button>
@@ -300,11 +302,12 @@ export function Coachmark({
               </div>
               {onPrev && step > 0 && (
                 <button type="button" className="btn btn--ghost btn--sm" onClick={onPrev}>
-                  Back
+                  {t("details.m9153f74ab465")}
                 </button>
               )}
               <button type="button" className="btn btn--primary btn--sm" onClick={onNext}>
-                {nextLabel || (step === total - 1 ? "Finish" : "Next")}
+                {nextLabel ||
+                  (step === total - 1 ? t("details.ma6c7a84baa67") : t("details.m1ff57a29d7c9"))}
               </button>
             </>
           ) : (
@@ -312,7 +315,7 @@ export function Coachmark({
               {slug ? (
                 <span className="grow">
                   <HelpLink slug={slug} variant="inline">
-                    Learn more
+                    {t("details.m7c4c8c96d847")}
                   </HelpLink>
                 </span>
               ) : (
@@ -323,7 +326,7 @@ export function Coachmark({
                 className="btn btn--primary btn--sm"
                 onClick={onNext || onDismiss}
               >
-                {nextLabel || "Got it"}
+                {nextLabel || t("details.m5ad3dbd1242a")}
               </button>
             </>
           )}
@@ -342,6 +345,7 @@ export function OnceCoach({
   onNext,
   ...props
 }: { id: string } & Omit<CoachmarkProps, "onDismiss">) {
+  useLocale();
   const { tipsEnabled, isSeen, markSeen } = useHelp();
   if (!tipsEnabled || isSeen(id)) return null;
   return (

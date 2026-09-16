@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Extract review mode (T024) — the real `/extract/$id` distillation workspace.
  *
@@ -121,6 +122,7 @@ function isFormFieldTarget(target: EventTarget | null): boolean {
 }
 
 export function ExtractView() {
+  useLocale();
   const { id } = useParams({ from: "/extract/$id" });
   const search = useSearch({ strict: false }) as {
     builder?: string;
@@ -697,11 +699,10 @@ export function ExtractView() {
         <span className="reader-state__icon">
           <Icon name="extract" size={26} />
         </span>
-        <h1 className="font-semibold text-text text-xl tracking-tight">Extract review</h1>
-        <p className="max-w-sm">
-          Extracts are processed through the desktop bridge — open the Electron app to review an
-          extract.
-        </p>
+        <h1 className="font-semibold text-text text-xl tracking-tight">
+          {t("learning.m69d3a7fa7791")}
+        </h1>
+        <p className="max-w-sm">{t("learning.mf1750bf18351")}</p>
       </div>
     );
   }
@@ -745,7 +746,7 @@ export function ExtractView() {
   return (
     <div className="reader-screen extract-view" data-testid="route-extract">
       <header className="reader-header" data-testid="extract-header">
-        <nav className="reader-crumbs" aria-label="Breadcrumb">
+        <nav className="reader-crumbs" aria-label={t("learning.m2bd873d6c734")}>
           {currentInspector?.source ? (
             <button
               type="button"
@@ -759,19 +760,20 @@ export function ExtractView() {
             </button>
           ) : (
             <span className="reader-crumb">
-              <Icon name="library" size={14} /> Library
+              <Icon name="library" size={14} />
+              {t("learning.md8b82e25ef52")}
             </span>
           )}
           <span className="reader-crumb-sep">
             <Icon name="chevronRight" size={13} />
           </span>
           <span className="reader-crumb reader-crumb--current">
-            <Icon name="extract" size={14} /> {element?.title ?? "Extract"}
+            <Icon name="extract" size={14} /> {element?.title ?? t("learning.mc15301c0e647")}
           </span>
         </nav>
 
         <h1 className="reader-title" data-testid="extract-title">
-          {element?.title ?? "Extract"}
+          {element?.title ?? t("learning.mc15301c0e647")}
         </h1>
 
         <div className="reader-metarow">
@@ -782,7 +784,9 @@ export function ExtractView() {
               <Stage stage={element.stage} />
               {currentInspector ? <SchedulerChip scheduler={currentInspector.scheduler} /> : null}
               <span className="reader-meta reader-meta--mono">
-                {element.dueAt ? `next ${fmtDate(element.dueAt)}` : "unscheduled"}
+                {element.dueAt
+                  ? t("learning.md10ede7a5444", { value1: String(fmtDate(element.dueAt)) })
+                  : t("learning.ma371ca4c1179")}
               </span>
             </>
           ) : null}
@@ -796,16 +800,16 @@ export function ExtractView() {
               affordance. Shown for a `media_fragment` extract with a region anchor. */}
           {element?.type === "media_fragment" && location?.region ? (
             <div className="extract-region" data-testid="extract-region-figure">
-              <div className="insp-sec__title">Figure</div>
+              <div className="insp-sec__title">{t("learning.m1f5be66894e5")}</div>
               {regionImageUrl ? (
                 <img
                   className="extract-region__img"
                   data-testid="extract-region-img"
                   src={regionImageUrl}
-                  alt={element?.title ?? "Extracted figure"}
+                  alt={element?.title ?? t("learning.maeacf44bb1a1")}
                 />
               ) : (
-                <p className="dimmed">Figure image loads through the desktop bridge.</p>
+                <p className="dimmed">{t("learning.m81d71219435e")}</p>
               )}
               <button
                 type="button"
@@ -824,7 +828,7 @@ export function ExtractView() {
                   });
                 }}
               >
-                <Icon name="source" size={12} /> {location.label ?? "Jump to page region"}
+                <Icon name="source" size={12} /> {location.label ?? t("learning.m9990d0ecdf74")}
               </button>
             </div>
           ) : null}
@@ -833,7 +837,7 @@ export function ExtractView() {
               extract with a clip window. */}
           {element?.type === "media_fragment" && location?.clip ? (
             <div className="extract-clip" data-testid="extract-clip">
-              <div className="insp-sec__title">Clip</div>
+              <div className="insp-sec__title">{t("learning.m82337888d764")}</div>
               {location.sourceElementId ? (
                 <ClipMiniPlayer
                   sourceElementId={location.sourceElementId}
@@ -854,11 +858,11 @@ export function ExtractView() {
                   });
                 }}
               >
-                <Icon name="source" size={12} /> {location.label ?? "Jump to clip"}
+                <Icon name="source" size={12} /> {location.label ?? t("learning.m5968e0c917c1")}
               </button>
             </div>
           ) : null}
-          <div className="insp-sec__title">Source context</div>
+          <div className="insp-sec__title">{t("learning.mf37735652b96")}</div>
           {/* Source reference (T043) — the always-visible refblock: source
               title/URL/author/date + location + verbatim snippet, resolved from
               this extract's lineage. The jump-to-source button (T022) opens the
@@ -880,15 +884,15 @@ export function ExtractView() {
                 data-testid="extract-jump-source"
                 onClick={() => navigateToLocation(location)}
               >
-                <Icon name="source" size={12} /> {location.label ?? "Jump to source"}
+                <Icon name="source" size={12} /> {location.label ?? t("learning.m433ba071638c")}
               </button>
             </blockquote>
           ) : (
-            <p className="dimmed">No source location recorded.</p>
+            <p className="dimmed">{t("learning.mc4e755cc5fe2")}</p>
           )}
 
           <div className="insp-sec__title" style={{ marginTop: 18 }}>
-            Lineage
+            {t("learning.m656c755e3d95")}
           </div>
           {lineageNodes.length > 0 ? (
             <LineageTree
@@ -913,7 +917,7 @@ export function ExtractView() {
               }}
             />
           ) : (
-            <p className="dimmed">Lineage loads through the desktop bridge.</p>
+            <p className="dimmed">{t("learning.ma2e2fc9cf072")}</p>
           )}
         </aside>
 
@@ -934,7 +938,8 @@ export function ExtractView() {
           <section className="extract-distill" data-testid="extract-distill">
             <div className="extract-distill__head">
               <span className="extract-distill__title">
-                Distill extract <HelpLink slug="distilling-extracts" />
+                {t("learning.m0fe43cee0794")}
+                <HelpLink slug="distilling-extracts" />
               </span>
               {stageIdx < EXTRACT_STAGES.length - 1 ? (
                 <button
@@ -944,7 +949,8 @@ export function ExtractView() {
                   disabled={busy}
                   onClick={() => void setStage()}
                 >
-                  <Icon name="sparkle" size={14} /> Advance stage
+                  <Icon name="sparkle" size={14} />
+                  {t("learning.m249bdfe359cd")}
                 </button>
               ) : null}
             </div>
@@ -986,11 +992,11 @@ export function ExtractView() {
             <div className="extract-editor" data-testid="extract-editor">
               {doc.status === "loading" ? (
                 <p className="dimmed" data-testid="extract-loading">
-                  Loading extract…
+                  {t("learning.mf94e43025cea")}
                 </p>
               ) : doc.status === "error" ? (
                 <p className="text-danger text-sm" data-testid="extract-error">
-                  {doc.error ?? "Failed to load this extract."}
+                  {doc.error ?? t("learning.m4026fba770a3")}
                 </p>
               ) : (
                 <SourceEditor
@@ -1004,9 +1010,13 @@ export function ExtractView() {
               )}
               <div className="extract-editor__meta">
                 <span className="reader-meta reader-meta--mono">
-                  {doc.plainText.trim() ? `${doc.plainText.trim().split(/\s+/).length} words` : "—"}
+                  {doc.plainText.trim()
+                    ? t("learning.maf1828ea16b2", {
+                        value1: String(doc.plainText.trim().split(/\s+/).length),
+                      })
+                    : "—"}
                 </span>
-                <span className="reader-meta">aim for a single, self-contained idea</span>
+                <span className="reader-meta">{t("learning.m22dfe76cb852")}</span>
               </div>
             </div>
 
@@ -1019,7 +1029,8 @@ export function ExtractView() {
                 disabled={busy}
                 onClick={() => void trimBody()}
               >
-                <Icon name="trim" size={14} /> Trim
+                <Icon name="trim" size={14} />
+                {t("learning.md4c4292cd92b")}
               </button>
               <button
                 type="button"
@@ -1028,14 +1039,15 @@ export function ExtractView() {
                 disabled={busy}
                 onClick={onSplit}
               >
-                <Icon name="split" size={14} /> Split
+                <Icon name="split" size={14} />
+                {t("learning.m7871d4c42454")}
               </button>
               <button
                 type="button"
                 className="reader-btn"
                 data-testid="extract-convert"
                 disabled={busy || extractFate !== null}
-                title={extractFate ? "Reactivate this extract before creating a card" : undefined}
+                title={extractFate ? t("learning.mbde82b5421e7") : undefined}
                 onClick={onConvert}
               >
                 <Icon
@@ -1043,10 +1055,10 @@ export function ExtractView() {
                   size={14}
                 />{" "}
                 {isImageExtract
-                  ? "Occlude image"
+                  ? t("learning.m0701883c90b8")
                   : isClipExtract
-                    ? "Create audio card"
-                    : "Convert to card"}
+                    ? t("learning.m03482923eb9a")
+                    : t("learning.m1a6158ff112e")}
               </button>
               <button
                 type="button"
@@ -1055,7 +1067,8 @@ export function ExtractView() {
                 disabled={busy}
                 onClick={() => void onPostpone()}
               >
-                <Icon name="postpone" size={14} /> Postpone
+                <Icon name="postpone" size={14} />
+                {t("learning.mffbeb9f3b9e6")}
               </button>
               <button
                 type="button"
@@ -1064,7 +1077,8 @@ export function ExtractView() {
                 disabled={busy}
                 onClick={() => void onMarkDone()}
               >
-                <Icon name="checkCircle" size={14} /> Mark done
+                <Icon name="checkCircle" size={14} />
+                {t("learning.m5a9108fa720f")}
               </button>
               {/* Descendant-aware delete (T135 / U7): a leaf deletes quietly; an extract
                   that still anchors live descendants opens the intent menu. The trigger
@@ -1086,7 +1100,7 @@ export function ExtractView() {
 
             <div className="extract-fate" data-testid="extract-fate-controls">
               <div className="extract-fate__label">
-                <span>Honorable exit</span>
+                <span>{t("learning.m48b082f03b44")}</span>
                 {extractFate ? (
                   <span className="extract-fate__chip" data-testid="extract-fate-current">
                     {extractFateLabel(extractFate)}
@@ -1099,22 +1113,22 @@ export function ExtractView() {
                   className="reader-btn"
                   data-testid="extract-fate-reference"
                   disabled={busy || !fateSupported || extractFate === "reference"}
-                  title={
-                    fateSupported ? "Keep this extract for reference" : EXTRACT_FATE_BRIDGE_HINT
-                  }
+                  title={fateSupported ? t("learning.m33ad657cde1f") : EXTRACT_FATE_BRIDGE_HINT}
                   onClick={() => void onSetFate("reference")}
                 >
-                  <Icon name="bookmark" size={14} /> Reference
+                  <Icon name="bookmark" size={14} />
+                  {t("learning.m18db77e4a15e")}
                 </button>
                 <button
                   type="button"
                   className="reader-btn"
                   data-testid="extract-fate-done-without-card"
                   disabled={busy || !fateSupported || extractFate === "done_without_card"}
-                  title={fateSupported ? "Finish without making a card" : EXTRACT_FATE_BRIDGE_HINT}
+                  title={fateSupported ? t("learning.m6277241bc173") : EXTRACT_FATE_BRIDGE_HINT}
                   onClick={() => void onSetFate("done_without_card")}
                 >
-                  <Icon name="checkCircle" size={14} /> Done without card
+                  <Icon name="checkCircle" size={14} />
+                  {t("learning.mbea71c195471")}
                 </button>
                 <button
                   type="button"
@@ -1122,13 +1136,12 @@ export function ExtractView() {
                   data-testid="extract-fate-reactivate"
                   disabled={busy || !reactivateSupported || !canReactivate}
                   title={
-                    reactivateSupported
-                      ? "Return this extract to the attention queue"
-                      : EXTRACT_FATE_BRIDGE_HINT
+                    reactivateSupported ? t("learning.m0f16cb23ecfd") : EXTRACT_FATE_BRIDGE_HINT
                   }
                   onClick={() => void onReactivateFate()}
                 >
-                  <Icon name="restore" size={14} /> Reactivate
+                  <Icon name="restore" size={14} />
+                  {t("learning.mbe3b1b9b1e26")}
                 </button>
               </div>
             </div>

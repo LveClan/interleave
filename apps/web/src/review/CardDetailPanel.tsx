@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "../components/Icon";
 import { FsrsStats, Prio, SchedulerChip, Stage } from "../components/inspector/primitives";
 import { RefBlock } from "../components/RefBlock";
+import { t, useLocale } from "../i18n";
 import "../components/inspector/inspector.css";
 import { appApi, type ReviewCardView, type SchedulerSignals } from "../lib/appApi";
 import { useNavigateToLocation } from "../reader/navigateToLocation";
@@ -57,6 +58,7 @@ export function CardDetailPanel({
   onBack,
   onCardRemoved,
 }: CardDetailPanelProps) {
+  useLocale();
   const navigateToLocation = useNavigateToLocation();
   const { select } = useSelection();
 
@@ -182,7 +184,7 @@ export function CardDetailPanel({
             <div className="rv-empty__icon">
               <Icon name="brain" size={26} />
             </div>
-            <h1 className="rv-empty__title">Opening card…</h1>
+            <h1 className="rv-empty__title">{t("learning.m3c867669f386")}</h1>
           </div>
         </div>
       </div>
@@ -197,11 +199,8 @@ export function CardDetailPanel({
             <div className="rv-empty__icon">
               <Icon name="x" size={26} />
             </div>
-            <h1 className="rv-empty__title">Card not found</h1>
-            <p className="rv-empty__body">
-              {error ??
-                "This card may have been deleted, suspended, or imported without a live card row."}
-            </p>
+            <h1 className="rv-empty__title">{t("learning.m4f4fd9c12857")}</h1>
+            <p className="rv-empty__body">{error ?? t("learning.m4a75d540dfbc")}</p>
             {onBack ? (
               <div className="rv-empty__actions">
                 <button
@@ -236,7 +235,8 @@ export function CardDetailPanel({
         <div className="rv-progress">
           <div className="rv-progress__nums">
             <span className="rv-progress__count" data-testid="card-title">
-              {kindLabel(card.kind)} card
+              {kindLabel(card.kind)}
+              {t("learning.m6ec6736b9d4e")}
             </span>
           </div>
           <div className="pbar">
@@ -279,15 +279,22 @@ export function CardDetailPanel({
               </span>
               {card.mediaRef ? (
                 <span className="badge badge--soft" data-testid="card-audio-badge">
-                  <Icon name="play" size={11} /> Audio
+                  <Icon name="play" size={11} />
+                  {t("learning.mba46c6ce39a2")}
                 </span>
               ) : null}
               {card.concept ? <span className="concept-tag">{card.concept}</span> : null}
               <Prio priority={card.priority} />
               <Stage stage={card.stage} />
-              {card.flagged ? <span className="badge badge--soft">Flagged</span> : null}
+              {card.flagged ? (
+                <span className="badge badge--soft">{t("learning.m2f1978c6166e")}</span>
+              ) : null}
               {card.leech ? (
-                <span className="badge badge--leech">Leech · {card.lapses} lapses</span>
+                <span className="badge badge--leech">
+                  {t("learning.m8137cf29cb6a")}
+                  {card.lapses}
+                  {t("learning.m8999ff0a4519")}
+                </span>
               ) : null}
             </div>
             <SchedulerChip scheduler={scheduler} />
@@ -373,7 +380,7 @@ export function CardDetailPanel({
                   onClick={() => setRevealed(true)}
                 >
                   <Icon name="eye" size={16} />
-                  Reveal answer
+                  {t("learning.mbcbb138eda79")}
                 </button>
               ) : (
                 <button
@@ -384,7 +391,7 @@ export function CardDetailPanel({
                   onClick={hideAnswer}
                 >
                   <Icon name="eye" size={16} />
-                  Hide answer
+                  {t("learning.md358cf59e6de")}
                 </button>
               )}
             </div>

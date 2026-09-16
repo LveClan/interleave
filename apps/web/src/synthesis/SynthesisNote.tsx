@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Synthesis-note surface (T095) — the incremental-writing workspace at
  * `/synthesis/$id`.
@@ -61,6 +62,7 @@ function fmtDate(iso: string | null): string {
 }
 
 export function SynthesisNote() {
+  useLocale();
   const { id } = useParams({ from: "/synthesis/$id" });
   const desktop = isDesktop();
   const navigate = useNavigate();
@@ -239,11 +241,10 @@ export function SynthesisNote() {
         <span className="reader-state__icon">
           <Icon name="synthesis" size={26} />
         </span>
-        <h1 className="font-semibold text-text text-xl tracking-tight">Synthesis note</h1>
-        <p className="max-w-sm">
-          Synthesis notes are edited through the desktop bridge — open the Electron app to write
-          one.
-        </p>
+        <h1 className="font-semibold text-text text-xl tracking-tight">
+          {t("collection.m320884ef56cd")}
+        </h1>
+        <p className="max-w-sm">{t("collection.m73ffc4176f8e")}</p>
       </div>
     );
   }
@@ -255,24 +256,25 @@ export function SynthesisNote() {
   return (
     <div className="synthesis-screen" data-testid="route-synthesis">
       <header className="reader-header" data-testid="synthesis-header">
-        <nav className="reader-crumbs" aria-label="Breadcrumb">
+        <nav className="reader-crumbs" aria-label={t("collection.m2bd873d6c734")}>
           <button
             type="button"
             className="reader-crumb"
             onClick={() => void navigate({ to: "/library" })}
           >
-            <Icon name="library" size={14} /> Library
+            <Icon name="library" size={14} />
+            {t("collection.md8b82e25ef52")}
           </button>
           <span className="reader-crumb-sep">
             <Icon name="chevronRight" size={13} />
           </span>
           <span className="reader-crumb reader-crumb--current">
-            <Icon name="synthesis" size={14} /> {element?.title ?? "Synthesis note"}
+            <Icon name="synthesis" size={14} /> {element?.title ?? t("collection.m320884ef56cd")}
           </span>
         </nav>
 
         <h1 className="reader-title" data-testid="synthesis-title">
-          {element?.title ?? "Synthesis note"}
+          {element?.title ?? t("collection.m320884ef56cd")}
         </h1>
 
         <div className="reader-metarow">
@@ -282,7 +284,9 @@ export function SynthesisNote() {
               <Status status={element.status} />
               <Stage stage={element.stage} />
               <span className="reader-meta reader-meta--mono" data-testid="synthesis-due">
-                {element.dueAt ? `returns ${fmtDate(element.dueAt)}` : "not scheduled to return"}
+                {element.dueAt
+                  ? t("collection.m886161d8f4c6", { value1: String(fmtDate(element.dueAt)) })
+                  : t("collection.mda63b4ebe397")}
               </span>
             </>
           ) : null}
@@ -294,16 +298,16 @@ export function SynthesisNote() {
         <section className="synthesis-editor-col" data-testid="synthesis-editor-col">
           <div className="synthesis-editor-col__head">
             <span className="synthesis-editor-col__title">Write &amp; refine</span>
-            <span className="reader-meta">incremental writing</span>
+            <span className="reader-meta">{t("collection.m051601edc1da")}</span>
           </div>
           <div className="synthesis-editor" data-testid="synthesis-editor">
             {status === "loading" ? (
               <p className="dimmed" data-testid="synthesis-loading">
-                Loading note…
+                {t("collection.med75dd74a2cc")}
               </p>
             ) : status === "error" ? (
               <p className="text-danger text-sm" data-testid="synthesis-error">
-                This synthesis note could not be loaded.
+                {t("collection.m043c4ea23c84")}
               </p>
             ) : (
               <SourceEditor
@@ -321,7 +325,7 @@ export function SynthesisNote() {
         <aside className="synthesis-panel" data-testid="synthesis-panel">
           <div className="synthesis-sec">
             <div className="synthesis-sec__head">
-              <span className="insp-sec__title">Linked material</span>
+              <span className="insp-sec__title">{t("collection.m5eaf95e2684e")}</span>
               <button
                 type="button"
                 className="synthesis-add"
@@ -329,12 +333,13 @@ export function SynthesisNote() {
                 disabled={busy}
                 onClick={() => setPicker(true)}
               >
-                <Icon name="plus" size={13} /> Add to note
+                <Icon name="plus" size={13} />
+                {t("collection.mfd20288223aa")}
               </button>
             </div>
             {linked.length === 0 ? (
               <p className="dimmed" data-testid="synthesis-linked-empty">
-                No extracts or cards collected yet. Add the material you want to weave together.
+                {t("collection.m8ae7145c07f4")}
               </p>
             ) : (
               <ul className="synthesis-linked" data-testid="synthesis-linked">
@@ -350,7 +355,7 @@ export function SynthesisNote() {
                       className="synthesis-linked__open"
                       data-testid="synthesis-linked-open"
                       onClick={() => openLinked(l)}
-                      title={`Open ${l.type}`}
+                      title={t("collection.m839d6deea6a7", { value1: String(l.type) })}
                     >
                       <Icon name={l.type === "card" ? "card" : "extract"} size={13} />
                       <span className="synthesis-linked__title">{l.title}</span>
@@ -358,7 +363,7 @@ export function SynthesisNote() {
                     <button
                       type="button"
                       className="synthesis-linked__remove"
-                      aria-label="Remove from note"
+                      aria-label={t("collection.m4cbe8c25f4b3")}
                       data-testid="synthesis-linked-remove"
                       disabled={busy}
                       onClick={() => void onUnlink(l.id)}
@@ -373,12 +378,13 @@ export function SynthesisNote() {
 
           <div className="synthesis-sec">
             <div className="synthesis-sec__head">
-              <span className="insp-sec__title">Schedule return</span>
+              <span className="insp-sec__title">{t("collection.m4eb2b5affeed")}</span>
               <ScheduleMenu disabled={busy} onSchedule={(c) => void onSchedule(c)} />
             </div>
             <p className="dimmed synthesis-hint">
-              A synthesis note returns on the <strong>attention scheduler</strong> for incremental
-              refinement — it is processed, not recalled (never FSRS review).
+              {t("collection.m2618758d67f6")}
+              <strong>{t("collection.m8e9645ce8257")}</strong>
+              {t("collection.mcc389455bdcf")}
             </p>
             <div className="synthesis-sched-presets">
               <button
@@ -388,7 +394,8 @@ export function SynthesisNote() {
                 disabled={busy}
                 onClick={() => void onSchedule({ kind: "tomorrow" })}
               >
-                <Icon name="calendar" size={13} /> Tomorrow
+                <Icon name="calendar" size={13} />
+                {t("collection.m469c496184b4")}
               </button>
               <button
                 type="button"
@@ -397,7 +404,8 @@ export function SynthesisNote() {
                 disabled={busy}
                 onClick={() => void onSchedule({ kind: "nextWeek" })}
               >
-                <Icon name="calendar" size={13} /> Next week
+                <Icon name="calendar" size={13} />
+                {t("collection.m7b0477422dd8")}
               </button>
               <button
                 type="button"
@@ -406,7 +414,8 @@ export function SynthesisNote() {
                 disabled={busy}
                 onClick={() => void onSchedule({ kind: "nextMonth" })}
               >
-                <Icon name="calendar" size={13} /> Next month
+                <Icon name="calendar" size={13} />
+                {t("collection.m5d4827bcef1b")}
               </button>
             </div>
           </div>

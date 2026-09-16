@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Collection Explorer Search mode (T042) — local full-text search + a read-only
  * concept map.
@@ -72,9 +73,24 @@ type LibraryRow = SearchResult & { readonly semantic?: boolean };
 
 /** The three searchable types, in display order, with their group titles. */
 const TYPE_GROUPS: readonly { type: SearchableType; title: string }[] = [
-  { type: "source", title: "Sources" },
-  { type: "extract", title: "Extracts" },
-  { type: "card", title: "Cards" },
+  {
+    type: "source",
+    get title() {
+      return t("supplement.mcaf85b0888d7");
+    },
+  },
+  {
+    type: "extract",
+    get title() {
+      return t("supplement.m877e04b7e7ed");
+    },
+  },
+  {
+    type: "card",
+    get title() {
+      return t("supplement.ma52fcbbc3364");
+    },
+  },
 ];
 
 const EMPTY_SEARCH_COUNTS: SearchCounts = {
@@ -237,10 +253,10 @@ const ResultRow = memo(function ResultRowImpl({
             <span
               className="badge badge--soft"
               data-testid="library-related-badge"
-              title="Surfaced by meaning, not just keywords"
+              title={t("collection.mc3a053f4e8ec")}
               style={{ marginLeft: 8 }}
             >
-              related
+              {t("collection.m8002fbfeeec8")}
             </span>
           ) : null}
         </div>
@@ -290,7 +306,7 @@ const FilterBar = memo(function FilterBarImpl({
   return (
     <div className="filterbar" data-testid="library-filterbar">
       <div className="filter-group">
-        <div className="filter-group__title">Type</div>
+        <div className="filter-group__title">{t("collection.mbaaddf70fb5d")}</div>
         {TYPE_GROUPS.map((g) => (
           <button
             key={g.type}
@@ -308,7 +324,7 @@ const FilterBar = memo(function FilterBarImpl({
 
       {concepts.length > 0 ? (
         <div className="filter-group">
-          <div className="filter-group__title">Concept</div>
+          <div className="filter-group__title">{t("collection.m54287be80625")}</div>
           {concepts.map((c) => (
             <button
               key={c.id}
@@ -328,7 +344,7 @@ const FilterBar = memo(function FilterBarImpl({
       ) : null}
 
       <div className="filter-group">
-        <div className="filter-group__title">Priority</div>
+        <div className="filter-group__title">{t("collection.md60dbba07922")}</div>
         {PRIORITIES.map((p) => (
           <button
             key={p}
@@ -338,7 +354,10 @@ const FilterBar = memo(function FilterBarImpl({
             onClick={() => onTogglePriority(p)}
           >
             <span className={`prio-dot prio-dot--${p.toLowerCase()}`} />
-            <span>Priority {p}</span>
+            <span>
+              {t("collection.m60fdce82f5ba")}
+              {p}
+            </span>
             <span className="filter-opt__count">{searchCounts.byPriority[p] ?? 0}</span>
           </button>
         ))}
@@ -346,7 +365,7 @@ const FilterBar = memo(function FilterBarImpl({
 
       {/* Maintenance "smart" filters are M9/M17 analytics — shown but disabled. */}
       <div className="filter-group">
-        <div className="filter-group__title">Maintenance</div>
+        <div className="filter-group__title">{t("collection.m17ccfa5b681e")}</div>
         {[
           ["hourglass", "Stale facts"],
           ["leech", "Leeches"],
@@ -355,7 +374,7 @@ const FilterBar = memo(function FilterBarImpl({
           <span
             key={label}
             className="filter-opt filter-opt--disabled"
-            title="Coming with analytics"
+            title={t("collection.md520d287df3f")}
           >
             <Icon name={ic as never} size={14} />
             <span>{label}</span>
@@ -368,6 +387,7 @@ const FilterBar = memo(function FilterBarImpl({
 });
 
 export function LibraryScreen() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const routeSearch = useSearch({ strict: false }) as Record<string, unknown>;
@@ -809,10 +829,8 @@ export function LibraryScreen() {
           <div className="lib-empty__icon">
             <Icon name="library" size={26} />
           </div>
-          <h1 className="lib-empty__title">Collection Explorer Search</h1>
-          <p className="lib-empty__body">
-            Open the Electron app to search across your whole collection.
-          </p>
+          <h1 className="lib-empty__title">{t("collection.mf54e2ad8b5e3")}</h1>
+          <p className="lib-empty__body">{t("collection.m08c939c0f7cf")}</p>
         </div>
       </div>
     );
@@ -842,7 +860,7 @@ export function LibraryScreen() {
             onClick={() => setTab("results")}
           >
             <Icon name="layers" size={14} />
-            Results
+            {t("collection.ma046d94384d1")}
           </button>
           <button
             type="button"
@@ -853,7 +871,7 @@ export function LibraryScreen() {
             onClick={() => setTab("map")}
           >
             <Icon name="concepts" size={14} />
-            Map
+            {t("collection.mce0fea53e23c")}
           </button>
         </div>
       </div>
@@ -890,14 +908,16 @@ export function LibraryScreen() {
                 indexBuilding ? (
                   <div className="lib-hint" data-testid="library-semantic-building">
                     {semanticIndex.embedded < semanticIndex.total
-                      ? `Indexing… ${semanticIndex.embedded} of ${semanticIndex.total}.`
-                      : "Indexing…"}
+                      ? t("collection.m638267320784", {
+                          value1: String(semanticIndex.embedded),
+                          value2: String(semanticIndex.total),
+                        })
+                      : t("collection.m740c08d6b6ac")}
                   </div>
                 ) : searchMode === "semantic" ? (
                   partialCoverage ? (
                     <div className="lib-hint" data-testid="library-semantic-partial">
-                      Partial coverage — newer items may only match by keyword until indexing
-                      finishes.
+                      {t("collection.ma1e060abfbde")}
                     </div>
                   ) : null
                 ) : searchMode === "fts" || searchMode === "disabled" ? (
@@ -914,7 +934,9 @@ export function LibraryScreen() {
                   <ReviewModeButton
                     selector={{ kind: "search", query: debouncedTerm }}
                     hideWhileLoading
-                    label={(n) => `Review ${n} matching card${n === 1 ? "" : "s"}`}
+                    label={(n) =>
+                      `Review ${n} matching card${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "s"}`
+                    }
                     testId="library-review-search"
                   />
                   {semanticAvailable ? (
@@ -922,7 +944,9 @@ export function LibraryScreen() {
                       selector={{ kind: "semantic", query: debouncedTerm }}
                       hideWhileLoading
                       icon="sparkle"
-                      label={(n) => `Review ${n} related card${n === 1 ? "" : "s"}`}
+                      label={(n) =>
+                        `Review ${n} related card${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "s"}`
+                      }
                       testId="library-review-semantic"
                     />
                   ) : null}
@@ -937,8 +961,11 @@ export function LibraryScreen() {
                   onClick={() => void onReindex()}
                 >
                   {reindexing
-                    ? "Building index…"
-                    : `Build index (${semanticIndex.embedded} of ${semanticIndex.total} embedded)`}
+                    ? t("collection.m14c04c75cd1d")
+                    : t("collection.m41f5b30ab81d", {
+                        value1: String(semanticIndex.embedded),
+                        value2: String(semanticIndex.total),
+                      })}
                 </button>
               ) : null}
               {!hasQuery ? (
@@ -946,24 +973,26 @@ export function LibraryScreen() {
                   <div className="lib-empty__icon">
                     <Icon name="search" size={26} />
                   </div>
-                  <h2 className="lib-empty__title">Search your collection</h2>
+                  <h2 className="lib-empty__title">{t("collection.m61d5a3e9beca")}</h2>
                   <p className="lib-empty__body">
                     {hasActiveFacet
-                      ? `Type to search within ${pendingFilterSummary}.`
-                      : "Find any source, extract, or card by title, body, prompt, answer, or tag."}
+                      ? t("collection.mbc8acb4b54f8", { value1: String(pendingFilterSummary) })
+                      : t("collection.m8c59274a1096")}
                   </p>
                   {hasActiveFacet ? (
                     <div className="lib-pending" data-testid="library-pending-filters">
                       <Icon name="filter" size={14} />
                       <span>
-                        Pending constraints: {pendingFilterSummary}. They apply when you type.
+                        {t("collection.m393c8681680a")}
+                        {pendingFilterSummary}
+                        {t("collection.mab839b46a514")}
                       </span>
                     </div>
                   ) : null}
                 </div>
               ) : loading && visible.length === 0 ? (
                 <p className="lib-loading" data-testid="library-loading">
-                  Searching…
+                  {t("collection.mc3994d8be8d2")}
                 </p>
               ) : visible.length === 0 ? (
                 <div className="lib-empty" data-testid="library-empty">
@@ -972,13 +1001,11 @@ export function LibraryScreen() {
                   </div>
                   <h2 className="lib-empty__title">
                     {hasQuery
-                      ? `No matches for “${debouncedTerm}”`
-                      : "No matches for selected filters"}
+                      ? t("collection.m4bdda2bbc651", { value1: String(debouncedTerm) })
+                      : t("collection.m15e1b57f505e")}
                   </h2>
                   <p className="lib-empty__body">
-                    {hasQuery
-                      ? "Try a different term, or clear the type/concept/priority filters."
-                      : "Clear the type/concept/priority filters to return to the search prompt."}
+                    {hasQuery ? t("collection.m3066f5f03f4e") : t("collection.mf14b8306649a")}
                   </p>
                 </div>
               ) : (
@@ -1015,10 +1042,12 @@ export function LibraryScreen() {
           <div className="lib-map" data-testid="library-map">
             <div className="lib-map__canvas">
               <div className="lib-map__head">
-                <h2 className="lib-map__title">Concept map</h2>
+                <h2 className="lib-map__title">{t("collection.m09554dc709f8")}</h2>
                 <span className="lib-map__hint">
-                  {concepts.length} concept{concepts.length === 1 ? "" : "s"} · click a node to
-                  filter
+                  {concepts.length}
+                  {t("collection.m3760744d1cce")}
+                  {i18n.language.startsWith("zh") ? "" : concepts.length === 1 ? "" : "s"}
+                  {t("collection.m26ca68eacfd2")}
                 </span>
               </div>
               <div className="lib-map__panel">
@@ -1032,13 +1061,13 @@ export function LibraryScreen() {
                   />
                 ) : (
                   <div className="lib-empty">
-                    <p className="lib-empty__body">No concepts yet.</p>
+                    <p className="lib-empty__body">{t("collection.m6baf896c2dc8")}</p>
                   </div>
                 )}
               </div>
             </div>
             <div className="lib-map__side">
-              <div className="filter-group__title">Concepts by volume</div>
+              <div className="filter-group__title">{t("collection.mca72467726cc")}</div>
               {concepts.map((c) => (
                 <div key={c.id} className="lib-map__concept">
                   <div className="lib-map__concept-head">
@@ -1052,10 +1081,12 @@ export function LibraryScreen() {
                   </div>
                   <div className="lib-map__concept-counts">
                     <span>
-                      <b>{conceptVolume.get(c.id) ?? 0}</b> members
+                      <b>{conceptVolume.get(c.id) ?? 0}</b>
+                      {t("collection.mf3c713c41de0")}
                     </span>
                     <span>
-                      <b>{c.childCount}</b> children
+                      <b>{c.childCount}</b>
+                      {t("collection.mb0887b1976fd")}
                     </span>
                   </div>
                 </div>

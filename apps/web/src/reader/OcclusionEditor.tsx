@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Occlusion editor (T071) — draw mask regions over a `media_fragment` image
  * extract and generate N sibling `image_occlusion` cards.
@@ -64,6 +65,7 @@ export function OcclusionEditor({
   onCardsCreated,
   onClose,
 }: OcclusionEditorProps) {
+  useLocale();
   const imageUrl = useRegionImage(imageElementId);
   const [masks, setMasks] = useState<DraftMask[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -153,7 +155,9 @@ export function OcclusionEditor({
         })),
       });
       const n = result.cards.length;
-      onToast(`${n} occlusion card${n === 1 ? "" : "s"} created`);
+      onToast(
+        `${n} occlusion card${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "s"} created`,
+      );
       onCardsCreated();
       // Leave the editor ready: an edit-then-regenerate re-runs replaceMasksForImage
       // MAIN-side (deterministic). Keep the masks so the user can tweak + regenerate.
@@ -166,7 +170,7 @@ export function OcclusionEditor({
 
   return (
     <aside className="card-builder" data-testid="occlusion-editor">
-      <div className="card-builder__tabs" role="tablist" aria-label="Card type">
+      <div className="card-builder__tabs" role="tablist" aria-label={t("learning.m2a855d548016")}>
         <button
           type="button"
           role="tab"
@@ -175,12 +179,12 @@ export function OcclusionEditor({
           data-on="true"
           data-testid="cb-tab-occlusion"
         >
-          Image occlusion
+          {t("learning.m2b303194c3ad")}
         </button>
         <button
           type="button"
           className="cb-tab cb-tab--close"
-          aria-label="Close card builder"
+          aria-label={t("learning.m2d39a2829f8f")}
           data-testid="occlusion-close"
           onClick={onClose}
         >
@@ -190,7 +194,7 @@ export function OcclusionEditor({
 
       <div className="card-builder__body">
         <div className="cb-field__hint" data-testid="occlusion-hint">
-          Drag over the image to mask a region. Each mask becomes one sibling card.
+          {t("learning.m527c47e1b545")}
         </div>
 
         <div className="occlusion-canvas-wrap" data-testid="occlusion-canvas">
@@ -200,7 +204,7 @@ export function OcclusionEditor({
                 className="occlusion-stage__img"
                 data-testid="occlusion-base-img"
                 src={imageUrl}
-                alt="Diagram to occlude"
+                alt={t("learning.m7c5842d34324")}
                 draggable={false}
               />
               {/* The pointer-grabbing overlay + the SVG mask boxes (normalized). */}
@@ -213,7 +217,7 @@ export function OcclusionEditor({
                 onPointerUp={onPointerUp}
               >
                 <svg className="occlusion-svg" preserveAspectRatio="none" viewBox="0 0 1 1">
-                  <title>Mask regions</title>
+                  <title>{t("learning.m20b57122b50c")}</title>
                   {masks.map((m, i) => (
                     <rect
                       key={m.id}
@@ -228,7 +232,9 @@ export function OcclusionEditor({
                         setSelectedId(m.id);
                       }}
                     >
-                      <title>{m.label.trim() || `Region ${i + 1}`}</title>
+                      <title>
+                        {m.label.trim() || t("learning.m0687dc25321f", { value1: String(i + 1) })}
+                      </title>
                     </rect>
                   ))}
                   {drag ? (
@@ -245,17 +251,20 @@ export function OcclusionEditor({
             </div>
           ) : (
             <p className="dimmed" data-testid="occlusion-no-image">
-              The figure image loads through the desktop bridge.
+              {t("learning.m9d17a3f9a0c7")}
             </p>
           )}
         </div>
 
         {/* The mask list — label + delete per mask. */}
         <div className="insp-sec">
-          <div className="insp-sec__title">Masks · {masks.length}</div>
+          <div className="insp-sec__title">
+            {t("learning.m6693086a2686")}
+            {masks.length}
+          </div>
           {masks.length === 0 ? (
             <p className="dimmed" data-testid="occlusion-empty">
-              No masks yet — drag over the image above.
+              {t("learning.m00a220e483f0")}
             </p>
           ) : (
             <ul className="occlusion-list" data-testid="occlusion-list">
@@ -271,14 +280,14 @@ export function OcclusionEditor({
                     className="occlusion-list__label"
                     data-testid="occlusion-label-input"
                     value={m.label}
-                    placeholder={`Region ${i + 1} (label, optional)`}
+                    placeholder={t("learning.m7600593e7134", { value1: String(i + 1) })}
                     onFocus={() => setSelectedId(m.id)}
                     onChange={(e) => setLabel(m.id, e.target.value)}
                   />
                   <button
                     type="button"
                     className="occlusion-list__del"
-                    aria-label={`Delete mask ${i + 1}`}
+                    aria-label={t("learning.m8cd0e42539f0", { value1: String(i + 1) })}
                     data-testid="occlusion-delete"
                     onClick={() => removeMask(m.id)}
                   >
@@ -310,10 +319,11 @@ export function OcclusionEditor({
           </div>
           <div className="cb-meta">
             <div className="cb-meta__row">
-              <span className="cb-meta__k">Scheduler</span>
+              <span className="cb-meta__k">{t("learning.md3a27d96cd07")}</span>
               <span className="cb-meta__v">
                 <span className="sched sched--fsrs" data-testid="occlusion-scheduler-fsrs">
-                  <Icon name="brain" size={12} /> FSRS
+                  <Icon name="brain" size={12} />
+                  {t("learning.m667849405d75")}
                 </span>
               </span>
             </div>
@@ -327,8 +337,11 @@ export function OcclusionEditor({
           disabled={masks.length === 0 || busy}
           onClick={() => void generate()}
         >
-          <Icon name="layers" size={14} /> Generate {masks.length || ""} card
-          {masks.length === 1 ? "" : "s"}
+          <Icon name="layers" size={14} />
+          {t("learning.ma884afde6caa")}
+          {masks.length || ""}
+          {t("learning.m6ec6736b9d4e")}
+          {i18n.language.startsWith("zh") ? "" : masks.length === 1 ? "" : "s"}
         </button>
       </div>
     </aside>

@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Library screen (`/library`) — the browse-everything surface.
  *
@@ -51,23 +52,88 @@ type Tab = "results" | "map";
 
 /** The six browsable types, in display order, with their group/section titles. */
 const TYPE_GROUPS: readonly { type: LibraryBrowseType; title: string }[] = [
-  { type: "source", title: "Sources" },
-  { type: "extract", title: "Extracts" },
-  { type: "card", title: "Cards" },
-  { type: "topic", title: "Topics" },
-  { type: "synthesis_note", title: "Synthesis notes" },
-  { type: "task", title: "Tasks" },
+  {
+    type: "source",
+    get title() {
+      return t("supplement.mcaf85b0888d7");
+    },
+  },
+  {
+    type: "extract",
+    get title() {
+      return t("supplement.m877e04b7e7ed");
+    },
+  },
+  {
+    type: "card",
+    get title() {
+      return t("supplement.ma52fcbbc3364");
+    },
+  },
+  {
+    type: "topic",
+    get title() {
+      return t("supplement.me22820fcf5cd");
+    },
+  },
+  {
+    type: "synthesis_note",
+    get title() {
+      return t("supplement.m627ae0da3704");
+    },
+  },
+  {
+    type: "task",
+    get title() {
+      return t("supplement.mb3a60e61a523");
+    },
+  },
 ];
 
 /** The status facets, in display order (matching the kit's lifecycle order). */
 const STATUSES: readonly { value: string; label: string }[] = [
-  { value: "active", label: "Active" },
-  { value: "scheduled", label: "Scheduled" },
-  { value: "inbox", label: "Inbox" },
-  { value: "pending", label: "Pending" },
-  { value: "done", label: "Done" },
-  { value: "parked", label: "Parked" },
-  { value: "suspended", label: "Suspended" },
+  {
+    value: "active",
+    get label() {
+      return t("options.m92340695899b");
+    },
+  },
+  {
+    value: "scheduled",
+    get label() {
+      return t("options.m4724f344c1c0");
+    },
+  },
+  {
+    value: "inbox",
+    get label() {
+      return t("options.m94835ea2fcf7");
+    },
+  },
+  {
+    value: "pending",
+    get label() {
+      return t("options.m331551b0de41");
+    },
+  },
+  {
+    value: "done",
+    get label() {
+      return t("options.m11a6767d5674");
+    },
+  },
+  {
+    value: "parked",
+    get label() {
+      return t("options.mf32a2c334c3b");
+    },
+  },
+  {
+    value: "suspended",
+    get label() {
+      return t("options.me392a3891c07");
+    },
+  },
 ];
 
 function parseStatus(value: unknown): string | null {
@@ -76,6 +142,7 @@ function parseStatus(value: unknown): string | null {
 }
 
 export function BrowseScreen() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const routeSearch = useSearch({ strict: false }) as Record<string, unknown>;
@@ -288,8 +355,8 @@ export function BrowseScreen() {
           <div className="lib-empty__icon">
             <Icon name="library" size={26} />
           </div>
-          <h1 className="lib-empty__title">Library</h1>
-          <p className="lib-empty__body">Open the Electron app to browse your whole collection.</p>
+          <h1 className="lib-empty__title">{t("collection.mdc20b3d5d2cd")}</h1>
+          <p className="lib-empty__body">{t("collection.mffaecde57fa1")}</p>
         </div>
       </div>
     );
@@ -320,7 +387,7 @@ export function BrowseScreen() {
               setSearchComposing(false);
               setSearchDraft(e.currentTarget.value);
             }}
-            placeholder="Search sources, extracts, cards…"
+            placeholder={t("collection.m65aa43f8037f")}
           />
         </div>
         <span className="lib-count" data-testid="library-count">
@@ -330,11 +397,17 @@ export function BrowseScreen() {
             // agrees with the section counts and the list (counts.all stays the
             // pre-title-narrow facet total, per the backend SPEC).
             <>
-              {visible.length} of {counts.all} element{counts.all === 1 ? "" : "s"}
+              {visible.length}
+              {t("collection.ma4282e4b2298")}
+              {counts.all}
+              {t("collection.mc060ae816c1a")}
+              {i18n.language.startsWith("zh") ? "" : counts.all === 1 ? "" : "s"}
             </>
           ) : (
             <>
-              {counts.all} element{counts.all === 1 ? "" : "s"}
+              {counts.all}
+              {t("collection.mc060ae816c1a")}
+              {i18n.language.startsWith("zh") ? "" : counts.all === 1 ? "" : "s"}
             </>
           )}
         </span>
@@ -349,7 +422,7 @@ export function BrowseScreen() {
             onClick={() => setTab("results")}
           >
             <Icon name="layers" size={14} />
-            Results
+            {t("collection.ma046d94384d1")}
           </button>
           <button
             type="button"
@@ -360,7 +433,7 @@ export function BrowseScreen() {
             onClick={() => setTab("map")}
           >
             <Icon name="concepts" size={14} />
-            Map
+            {t("collection.mce0fea53e23c")}
           </button>
         </div>
       </div>
@@ -368,7 +441,7 @@ export function BrowseScreen() {
       <div className="lib-body">
         <div className="filterbar" data-testid="library-filterbar">
           <div className="filter-group">
-            <div className="filter-group__title">Visible titles</div>
+            <div className="filter-group__title">{t("collection.m8bf62cbbb708")}</div>
             <label className="lib-mini-input">
               <Icon name="filter" size={14} />
               <input
@@ -376,13 +449,13 @@ export function BrowseScreen() {
                 data-testid="library-title-filter"
                 value={titleFilter}
                 onChange={(e) => setTitleFilter(e.target.value)}
-                placeholder="Filter visible titles"
+                placeholder={t("collection.md82bdb3d7981")}
               />
             </label>
           </div>
 
           <div className="filter-group">
-            <div className="filter-group__title">Type</div>
+            <div className="filter-group__title">{t("collection.mbaaddf70fb5d")}</div>
             {TYPE_GROUPS.map((g) => (
               <button
                 key={g.type}
@@ -400,7 +473,7 @@ export function BrowseScreen() {
 
           {concepts.length > 0 ? (
             <div className="filter-group">
-              <div className="filter-group__title">Concept</div>
+              <div className="filter-group__title">{t("collection.m54287be80625")}</div>
               {concepts.map((c) => (
                 <button
                   key={c.id}
@@ -420,7 +493,7 @@ export function BrowseScreen() {
           ) : null}
 
           <div className="filter-group">
-            <div className="filter-group__title">Priority</div>
+            <div className="filter-group__title">{t("collection.md60dbba07922")}</div>
             {PRIORITIES.map((p) => (
               <button
                 key={p}
@@ -430,14 +503,17 @@ export function BrowseScreen() {
                 onClick={() => setPriorityFilter((cur) => (cur === p ? null : p))}
               >
                 <span className={`prio-dot prio-dot--${p.toLowerCase()}`} />
-                <span>Priority {p}</span>
+                <span>
+                  {t("collection.m60fdce82f5ba")}
+                  {p}
+                </span>
                 <span className="filter-opt__count">{counts.byPriority[p] ?? 0}</span>
               </button>
             ))}
           </div>
 
           <div className="filter-group">
-            <div className="filter-group__title">Status</div>
+            <div className="filter-group__title">{t("collection.m920e413c7d41")}</div>
             {STATUSES.map((s) => (
               <button
                 key={s.value}
@@ -456,7 +532,7 @@ export function BrowseScreen() {
           {/* Maintenance "smart" filters are M9/M17 analytics — shown but disabled,
               exactly as the search screen does. */}
           <div className="filter-group">
-            <div className="filter-group__title">Maintenance</div>
+            <div className="filter-group__title">{t("collection.m17ccfa5b681e")}</div>
             {[
               ["hourglass", "Stale facts"],
               ["leech", "Leeches"],
@@ -465,7 +541,7 @@ export function BrowseScreen() {
               <span
                 key={label}
                 className="filter-opt filter-opt--disabled"
-                title="Coming with analytics"
+                title={t("collection.md520d287df3f")}
               >
                 <Icon name={ic as never} size={14} />
                 <span>{label}</span>
@@ -485,7 +561,7 @@ export function BrowseScreen() {
               ) : null}
               {loading && visible.length === 0 ? (
                 <p className="lib-loading" data-testid="library-loading">
-                  Loading…
+                  {t("collection.m0a5afbeee779")}
                 </p>
               ) : visible.length === 0 && titleActive && items.length > 0 ? (
                 // The facets matched rows but the inline title filter excluded them
@@ -495,10 +571,14 @@ export function BrowseScreen() {
                   <div className="lib-empty__icon">
                     <Icon name="filter" size={26} />
                   </div>
-                  <h2 className="lib-empty__title">No matches for “{titleFilter.trim()}”</h2>
+                  <h2 className="lib-empty__title">
+                    {t("collection.md33897402ce8")}
+                    {titleFilter.trim()}”
+                  </h2>
                   <p className="lib-empty__body">
-                    No titles match your filter. Clear the title filter to see all {counts.all}{" "}
-                    matching element{counts.all === 1 ? "" : "s"}.
+                    {t("collection.mb2261777eccc")}
+                    {counts.all} {t("collection.me40279c7cd97")}
+                    {i18n.language.startsWith("zh") ? "" : counts.all === 1 ? "" : "s"}.
                   </p>
                 </div>
               ) : visible.length === 0 ? (
@@ -506,11 +586,8 @@ export function BrowseScreen() {
                   <div className="lib-empty__icon">
                     <Icon name="library" size={26} />
                   </div>
-                  <h2 className="lib-empty__title">Nothing here yet</h2>
-                  <p className="lib-empty__body">
-                    No elements match these facets. Clear the type/concept/priority/status filters
-                    to see your whole collection.
-                  </p>
+                  <h2 className="lib-empty__title">{t("collection.m49abaf804ab3")}</h2>
+                  <p className="lib-empty__body">{t("collection.me303ead44ea7")}</p>
                 </div>
               ) : (
                 TYPE_GROUPS.map((g) => {
@@ -545,7 +622,9 @@ export function BrowseScreen() {
                               {r.sourceLocationLabel ? <span>{r.sourceLocationLabel}</span> : null}
                               <span>
                                 {r.status === "parked" && r.parkedAt
-                                  ? `Parked ${formatShortDate(r.parkedAt)}`
+                                  ? t("collection.mc03de28e0f79", {
+                                      value1: String(formatShortDate(r.parkedAt)),
+                                    })
                                   : r.dueLabel}
                               </span>
                             </div>
@@ -563,10 +642,12 @@ export function BrowseScreen() {
           <div className="lib-map" data-testid="library-map">
             <div className="lib-map__canvas">
               <div className="lib-map__head">
-                <h2 className="lib-map__title">Concept map</h2>
+                <h2 className="lib-map__title">{t("collection.m09554dc709f8")}</h2>
                 <span className="lib-map__hint">
-                  {concepts.length} concept{concepts.length === 1 ? "" : "s"} · click a node to
-                  filter
+                  {concepts.length}
+                  {t("collection.m3760744d1cce")}
+                  {i18n.language.startsWith("zh") ? "" : concepts.length === 1 ? "" : "s"}
+                  {t("collection.m26ca68eacfd2")}
                 </span>
               </div>
               <div className="lib-map__panel">
@@ -580,13 +661,13 @@ export function BrowseScreen() {
                   />
                 ) : (
                   <div className="lib-empty">
-                    <p className="lib-empty__body">No concepts yet.</p>
+                    <p className="lib-empty__body">{t("collection.m6baf896c2dc8")}</p>
                   </div>
                 )}
               </div>
             </div>
             <div className="lib-map__side">
-              <div className="filter-group__title">Concepts by volume</div>
+              <div className="filter-group__title">{t("collection.mca72467726cc")}</div>
               {concepts.map((c) => (
                 <div key={c.id} className="lib-map__concept">
                   <div className="lib-map__concept-head">
@@ -600,10 +681,12 @@ export function BrowseScreen() {
                   </div>
                   <div className="lib-map__concept-counts">
                     <span>
-                      <b>{c.memberCount}</b> members
+                      <b>{c.memberCount}</b>
+                      {t("collection.mf3c713c41de0")}
                     </span>
                     <span>
-                      <b>{c.childCount}</b> children
+                      <b>{c.childCount}</b>
+                      {t("collection.mb0887b1976fd")}
                     </span>
                   </div>
                 </div>

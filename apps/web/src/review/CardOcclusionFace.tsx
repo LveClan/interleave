@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Image-occlusion review face (T071) — render the base image with ONE masked
  * region hidden on the front, revealed on reveal.
@@ -59,6 +60,7 @@ export function CardOcclusionFace({
   occlusion: CardOcclusionFaceInput;
   revealed: boolean;
 }) {
+  useLocale();
   const imageUrl = useRegionImage(occlusion.imageElementId);
 
   return (
@@ -69,7 +71,7 @@ export function CardOcclusionFace({
             className="rcard-occlusion__img"
             data-testid="review-occlusion-img"
             src={imageUrl}
-            alt="Diagram with one region occluded"
+            alt={t("learning.mdf4337fa56c4")}
             draggable={false}
           />
           {/* The sibling regions — a light dim so the diagram reads as "there are
@@ -101,7 +103,7 @@ export function CardOcclusionFace({
         </div>
       ) : (
         <p className="dimmed" data-testid="review-occlusion-no-image">
-          The figure image loads through the desktop bridge.
+          {t("learning.m9d17a3f9a0c7")}
         </p>
       )}
       {revealed && occlusion.label ? (

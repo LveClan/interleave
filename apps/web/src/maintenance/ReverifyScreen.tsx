@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Re-verify drain (T124) — the maintenance surface that resolves T123's content-staleness
  * flags. When a source block is edited, its derived outputs (extract / atomic statement /
@@ -58,6 +59,7 @@ function stageLabel(stage: string): string {
 
 /** The small old→new diff shown once per changed block (context, not the action). */
 function BlockDiff({ oldText, newText }: { oldText: string; newText: string }) {
+  useLocale();
   const segments = reverifyDiff(oldText, newText);
   return (
     <div className="rv-block__diff" data-testid="reverify-diff">
@@ -105,6 +107,7 @@ function groupByBlock(items: readonly ReverifySessionItem[]): Grouped[] {
 }
 
 export function ReverifyScreen() {
+  useLocale();
   const desktop = isDesktop();
   // Optional `?source=<id>` scopes the screen to one source (entered from the chip /
   // source page); absent → every source with flagged outputs.
@@ -308,11 +311,8 @@ export function ReverifyScreen() {
             <div className="rv-empty__icon">
               <Icon name="warning" size={26} />
             </div>
-            <h1 className="rv-empty__title">Re-verify</h1>
-            <p className="rv-empty__body">
-              Outputs whose source was edited are listed here to confirm, rebase, or detach — open
-              the Electron app to drain the queue.
-            </p>
+            <h1 className="rv-empty__title">{t("collection.m0344860a349f")}</h1>
+            <p className="rv-empty__body">{t("collection.ma3405a1ee0b4")}</p>
           </div>
         </div>
       </div>
@@ -330,15 +330,13 @@ export function ReverifyScreen() {
         <div>
           <h1 className="lc-title">
             <Icon name="warning" size={18} />
-            Re-verify
+            {t("collection.m32ecc71411c8")}
           </h1>
-          <p className="lc-sub">
-            A source you edited changed text these outputs were built from. Confirm if the drift is
-            immaterial, rebase to the corrected text, or detach to keep the output standalone.
-          </p>
+          <p className="lc-sub">{t("collection.m4534b2951219")}</p>
         </div>
         <span className="lc-count" data-testid="reverify-count">
-          {totalItems} to re-verify
+          {totalItems}
+          {t("collection.mcbca5d41b337")}
         </span>
       </div>
 
@@ -351,27 +349,24 @@ export function ReverifyScreen() {
             style={{ marginLeft: 8 }}
             onClick={() => void load()}
           >
-            Retry
+            {t("collection.m9b3bc3dcdc2e")}
           </button>
         </p>
       ) : null}
 
       {loading ? (
         <p className="lc-loading" data-testid="reverify-loading" style={{ padding: "12px 24px" }}>
-          Loading…
+          {t("collection.m0a5afbeee779")}
         </p>
       ) : totalItems === 0 ? (
         <div className="rv-empty" data-testid="reverify-empty">
           <div className="rv-empty__icon">
             <Icon name="checkCircle" size={26} />
           </div>
-          <h2 className="rv-empty__title">All caught up</h2>
-          <p className="rv-empty__body">
-            No outputs need re-verification. When you edit a source, the outputs built from the
-            changed text appear here to confirm, rebase, or detach.
-          </p>
+          <h2 className="rv-empty__title">{t("collection.m7773db01aeed")}</h2>
+          <p className="rv-empty__body">{t("collection.m174524721900")}</p>
           <Link to="/maintenance" className="rv-repair__btn" data-testid="reverify-empty-hub">
-            Back to maintenance
+            {t("collection.mc9e25fcd9efb")}
           </Link>
         </div>
       ) : (
@@ -387,7 +382,10 @@ export function ReverifyScreen() {
                 <span className="rv-group__title" title={source.title}>
                   {source.title}
                 </span>
-                <span className="rv-group__count">{items.length} flagged</span>
+                <span className="rv-group__count">
+                  {items.length}
+                  {t("collection.m762851068a09")}
+                </span>
               </div>
 
               {groups.map((g) => (
@@ -417,39 +415,39 @@ export function ReverifyScreen() {
                               className="rv-repair__btn se-btn--suggested"
                               data-testid="reverify-confirm"
                               disabled={busy}
-                              title="Drift is immaterial — clear the flag"
+                              title={t("collection.m6741af72e15a")}
                               onClick={() =>
                                 void resolveDecisions(source.sourceElementId, [item], "confirm")
                               }
                             >
                               <Icon name="check" size={14} />
-                              Confirm
+                              {t("collection.mcb98700a7bbd")}
                             </button>
                             <button
                               type="button"
                               className="rv-repair__btn"
                               data-testid="reverify-rebase"
                               disabled={busy}
-                              title="Re-anchor to the corrected source text"
+                              title={t("collection.ma63006d50693")}
                               onClick={() =>
                                 void resolveDecisions(source.sourceElementId, [item], "rebase")
                               }
                             >
                               <Icon name="review" size={14} />
-                              Rebase
+                              {t("collection.mf3d830c704af")}
                             </button>
                             <button
                               type="button"
                               className="rv-repair__btn"
                               data-testid="reverify-detach"
                               disabled={busy}
-                              title="Stands alone — won't re-flag on future source edits"
+                              title={t("collection.m7a6ece4569c2")}
                               onClick={() =>
                                 void resolveDecisions(source.sourceElementId, [item], "detach")
                               }
                             >
                               <Icon name="split" size={14} />
-                              Detach
+                              {t("collection.m2fcf7376dde6")}
                             </button>
                           </div>
                         )}
@@ -468,14 +466,16 @@ export function ReverifyScreen() {
                   onClick={() => void resolveDecisions(source.sourceElementId, items, "confirm")}
                 >
                   <Icon name="check" size={14} />
-                  Confirm all ({items.length})
+                  {t("collection.m18f5485fcc75")}
+                  {items.length})
                 </button>
               </div>
 
               {remaining > 0 ? (
                 <p className="rv-resume" data-testid="reverify-resume">
-                  {remaining} more from this source — resume later.{" "}
-                  <Link to="/maintenance">Back to maintenance</Link>
+                  {remaining}
+                  {t("collection.m56eb88d266aa")}{" "}
+                  <Link to="/maintenance">{t("collection.mda1652eddafe")}</Link>
                 </p>
               ) : null}
             </div>

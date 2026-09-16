@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * Suggested-priority chip + justification formatter (T127 — U6).
  *
@@ -86,11 +87,12 @@ export function SuggestionChip({
   busy?: boolean;
   compact?: boolean;
 }) {
+  useLocale();
   const label = compact ? `Suggested priority ${band}` : `Accept suggested priority ${band}`;
   const body = (
     <>
       <Icon name="sparkle" size={12} />
-      {compact ? null : <span className="font-medium">Suggested</span>}
+      {compact ? null : <span className="font-medium">{t("collection.m93b63bab4c3a")}</span>}
       <span
         className="inline-flex size-4 items-center justify-center rounded-full font-semibold text-2xs"
         style={{ background: `var(--prio-${band.toLowerCase()})`, color: "var(--text-on-accent)" }}
@@ -136,6 +138,7 @@ export function SuggestionChip({
  * `insufficient_signal` row shows (the plan's loading-vs-empty rule).
  */
 export function SuggestionPending() {
+  useLocale();
   return (
     <span
       data-testid="inbox-suggestion-pending"

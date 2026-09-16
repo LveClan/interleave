@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { i18n } from "../../i18n";
 import type { ElementSummary, InspectorData, TopicKnowledgeStateGetResult } from "../../lib/appApi";
 import type { LibraryInspectorPanel } from "../../shell/libraryInspectorPanel";
 
@@ -446,6 +447,26 @@ beforeEach(() => {
 });
 
 describe("Inspector", () => {
+  it("updates unselected inspector labels live while preserving stored titles", async () => {
+    const view = render(<Inspector />);
+    try {
+      const item = await screen.findByTestId("element-picker-item");
+      await act(async () => {
+        await i18n.changeLanguage("zh-CN");
+      });
+      expect(screen.getByTestId("inspector-header")).toHaveTextContent("详情面板");
+      expect(screen.getByText("选择一个条目，查看其详情、来源关系和调度信息。")).toBeVisible();
+      expect(item).toHaveTextContent("Topic one");
+      await act(async () => {
+        await i18n.changeLanguage("en");
+      });
+      expect(screen.getByTestId("inspector-header")).toHaveTextContent("Inspector");
+    } finally {
+      view.unmount();
+      await i18n.changeLanguage("en");
+    }
+  });
+
   it("renders the desktop-only placeholder outside the Electron bridge", () => {
     h.desktop = false;
 

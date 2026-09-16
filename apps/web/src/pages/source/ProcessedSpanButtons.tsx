@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * Per-paragraph block-processing affordance for the reader.
  *
@@ -158,6 +159,7 @@ export function ProcessedSpanButtons({
   onToggled,
   onToggleFailed,
 }: ProcessedSpanButtonsProps) {
+  useLocale();
   const [anchors, setAnchors] = useState<readonly BlockAnchor[]>([]);
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
 
@@ -311,17 +313,17 @@ export function ProcessedSpanButtons({
                 className="readpara__mark"
                 title={
                   isExtracted
-                    ? "Extracted blocks stay linked to their output"
+                    ? t("learning.m596802481fdb")
                     : isProc
-                      ? `${stateTitle(state)} — click to restore`
-                      : "Mark processed without output"
+                      ? t("learning.m6f533c257df9", { value1: String(stateTitle(state)) })
+                      : t("learning.mb9e29dfb9161")
                 }
                 aria-label={
                   isExtracted
-                    ? "Extracted paragraph"
+                    ? t("learning.m59dfd0fc7b23")
                     : isProc
-                      ? "Restore processed paragraph"
-                      : "Mark paragraph processed"
+                      ? t("learning.mf20244ddff17")
+                      : t("learning.m6e5f1c66cd61")
                 }
                 aria-pressed={isProc}
                 disabled={isExtracted}
@@ -342,12 +344,8 @@ export function ProcessedSpanButtons({
               <button
                 type="button"
                 className="readpara__mark readpara__mark--secondary"
-                title={
-                  isExtracted ? "Extracted blocks stay linked to their output" : "Ignore paragraph"
-                }
-                aria-label={
-                  isExtracted ? "Extracted paragraph cannot be ignored" : "Ignore paragraph"
-                }
+                title={isExtracted ? t("learning.m596802481fdb") : t("learning.me431e51c227c")}
+                aria-label={isExtracted ? t("learning.m6eedd3d9921b") : t("learning.me431e51c227c")}
                 disabled={isExtracted}
                 data-testid={`processed-ignore-${a.blockId}`}
                 onClick={() => {
@@ -362,12 +360,8 @@ export function ProcessedSpanButtons({
               <button
                 type="button"
                 className="readpara__mark readpara__mark--secondary"
-                title={isExtracted ? "Extracted blocks stay linked to their output" : "Needs later"}
-                aria-label={
-                  isExtracted
-                    ? "Extracted paragraph cannot be marked needs later"
-                    : "Mark paragraph needs later"
-                }
+                title={isExtracted ? t("learning.m596802481fdb") : t("learning.m5990ff531b55")}
+                aria-label={isExtracted ? t("learning.m6eb992b8fa15") : t("learning.mcfacca8465fe")}
                 disabled={isExtracted}
                 data-testid={`processed-needs-later-${a.blockId}`}
                 onClick={() => {

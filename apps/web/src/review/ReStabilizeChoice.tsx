@@ -1,3 +1,4 @@
+import { t, useLocale } from "../i18n";
 /**
  * Card-edit write-barrier choice + receipt (T125) — the renderer half.
  *
@@ -56,6 +57,7 @@ export function ReStabilizeChoice({
   after,
   onResolved,
 }: ReStabilizeChoiceProps) {
+  useLocale();
   // Only Q&A / cloze cards carry answer-bearing prose the classifier reasons about; an
   // occlusion label tweak is treated as a typo (no demotion).
   const isSubstantive =
@@ -130,9 +132,7 @@ export function ReStabilizeChoice({
 
   return (
     <div className="rv-restab" data-testid="restabilize-choice">
-      <p className="rv-restab__prompt">
-        You changed the answer. Re-verify the new wording soon, or keep its schedule?
-      </p>
+      <p className="rv-restab__prompt">{t("learning.ma65eeb4702f6")}</p>
       <div className="rv-restab__options">
         <button
           type="button"
@@ -143,7 +143,7 @@ export function ReStabilizeChoice({
           onClick={() => setChoice("re_stabilize")}
         >
           <Icon name="clock" size={14} />
-          Re-verify soon
+          {t("learning.m2999114e08e6")}
         </button>
         <button
           type="button"
@@ -153,9 +153,9 @@ export function ReStabilizeChoice({
           disabled={applying}
           onClick={() => setChoice("keep")}
         >
-          Keep schedule
+          {t("learning.m20aff52909b9")}
         </button>
-        <span className="rv-restab__hint">K to flip · Enter to confirm</span>
+        <span className="rv-restab__hint">{t("learning.mbd44da833189")}</span>
         <button
           type="button"
           className="rv-btn rv-btn--primary"
@@ -163,7 +163,7 @@ export function ReStabilizeChoice({
           disabled={applying}
           onClick={() => void confirm()}
         >
-          Confirm
+          {t("learning.mcb98700a7bbd")}
         </button>
       </div>
       {error ? (
@@ -188,6 +188,7 @@ interface ReStabilizeReceiptProps {
  * since the edit). UI only.
  */
 export function ReStabilizeReceipt({ cardId, reviewLogId, onDone }: ReStabilizeReceiptProps) {
+  useLocale();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
@@ -212,7 +213,7 @@ export function ReStabilizeReceipt({ cardId, reviewLogId, onDone }: ReStabilizeR
     <div className="rv-restab-receipt" data-testid="restabilize-receipt" role="status">
       <span className="rv-restab-receipt__msg">
         <Icon name="clock" size={14} />
-        Re-verifying soon
+        {t("learning.m1cbd6097125c")}
       </span>
       {note ? (
         <span className="rv-restab-receipt__note">{note}</span>
@@ -224,13 +225,13 @@ export function ReStabilizeReceipt({ cardId, reviewLogId, onDone }: ReStabilizeR
           disabled={busy}
           onClick={() => void undo()}
         >
-          Keep schedule instead
+          {t("learning.m3a538c8f41b4")}
         </button>
       )}
       <button
         type="button"
         className="rv-restab-receipt__dismiss"
-        aria-label="Dismiss"
+        aria-label={t("learning.m48845bff334a")}
         data-testid="restabilize-receipt-dismiss"
         onClick={onDone}
       >

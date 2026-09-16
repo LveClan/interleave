@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import type { QueueTimeEstimate } from "./appApi";
 
 export interface QueueTimeEstimateLabel {
@@ -10,14 +11,14 @@ export interface QueueTimeEstimateLabel {
  * leans on documented default estimates rather than learned timings. Rounds to one
  * decimal for non-integers so small estimates stay honest. (Relocated from the deleted
  * `sessionAssemblyState` module — its natural home next to the queue time formatter.)
+ * Plain helper code: it uses the shared instance's `t` directly (components subscribe
+ * to language changes with `useLocale`).
  */
 export function sessionMinuteLabel(minutes: number, approximate: boolean): string {
   const rounded = Number.isInteger(minutes) ? minutes : Math.round(minutes * 10) / 10;
-  return `${approximate ? "~" : ""}${rounded} min`;
-}
-
-function pluralizeMinutes(minutes: number): string {
-  return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  return approximate
+    ? t("home.sessionMinuteApproximate", { count: rounded })
+    : t("home.sessionMinuteExact", { count: rounded });
 }
 
 export function formatQueueTimeEstimate(
@@ -30,12 +31,12 @@ export function formatQueueTimeEstimate(
       : Math.max(0, Math.round(estimate.totalMinutes));
   if (estimate.confidence === "default") {
     return {
-      text: `~${rounded} min`,
-      ariaLabel: `About ${pluralizeMinutes(rounded)}; some estimates use defaults.`,
+      text: t("home.queueTimeEstimateApproximate", { count: rounded }),
+      ariaLabel: t("home.queueTimeEstimateAriaApproximate", { count: rounded }),
     };
   }
   return {
-    text: `${rounded} min`,
-    ariaLabel: pluralizeMinutes(rounded),
+    text: t("home.queueTimeEstimateExact", { count: rounded }),
+    ariaLabel: t("home.queueTimeEstimateAriaExact", { count: rounded }),
   };
 }

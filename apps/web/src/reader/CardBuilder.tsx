@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Card builder (T033 — Q&A card creation; T034 — cloze card creation).
  *
@@ -154,6 +155,7 @@ export function CardBuilder({
   onCardCreated,
   onClose,
 }: CardBuilderProps) {
+  useLocale();
   const defaultLabel = priorityLabel(extractPriority);
   const isAudio = audioClip != null;
 
@@ -286,24 +288,30 @@ export function CardBuilder({
     if (blockerCount > 0) {
       return {
         severity: "block" as const,
-        label: "Blocked",
+        get label() {
+          return t("options.m18f2a0947f9d");
+        },
         meta:
           warningCount > 0
-            ? `${blockerCount} blocker${blockerCount === 1 ? "" : "s"} · ${warningCount} warning${warningCount === 1 ? "" : "s"}`
-            : `${blockerCount} blocker${blockerCount === 1 ? "" : "s"}`,
+            ? `${blockerCount} blocker${i18n.language.startsWith("zh") ? "" : blockerCount === 1 ? "" : "s"} · ${warningCount} warning${i18n.language.startsWith("zh") ? "" : warningCount === 1 ? "" : "s"}`
+            : `${blockerCount} blocker${i18n.language.startsWith("zh") ? "" : blockerCount === 1 ? "" : "s"}`,
       };
     }
     if (warningCount > 0) {
       return {
         severity: "warn" as const,
-        label: "Needs attention",
-        meta: `${warningCount} warning${warningCount === 1 ? "" : "s"} · Create allowed`,
+        get label() {
+          return t("options.mc1ebc7817870");
+        },
+        meta: `${warningCount} warning${i18n.language.startsWith("zh") ? "" : warningCount === 1 ? "" : "s"} · Create allowed`,
       };
     }
     return {
       severity: "ok" as const,
-      label: "Ready",
-      meta: `${passed.length} check${passed.length === 1 ? "" : "s"} passed`,
+      get label() {
+        return t("options.m5fa7aac5375c");
+      },
+      meta: `${passed.length} check${i18n.language.startsWith("zh") ? "" : passed.length === 1 ? "" : "s"} passed`,
     };
   }, [qualityRows]);
 
@@ -440,7 +448,7 @@ export function CardBuilder({
 
   return (
     <aside className="card-builder" data-testid="card-builder">
-      <div className="card-builder__tabs" role="tablist" aria-label="Card type">
+      <div className="card-builder__tabs" role="tablist" aria-label={t("learning.m2a855d548016")}>
         <button
           type="button"
           role="tab"
@@ -461,22 +469,22 @@ export function CardBuilder({
           data-testid="cb-tab-cloze"
           onClick={() => setTab("cloze")}
         >
-          Cloze
+          {t("learning.mf73553733277")}
         </button>
         <button
           type="button"
           className="cb-tab cb-tab--disabled"
           disabled
-          title="Open an image extract to occlude"
+          title={t("learning.m7c4352b104ae")}
           aria-disabled="true"
           data-testid="cb-tab-occlusion-disabled"
         >
-          Image occlusion
+          {t("learning.m2b303194c3ad")}
         </button>
         <button
           type="button"
           className="cb-tab cb-tab--close"
-          aria-label="Close card builder"
+          aria-label={t("learning.m2d39a2829f8f")}
           data-testid="cb-close"
           onClick={onClose}
         >
@@ -491,14 +499,14 @@ export function CardBuilder({
             (e.g. a spoken phrase as the prompt + a written translation as the answer). */}
         {isAudio && audioClip ? (
           <div className="cb-audio" data-testid="cb-audio">
-            <div className="insp-sec__title">Audio clip</div>
+            <div className="insp-sec__title">{t("learning.m9a0feb103cdc")}</div>
             <ClipMiniPlayer
               sourceElementId={audioClip.sourceElementId}
               startMs={audioClip.startMs}
               endMs={audioClip.endMs}
             />
             {/* biome-ignore lint/a11y/useSemanticElements: a toggle group of buttons, not a form fieldset */}
-            <div className="cb-audio__faces" role="group" aria-label="Audio plays on">
+            <div className="cb-audio__faces" role="group" aria-label={t("learning.m509ae414e860")}>
               {(["prompt", "answer", "both"] as const).map((f) => (
                 <button
                   key={f}
@@ -508,14 +516,24 @@ export function CardBuilder({
                   data-testid={`cb-audio-on-${f}`}
                   onClick={() => setAudioOn(f)}
                 >
-                  {f === "prompt" ? "Prompt" : f === "answer" ? "Answer" : "Both"}
+                  {f === "prompt"
+                    ? t("learning.m5c39123805ff")
+                    : f === "answer"
+                      ? t("learning.mb2a3aa602762")
+                      : t("learning.mb6c1d862f9f7")}
                 </button>
               ))}
             </div>
             <div className="cb-field__hint">
-              The audio is the {audioOn === "both" ? "prompt and answer" : audioOn} — add a written{" "}
-              {audioOn === "prompt" ? "answer" : audioOn === "answer" ? "prompt" : "side"} if
-              useful.
+              {t("learning.mf7a53a51ff26")}
+              {audioOn === "both" ? t("learning.m371373c78975") : audioOn}
+              {t("learning.m45b8d93cb6a0")}{" "}
+              {audioOn === "prompt"
+                ? t("learning.m0db52f4076c0")
+                : audioOn === "answer"
+                  ? t("learning.mcf07194ee232")
+                  : t("learning.mea7bf4bb7230")}
+              {t("learning.m8952074ae9c4")}
             </div>
           </div>
         ) : null}
@@ -524,7 +542,7 @@ export function CardBuilder({
             <div className="cb-field">
               <div className="cb-field__labelrow">
                 <label className="cb-field__label" htmlFor="cb-qa-front">
-                  Front · question
+                  {t("learning.m155bf467b431")}
                 </label>
                 {/* T072: a "Predict output" code-card template — pre-seed the prompt
                     as a fenced code block from the extract body so the front renders
@@ -534,7 +552,7 @@ export function CardBuilder({
                   type="button"
                   className="cb-template"
                   data-testid="cb-predict-output"
-                  title="Seed the prompt with the code; answer is the expected output"
+                  title={t("learning.macea64bc17f7")}
                   onClick={() => {
                     const code = (seedBody ?? back).trim();
                     setFront(
@@ -545,7 +563,8 @@ export function CardBuilder({
                     setBack("");
                   }}
                 >
-                  <Icon name="code" size={12} /> Predict output
+                  <Icon name="code" size={12} />
+                  {t("learning.mfb1049071d27")}
                 </button>
               </div>
               <textarea
@@ -555,12 +574,12 @@ export function CardBuilder({
                 data-testid="cb-qa-front"
                 value={front}
                 onChange={(e) => setFront(e.target.value)}
-                placeholder="Ask one clear, single-fact question…"
+                placeholder={t("learning.mf061d2baf9ff")}
               />
             </div>
             <div className="cb-field">
               <label className="cb-field__label" htmlFor="cb-qa-back">
-                Back · answer
+                {t("learning.m63b27274bdd1")}
               </label>
               <textarea
                 id="cb-qa-back"
@@ -569,11 +588,14 @@ export function CardBuilder({
                 data-testid="cb-qa-back"
                 value={back}
                 onChange={(e) => setBack(e.target.value)}
-                placeholder="One atomic answer…"
+                placeholder={t("learning.m29a7cf570bc7")}
               />
             </div>
             <div className="cb-preview">
-              <div className="cardprev__label">Preview · {revealed ? "back" : "front"}</div>
+              <div className="cardprev__label">
+                {t("learning.m580f28f232d1")}
+                {revealed ? t("learning.m3c482346f375") : t("learning.m2d8d693177ac")}
+              </div>
               <div className="cardprev" data-testid="cb-preview">
                 <div className="cardprev__face">
                   {previewFace.trim() ? previewFace : <span className="dimmed">—</span>}
@@ -585,7 +607,8 @@ export function CardBuilder({
                 data-testid="cb-reveal"
                 onClick={toggleReveal}
               >
-                <Icon name="eye" size={14} /> {revealed ? "Show front" : "Show back"}
+                <Icon name="eye" size={14} />{" "}
+                {revealed ? t("learning.m4d15860b1bd8") : t("learning.ma305a51f782f")}
                 <kbd className="cb-kbd">␣</kbd>
               </button>
             </div>
@@ -594,7 +617,8 @@ export function CardBuilder({
           <>
             <div className="cb-field">
               <label className="cb-field__label" htmlFor="cb-cloze-text">
-                Cloze text · wrap answers in {"{{ }}"}
+                {t("learning.mbc1c6a544762")}
+                {"{{ }}"}
               </label>
               <textarea
                 id="cb-cloze-text"
@@ -608,11 +632,17 @@ export function CardBuilder({
               <div className="cb-field__hint" data-testid="cb-cloze-count">
                 {clozeCount === 0
                   ? "No cloze deletion yet — wrap a phrase in {{ }}"
-                  : `${clozeCount} cloze deletion${clozeCount > 1 ? "s" : ""}`}
+                  : t("learning.ma3cfa50ec7a0", {
+                      value1: String(clozeCount),
+                      value2: String(clozeCount > 1 ? "s" : ""),
+                    })}
               </div>
             </div>
             <div className="cb-preview">
-              <div className="cardprev__label">Preview · {revealed ? "answers" : "deletions"}</div>
+              <div className="cardprev__label">
+                {t("learning.m580f28f232d1")}
+                {revealed ? t("learning.m677fe21b65f4") : t("learning.mc764744d4eab")}
+              </div>
               <div className="cardprev" data-testid="cb-preview">
                 <div className="cardprev__face cardprev__face--cloze">
                   {clozeCount === 0 ? (
@@ -642,7 +672,8 @@ export function CardBuilder({
                 data-testid="cb-reveal"
                 onClick={toggleReveal}
               >
-                <Icon name="eye" size={14} /> {revealed ? "Hide answers" : "Reveal answers"}
+                <Icon name="eye" size={14} />{" "}
+                {revealed ? t("learning.mabeb825780f0") : t("learning.mbdd5ad4655d0")}
                 <kbd className="cb-kbd">␣</kbd>
               </button>
             </div>
@@ -655,7 +686,8 @@ export function CardBuilder({
         <div className="insp-sec cb-quality" data-testid="cb-quality">
           <div className="cb-quality__head">
             <div className="insp-sec__title">
-              Quality checks <HelpLink slug="quality-checks" />
+              {t("learning.m126fbb3a8913")}
+              <HelpLink slug="quality-checks" />
             </div>
             {qualityRows.passed.length > 0 ? (
               <button
@@ -666,7 +698,9 @@ export function CardBuilder({
                 aria-controls="cb-quality-passed"
                 onClick={() => setShowPassedChecks((show) => !show)}
               >
-                {showPassedChecks ? "Hide passed" : `Show ${qualityRows.passed.length} passed`}
+                {showPassedChecks
+                  ? t("learning.m2f40a5ffe855")
+                  : t("learning.mc9a8d4e71203", { value1: String(qualityRows.passed.length) })}
               </button>
             ) : null}
           </div>
@@ -720,14 +754,15 @@ export function CardBuilder({
           </div>
           <div className="cb-meta">
             <div className="cb-meta__row">
-              <span className="cb-meta__k">First due</span>
+              <span className="cb-meta__k">{t("learning.m3f71bdae5926")}</span>
               <span className="cb-meta__v">— (M7)</span>
             </div>
             <div className="cb-meta__row">
-              <span className="cb-meta__k">Scheduler</span>
+              <span className="cb-meta__k">{t("learning.md3a27d96cd07")}</span>
               <span className="cb-meta__v">
                 <span className="sched sched--fsrs" data-testid="cb-scheduler-fsrs">
-                  <Icon name="brain" size={12} /> FSRS
+                  <Icon name="brain" size={12} />
+                  {t("learning.m667849405d75")}
                 </span>
               </span>
             </div>
@@ -742,7 +777,10 @@ export function CardBuilder({
           disabled={!canCreate || busy}
           onClick={() => void create()}
         >
-          <Icon name="card" size={14} /> Create {tab === "qa" ? "Q&A" : "cloze"} card
+          <Icon name="card" size={14} />
+          {t("learning.m6bf629b01c87")}
+          {tab === "qa" ? "Q&A" : t("learning.m516dc8a43bc4")}
+          {t("learning.m6ec6736b9d4e")}
         </button>
       </div>
     </aside>

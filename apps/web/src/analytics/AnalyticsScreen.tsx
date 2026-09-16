@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Analytics view (T045) — the system-wide learning-health snapshot.
  *
@@ -73,12 +74,16 @@ function ConceptRetentionPanel({
   error: string | null;
   onOpenConcept: (conceptId: string) => void;
 }) {
+  useLocale();
   const subjects = data?.subjects ?? [];
   return (
     <div className="an-panel an-knowledge" data-testid="concept-retention-panel">
       <div className="an-panel__head">
-        <span className="an-panel__title">Concept retention</span>
-        <span className="an-panel__meta">{data?.windowDays ?? 90} days</span>
+        <span className="an-panel__title">{t("collection.mb9095b2e1f9d")}</span>
+        <span className="an-panel__meta">
+          {data?.windowDays ?? 90}
+          {t("collection.mb1c503166f16")}
+        </span>
       </div>
       {error ? (
         <p className="an-priority__error" data-testid="concept-retention-error">
@@ -86,7 +91,7 @@ function ConceptRetentionPanel({
         </p>
       ) : subjects.length === 0 ? (
         <p className="an-knowledge__empty" data-testid="concept-retention-empty">
-          No concept retention receipts yet.
+          {t("collection.m21e2848b70bc")}
         </p>
       ) : (
         <div className="an-knowledge__rows" data-testid="concept-retention-rows">
@@ -102,7 +107,8 @@ function ConceptRetentionPanel({
                 <span className="an-knowledge__title">{subject.title}</span>
                 <span className="an-knowledge__meta">
                   {graduationLabel(subject.graduationState.status)} ·{" "}
-                  {subject.retention.reviewCount} reviews
+                  {subject.retention.reviewCount}
+                  {t("collection.m3a186fa2a588")}
                 </span>
               </span>
               <span className="an-knowledge__metric">
@@ -110,7 +116,8 @@ function ConceptRetentionPanel({
                   {formatPct(subject.retention.measuredRetention)}
                 </span>
                 <span className="an-knowledge__label">
-                  target {formatPct(subject.retention.retentionTarget)}
+                  {t("collection.m7c51bfc4180d")}
+                  {formatPct(subject.retention.retentionTarget)}
                 </span>
               </span>
               <span className="an-knowledge__metric">
@@ -118,7 +125,8 @@ function ConceptRetentionPanel({
                   {formatPct(subject.funnel.matureOfCarded)}
                 </span>
                 <span className="an-knowledge__label">
-                  {subject.funnel.mature}/{subject.funnel.carded} mature
+                  {subject.funnel.mature}/{subject.funnel.carded}
+                  {t("collection.mace6de3c6478")}
                 </span>
               </span>
               <Icon name="chevronRight" size={14} />
@@ -131,6 +139,7 @@ function ConceptRetentionPanel({
 }
 
 export function AnalyticsScreen() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const [data, setData] = useState<AnalyticsGetResult | null>(null);
@@ -277,11 +286,8 @@ export function AnalyticsScreen() {
           <div className="an-empty__icon">
             <Icon name="analytics" size={26} />
           </div>
-          <h1 className="an-empty__title">Analytics</h1>
-          <p className="an-empty__body">
-            Your learning system at a glance — daily reviews, retention, and what is due. Open the
-            Electron app to see the numbers.
-          </p>
+          <h1 className="an-empty__title">{t("collection.m94c116ee118a")}</h1>
+          <p className="an-empty__body">{t("collection.m33c0bc2f98c9")}</p>
         </div>
       </div>
     );
@@ -294,9 +300,11 @@ export function AnalyticsScreen() {
     <div className="an-shell" data-testid="route-analytics">
       <div className="an-head">
         <div>
-          <h1 className="an-title">Analytics</h1>
+          <h1 className="an-title">{t("collection.m94c116ee118a")}</h1>
           <p className="an-sub">
-            Your learning system at a glance · last {data?.windowDays ?? 30} days
+            {t("collection.m5240dae295e2")}
+            {data?.windowDays ?? 30}
+            {t("collection.m8fae8e734d61")}
           </p>
         </div>
       </div>
@@ -309,7 +317,7 @@ export function AnalyticsScreen() {
 
       {loading ? (
         <p className="an-loading" data-testid="analytics-loading">
-          Loading…
+          {t("collection.m0a5afbeee779")}
         </p>
       ) : data ? (
         <div className="an-body" data-testid="analytics-body">
@@ -323,26 +331,32 @@ export function AnalyticsScreen() {
                 {formatRetention(data.retention30d)}
                 {data.retention30d !== null ? <span className="an-metric__suffix">%</span> : null}
               </span>
-              <span className="an-metric__label">Retention</span>
-              <span className="an-metric__sub">not-again, 30d</span>
+              <span className="an-metric__label">{t("collection.m3b1f58d94eac")}</span>
+              <span className="an-metric__sub">{t("collection.mfbd7f56839c5")}</span>
             </div>
             <div className="an-metric" data-testid="metric-reviews">
               <span className="an-metric__val">{formatCount(data.reviewsTotal)}</span>
-              <span className="an-metric__label">Reviews</span>
-              <span className="an-metric__sub">≈ {Math.round(data.reviewsPerDayAvg)} / day</span>
+              <span className="an-metric__label">{t("collection.m84cb7871b741")}</span>
+              <span className="an-metric__sub">
+                ≈ {Math.round(data.reviewsPerDayAvg)}
+                {t("collection.m448a17b8a5ae")}
+              </span>
             </div>
             <div className="an-metric" data-testid="metric-streak">
               <span className="an-metric__val">{formatCount(data.dayStreak)}</span>
-              <span className="an-metric__label">Day streak</span>
-              <span className="an-metric__sub">consecutive days</span>
+              <span className="an-metric__label">{t("collection.m4575171b4873")}</span>
+              <span className="an-metric__sub">{t("collection.m58a8947d41c9")}</span>
             </div>
             <div
               className={`an-metric${data.dueCards > 0 ? " an-metric--danger" : ""}`}
               data-testid="metric-due"
             >
               <span className="an-metric__val">{formatCount(data.dueCards)}</span>
-              <span className="an-metric__label">Due cards</span>
-              <span className="an-metric__sub">{formatCount(data.dueTopics)} topics due</span>
+              <span className="an-metric__label">{t("collection.mf73dfabf39a9")}</span>
+              <span className="an-metric__sub">
+                {formatCount(data.dueTopics)}
+                {t("collection.m96c22e5ead83")}
+              </span>
             </div>
           </div>
 
@@ -350,23 +364,23 @@ export function AnalyticsScreen() {
           <div className="an-metrics an-metrics--sm">
             <div className="an-metric an-metric--sm" data-testid="metric-new-cards">
               <span className="an-metric__val">{formatCount(data.newCards)}</span>
-              <span className="an-metric__label">New cards</span>
+              <span className="an-metric__label">{t("collection.m3448c00f4c8f")}</span>
             </div>
             <div className="an-metric an-metric--sm" data-testid="metric-new-extracts">
               <span className="an-metric__val">{formatCount(data.newExtracts)}</span>
-              <span className="an-metric__label">New extracts</span>
+              <span className="an-metric__label">{t("collection.m2fdcaf4e59f9")}</span>
             </div>
             <div className="an-metric an-metric--sm" data-testid="metric-deletions">
               <span className="an-metric__val">{formatCount(data.deletions)}</span>
-              <span className="an-metric__label">Deletions</span>
+              <span className="an-metric__label">{t("collection.m1535d13590fe")}</span>
             </div>
             <div className="an-metric an-metric--sm" data-testid="metric-leeches">
               <span className="an-metric__val">{formatCount(data.leeches)}</span>
-              <span className="an-metric__label">Leeches</span>
+              <span className="an-metric__label">{t("collection.meb105f601c13")}</span>
             </div>
             <div className="an-metric an-metric--sm" data-testid="metric-retired">
               <span className="an-metric__val">{formatCount(data.retired)}</span>
-              <span className="an-metric__label">Retired</span>
+              <span className="an-metric__label">{t("collection.ma9f71bc2404c")}</span>
             </div>
           </div>
 
@@ -392,8 +406,11 @@ export function AnalyticsScreen() {
           {/* Reviews per day spark */}
           <div className="an-panel">
             <div className="an-panel__head">
-              <span className="an-panel__title">Reviews per day</span>
-              <span className="an-panel__meta">{data.windowDays} days</span>
+              <span className="an-panel__title">{t("collection.m7644c030c481")}</span>
+              <span className="an-panel__meta">
+                {data.windowDays}
+                {t("collection.mb1c503166f16")}
+              </span>
             </div>
             <div className="an-spark" data-testid="analytics-spark">
               {sparkData.map((d, i) => (
@@ -414,7 +431,7 @@ export function AnalyticsScreen() {
           {/* System health banners */}
           <div className="an-panel">
             <div className="an-panel__head">
-              <span className="an-panel__title">System health</span>
+              <span className="an-panel__title">{t("collection.m982649422d26")}</span>
             </div>
             <div className="an-banners">
               {data.leeches > 0 ? (
@@ -426,7 +443,10 @@ export function AnalyticsScreen() {
                 >
                   <Icon name="leech" size={16} />
                   <span className="an-banner__title">
-                    {data.leeches} leech{data.leeches === 1 ? "" : "es"} to repair
+                    {data.leeches}
+                    {t("collection.mfee065c45b93")}
+                    {data.leeches === 1 ? "" : t("collection.mc0bc1e08f974")}
+                    {t("collection.mf0b074ee71a3")}
                   </span>
                   <Icon name="chevronRight" size={14} />
                 </button>
@@ -440,7 +460,10 @@ export function AnalyticsScreen() {
                 >
                   <Icon name="trash" size={16} />
                   <span className="an-banner__title">
-                    {data.deletions} item{data.deletions === 1 ? "" : "s"} deleted this window
+                    {data.deletions}
+                    {t("collection.ma5f3c2e9f903")}
+                    {i18n.language.startsWith("zh") ? "" : data.deletions === 1 ? "" : "s"}
+                    {t("collection.med12f4545575")}
                   </span>
                   <Icon name="chevronRight" size={14} />
                 </button>
@@ -454,7 +477,10 @@ export function AnalyticsScreen() {
                 >
                   <Icon name="archive" size={16} />
                   <span className="an-banner__title">
-                    {data.retired} retired card{data.retired === 1 ? "" : "s"} kept for reference
+                    {data.retired}
+                    {t("collection.m231dc938e524")}
+                    {i18n.language.startsWith("zh") ? "" : data.retired === 1 ? "" : "s"}
+                    {t("collection.m7723bc0e0417")}
                   </span>
                   <Icon name="chevronRight" size={14} />
                 </button>
@@ -469,7 +495,10 @@ export function AnalyticsScreen() {
                 >
                   <Icon name="library" size={16} />
                   <span className="an-banner__title">
-                    {lowYieldCount} low-yield source{lowYieldCount === 1 ? "" : "s"} to review
+                    {lowYieldCount}
+                    {t("collection.m3bd086400238")}
+                    {i18n.language.startsWith("zh") ? "" : lowYieldCount === 1 ? "" : "s"}
+                    {t("collection.mf721653f66a3")}
                   </span>
                   <Icon name="chevronRight" size={14} />
                 </button>
@@ -484,8 +513,10 @@ export function AnalyticsScreen() {
                 >
                   <Icon name="hourglass" size={16} />
                   <span className="an-banner__title">
-                    {stagnantCount} stagnant extract{stagnantCount === 1 ? "" : "s"} to finish or
-                    drop
+                    {stagnantCount}
+                    {t("collection.mf860406ea72a")}
+                    {i18n.language.startsWith("zh") ? "" : stagnantCount === 1 ? "" : "s"}
+                    {t("collection.m6a135820f4ba")}
                   </span>
                   <Icon name="chevronRight" size={14} />
                 </button>
@@ -496,7 +527,7 @@ export function AnalyticsScreen() {
               stagnantCount === 0 ? (
                 <div className="an-banner an-banner--ok" data-testid="banner-healthy">
                   <Icon name="checkCircle" size={16} />
-                  <span className="an-banner__title">No maintenance needed</span>
+                  <span className="an-banner__title">{t("collection.m84f56c954407")}</span>
                 </div>
               ) : null}
               {/* The Maintenance hub (T099) — always available: duplicates, orphan media,
@@ -508,9 +539,7 @@ export function AnalyticsScreen() {
                 onClick={() => void navigate({ to: "/maintenance" })}
               >
                 <Icon name="shield" size={16} />
-                <span className="an-banner__title">
-                  Open maintenance — duplicates, orphans, integrity
-                </span>
+                <span className="an-banner__title">{t("collection.m3658f42df142")}</span>
                 <Icon name="chevronRight" size={14} />
               </button>
             </div>

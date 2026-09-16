@@ -197,9 +197,24 @@ const LAPSE_CLUSTER_WINDOW_DAYS_MAX = 365;
 const REREAD_PROPOSAL_WEEKLY_CAP_MIN = 1;
 const REREAD_PROPOSAL_WEEKLY_CAP_MAX = 10;
 const KEYBOARD_LAYOUTS: { value: AppSettings["keyboardLayout"]; label: string }[] = [
-  { value: "qwerty", label: "QWERTY" },
-  { value: "dvorak", label: "Dvorak" },
-  { value: "vim", label: "Vim" },
+  {
+    value: "qwerty",
+    get label() {
+      return t("options.m435c554a2e9c");
+    },
+  },
+  {
+    value: "dvorak",
+    get label() {
+      return t("options.mcd2526b5791c");
+    },
+  },
+  {
+    value: "vim",
+    get label() {
+      return t("options.mc71ba099f440");
+    },
+  },
 ];
 
 const SettingLabel = createContext<string | undefined>(undefined);
@@ -213,6 +228,7 @@ function SettingRow({
   hint?: string;
   children: React.ReactNode;
 }) {
+  useLocale();
   const labelId = useId();
   return (
     <div className="setting-row flex items-center justify-between gap-5 border-border-faint border-b py-3.5 last:border-b-0">
@@ -232,6 +248,7 @@ function SettingRow({
 }
 
 function SectionPanel({ title, children }: { title: string; children: React.ReactNode }) {
+  useLocale();
   return (
     <section className="mb-6">
       <div className="mb-1.5 font-medium text-text-2 text-xs uppercase tracking-wide">{title}</div>
@@ -252,6 +269,7 @@ function Segmented<T extends string | number>({
   onChange: (value: T) => void;
   name: string;
 }) {
+  useLocale();
   const labelId = useContext(SettingLabel);
   return (
     <fieldset
@@ -291,6 +309,7 @@ function Toggle({
   onChange: (checked: boolean) => void;
   name: string;
 }) {
+  useLocale();
   const labelId = useContext(SettingLabel);
   return (
     <button
@@ -338,6 +357,7 @@ function RetentionBandRow({
   enabled: boolean;
   onSet: (band: "A" | "B" | "C" | "D", target: number | null) => void;
 }) {
+  useLocale();
   const effective = target ?? global;
   const pct = Math.round(effective * 100);
   const inherits = target === undefined;
@@ -401,6 +421,7 @@ function AiAssistancePanel({
   settings: RendererSettings;
   patch: (next: Partial<AppSettings>) => Promise<void>;
 }) {
+  useLocale();
   const [status, setStatus] = useState<{
     enabled: boolean;
     providerKind: string;
@@ -504,8 +525,18 @@ function AiAssistancePanel({
                 return t("settings.local");
               },
             },
-            { value: "anthropic", label: "Anthropic" },
-            { value: "openai", label: "OpenAI" },
+            {
+              value: "anthropic",
+              get label() {
+                return t("options.m744205e43529");
+              },
+            },
+            {
+              value: "openai",
+              get label() {
+                return t("options.m8b7d1a3187ab");
+              },
+            },
           ]}
         />
       </SettingRow>
@@ -525,7 +556,9 @@ function AiAssistancePanel({
               type="password"
               data-testid="setting-ai-api-key"
               value={keyInput}
-              placeholder={status?.keyConfigured ? t("settings.configured") : "sk-…"}
+              placeholder={
+                status?.keyConfigured ? t("settings.configured") : t("collection.m4c8ab1c7c998")
+              }
               onChange={(e) => setKeyInput(e.target.value)}
               className="w-40 rounded-md border border-border bg-surface px-2.5 py-1 text-sm text-text placeholder:text-text-3 focus:outline-none focus:ring-2 focus:ring-accent"
             />
@@ -579,6 +612,7 @@ function AiAssistancePanel({
 
 /** A small "OK" status chip matching the kit's `.set-ok` (mirrors the backup-result chip). */
 function OkChip({ testid, icon, children }: { testid: string; icon: IconName; children: string }) {
+  useLocale();
   return (
     <span
       data-testid={testid}
@@ -592,6 +626,7 @@ function OkChip({ testid, icon, children }: { testid: string; icon: IconName; ch
 
 /** A neutral mono token pill matching the kit's `.set-token`. */
 function Token({ testid, children }: { testid: string; children: string }) {
+  useLocale();
   return (
     <span
       data-testid={testid}
@@ -614,6 +649,7 @@ function StatusChip({
   tone: "ok" | "warn" | "danger";
   children: string;
 }) {
+  useLocale();
   const tint =
     tone === "ok"
       ? "bg-ok-soft text-ok"
@@ -633,6 +669,7 @@ function StatusChip({
 
 /** A single readiness-checklist line (pass = check, fail = warning, muted-to-warn). */
 function ChecklistItem({ ok, label }: { ok: boolean; label: string }) {
+  useLocale();
   return (
     <span
       className={`inline-flex items-center gap-1.5 text-sm ${ok ? "text-text-2" : "text-warn"}`}
@@ -729,6 +766,7 @@ function formatEta(seconds: number): string {
  * neutral state for an empty vault — no false "partial coverage".
  */
 function SearchIntelligencePanel() {
+  useLocale();
   const [status, setStatus] = useState<SemanticStatusResult | null>(null);
   const [busy, setBusy] = useState<"reindex" | "retry" | "model" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -970,6 +1008,7 @@ const PERSIST_KEY = "desktop.lastCheck";
  * Pure UI — it only awaits IPC-backed promises from the typed client; no domain logic here.
  */
 function SystemPanel() {
+  useLocale();
   const [health, setHealth] = useState<HealthResult | null>(null);
   const [status, setStatus] = useState<DbStatus | null>(null);
   const [persisted, setPersisted] = useState<SettingValue | undefined>(undefined);
@@ -1084,7 +1123,7 @@ function SystemPanel() {
         >
           <div className="flex items-center gap-2 flex-wrap">
             <span data-testid="persisted-value" className="font-mono text-text-3 text-xs">
-              {persisted === undefined ? "(unset)" : String(persisted)}
+              {persisted === undefined ? t("collection.m4d993827d064") : String(persisted)}
             </span>
             <button
               type="button"

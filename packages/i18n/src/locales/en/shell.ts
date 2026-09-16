@@ -1,4 +1,12 @@
 export const shell = {
+  inspector: "Inspector",
+  inspectorSelect: "Select an element to see its details, lineage, and scheduler signals.",
+  inspectorElements: "Elements",
+  inspectorEmpty: "No elements yet. Import a source to get started.",
+  inspectorDesktop:
+    "The inspector reads element data through the desktop bridge — open the Electron app to see it.",
+  inspectorMissing: "That element is no longer available.",
+  inspectorLoading: "Loading…",
   localVault: "Local vault",
   undid_one: "Undid {{count, number}} change",
   undid_other: "Undid {{count, number}} changes",

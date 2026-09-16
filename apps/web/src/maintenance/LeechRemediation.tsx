@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../i18n";
 /**
  * Leech remediation screen (T085) — the full repair workflow for repeatedly-failing
  * cards, promoting the minimal T040 cleanup view.
@@ -82,6 +83,7 @@ function RewriteEditor({
   onSaved: () => void | Promise<void>;
   onCancel: () => void;
 }) {
+  useLocale();
   const isCloze = card.kind === "cloze";
   const [prompt, setPrompt] = useState(card.prompt ?? "");
   const [answer, setAnswer] = useState(card.answer ?? "");
@@ -246,7 +248,7 @@ function RewriteEditor({
     <div className="rv-edit lc-edit" data-testid={`leech-edit-${card.id}`}>
       {isCloze ? (
         <label className="rv-edit__field">
-          <span className="rv-edit__label">Cloze text</span>
+          <span className="rv-edit__label">{t("collection.mc787c15e64f5")}</span>
           <textarea
             className="rv-edit__textarea"
             data-testid="leech-edit-cloze"
@@ -259,7 +261,7 @@ function RewriteEditor({
       ) : (
         <>
           <label className="rv-edit__field">
-            <span className="rv-edit__label">Prompt</span>
+            <span className="rv-edit__label">{t("collection.m5c39123805ff")}</span>
             <textarea
               className="rv-edit__textarea"
               data-testid="leech-edit-prompt"
@@ -270,7 +272,7 @@ function RewriteEditor({
             />
           </label>
           <label className="rv-edit__field">
-            <span className="rv-edit__label">Answer</span>
+            <span className="rv-edit__label">{t("collection.mb2a3aa602762")}</span>
             <textarea
               className="rv-edit__textarea"
               data-testid="leech-edit-answer"
@@ -307,7 +309,7 @@ function RewriteEditor({
             data-testid="leech-edit-close"
             onClick={() => void close()}
           >
-            Close
+            {t("collection.m79c84b48c2f0")}
           </button>
           <button
             type="button"
@@ -316,7 +318,7 @@ function RewriteEditor({
             onClick={() => void resolve()}
           >
             <Icon name="check" size={14} />
-            Resolve
+            {t("collection.m80d399a2baab")}
           </button>
         </div>
       )}
@@ -338,6 +340,7 @@ function SplitEditor({
   onSplit: () => void | Promise<void>;
   onCancel: () => void;
 }) {
+  useLocale();
   const kind = card.kind === "cloze" ? "cloze" : "qa";
   // Two atomic parts authored from the multi-fact original. The stable `key` (a fixed
   // slot id) keeps React from re-mounting the textareas as the user types — the part
@@ -371,15 +374,17 @@ function SplitEditor({
   return (
     <div className="rv-edit lc-edit" data-testid={`leech-split-${card.id}`}>
       <p className="rv-edit__hint" data-testid="leech-split-hint">
-        Split this card into two atomic cards — one fact each. The original is moved to trash
-        (recoverable).
+        {t("collection.m1fe281a7c5cf")}
       </p>
       {parts.map((part, index) => (
         <div className="lc-split-part" key={part.key} data-testid={`leech-split-part-${index}`}>
-          <span className="rv-edit__label">Card {index + 1}</span>
+          <span className="rv-edit__label">
+            {t("collection.m72188e4ff731")}
+            {index + 1}
+          </span>
           {kind === "cloze" ? (
             <label className="rv-edit__field">
-              <span className="rv-edit__label">Cloze text</span>
+              <span className="rv-edit__label">{t("collection.mc787c15e64f5")}</span>
               <textarea
                 className="rv-edit__textarea"
                 data-testid={`leech-split-cloze-${index}`}
@@ -391,7 +396,7 @@ function SplitEditor({
           ) : (
             <>
               <label className="rv-edit__field">
-                <span className="rv-edit__label">Prompt</span>
+                <span className="rv-edit__label">{t("collection.m5c39123805ff")}</span>
                 <textarea
                   className="rv-edit__textarea"
                   data-testid={`leech-split-prompt-${index}`}
@@ -401,7 +406,7 @@ function SplitEditor({
                 />
               </label>
               <label className="rv-edit__field">
-                <span className="rv-edit__label">Answer</span>
+                <span className="rv-edit__label">{t("collection.mb2a3aa602762")}</span>
                 <textarea
                   className="rv-edit__textarea"
                   data-testid={`leech-split-answer-${index}`}
@@ -427,7 +432,7 @@ function SplitEditor({
           onClick={onCancel}
           disabled={saving}
         >
-          Cancel
+          {t("collection.m0ef70263b054")}
         </button>
         <button
           type="button"
@@ -437,7 +442,7 @@ function SplitEditor({
           disabled={saving}
         >
           <Icon name="check" size={14} />
-          Split into 2 cards
+          {t("collection.mcd3590b567cc")}
         </button>
       </div>
     </div>
@@ -454,6 +459,7 @@ function ContextEditor({
   onSaved: () => void | Promise<void>;
   onCancel: () => void;
 }) {
+  useLocale();
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -474,12 +480,12 @@ function ContextEditor({
   return (
     <div className="rv-edit lc-edit" data-testid={`leech-context-${card.id}`}>
       <label className="rv-edit__field">
-        <span className="rv-edit__label">Context note</span>
+        <span className="rv-edit__label">{t("collection.m844c872c4bbb")}</span>
         <textarea
           className="rv-edit__textarea"
           data-testid="leech-context-note"
           value={note}
-          placeholder="A clarifying note so the prompt is answerable…"
+          placeholder={t("collection.md6522f07b9e4")}
           onChange={(e) => setNote(e.target.value)}
           rows={2}
         />
@@ -497,7 +503,7 @@ function ContextEditor({
           onClick={onCancel}
           disabled={saving}
         >
-          Cancel
+          {t("collection.m0ef70263b054")}
         </button>
         <button
           type="button"
@@ -507,7 +513,7 @@ function ContextEditor({
           disabled={saving || note.trim().length === 0}
         >
           <Icon name="check" size={14} />
-          Add context
+          {t("collection.m91e830f0b0a5")}
         </button>
       </div>
     </div>
@@ -524,11 +530,12 @@ function PriorityRow({
   busy: boolean;
   onSet: (band: PriorityLabel) => void;
 }) {
+  useLocale();
   const current = priorityLabel(card.priority);
   return (
     <fieldset
       className="prio-edit__seg lc-prio"
-      aria-label="Set priority"
+      aria-label={t("collection.m491dc6df71d6")}
       data-testid="leech-priority"
     >
       {PRIORITY_BANDS.map((band) => (
@@ -556,6 +563,7 @@ function PriorityRow({
 type EditorMode = "rewrite" | "split" | "context";
 
 export function LeechRemediation() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const navigateToLocation = useNavigateToLocation();
@@ -661,11 +669,8 @@ export function LeechRemediation() {
             <div className="rv-empty__icon">
               <Icon name="leech" size={26} />
             </div>
-            <h1 className="rv-empty__title">Leech remediation</h1>
-            <p className="rv-empty__body">
-              Repeatedly-failing cards are listed here for repair — open the Electron app to clean
-              them up.
-            </p>
+            <h1 className="rv-empty__title">{t("collection.m8227e19b7d12")}</h1>
+            <p className="rv-empty__body">{t("collection.mfdf7177079ee")}</p>
           </div>
         </div>
       </div>
@@ -678,15 +683,14 @@ export function LeechRemediation() {
         <div>
           <h1 className="lc-title">
             <Icon name="leech" size={18} />
-            Leech remediation
+            {t("collection.ma42e5ff7362e")}
           </h1>
-          <p className="lc-sub">
-            Cards that keep lapsing (≥ 4 failures). Split, add context, send back to the extract,
-            lower priority, suspend, or delete them so they stop costing review time.
-          </p>
+          <p className="lc-sub">{t("collection.m3eb3e72a8875")}</p>
         </div>
         <span className="lc-count" data-testid="leech-count">
-          {cards.length} leech{cards.length === 1 ? "" : "es"}
+          {cards.length}
+          {t("collection.mfee065c45b93")}
+          {cards.length === 1 ? "" : t("collection.mc0bc1e08f974")}
         </span>
         {/* T096 — review every leech as a targeted session (in addition to the per-card
             rewrite/suspend/delete repairs). Omitted when there are no live leeches. */}
@@ -694,7 +698,9 @@ export function LeechRemediation() {
           selector={{ kind: "leech" }}
           hideWhileLoading
           icon="leech"
-          label={(n) => `Review ${n} leech${n === 1 ? "" : "es"}`}
+          label={(n) =>
+            `Review ${n} leech${i18n.language.startsWith("zh") ? "" : n === 1 ? "" : "es"}`
+          }
           testId="leech-review-mode"
         />
       </div>
@@ -708,18 +714,15 @@ export function LeechRemediation() {
       <div className="lc-list">
         {loading ? (
           <p className="lc-loading" data-testid="leech-loading">
-            Loading…
+            {t("collection.m0a5afbeee779")}
           </p>
         ) : cards.length === 0 ? (
           <div className="rv-empty" data-testid="leech-empty">
             <div className="rv-empty__icon">
               <Icon name="checkCircle" size={26} />
             </div>
-            <h2 className="rv-empty__title">No leeches</h2>
-            <p className="rv-empty__body">
-              No cards have crossed the leech threshold. Cards that keep failing will appear here
-              for repair.
-            </p>
+            <h2 className="rv-empty__title">{t("collection.m5f901c7f8bbd")}</h2>
+            <p className="rv-empty__body">{t("collection.m705bc4fb5f4c")}</p>
           </div>
         ) : (
           cards.map((card) => {
@@ -734,14 +737,15 @@ export function LeechRemediation() {
               >
                 <div className="lc-card__meta">
                   <span className="badge badge--soft">
-                    {card.kind === "cloze" ? "Cloze" : "Q&A"}
+                    {card.kind === "cloze" ? t("collection.mde503889179e") : "Q&A"}
                   </span>
                   <Prio priority={card.priority} />
                   <span className="badge badge--leech" data-testid="leech-card-lapses">
-                    {card.lapses} lapses
+                    {card.lapses}
+                    {t("collection.m01a318187644")}
                   </span>
                   {card.status === "suspended" ? (
-                    <span className="badge badge--suspended">Suspended</span>
+                    <span className="badge badge--suspended">{t("collection.me392a3891c07")}</span>
                   ) : null}
                 </div>
                 <div className="lc-card__body">
@@ -765,7 +769,8 @@ export function LeechRemediation() {
                   ) : null}
                   {extractAvailable ? (
                     <div className="lc-card__lineage" data-testid="leech-card-lineage">
-                      <Icon name="extract" size={12} /> From an extract
+                      <Icon name="extract" size={12} />
+                      {t("collection.m71601f692779")}
                     </div>
                   ) : null}
                   {clusterSizeByCard.has(card.id) ? (
@@ -779,7 +784,9 @@ export function LeechRemediation() {
                     >
                       <Icon name="layers" size={12} />
                       <span>
-                        Part of a struggling group ({clusterSizeByCard.get(card.id)} cards)
+                        {t("collection.m523be127eaaa")}
+                        {clusterSizeByCard.get(card.id)}
+                        {t("collection.mc90e0ea01291")}
                       </span>
                     </button>
                   ) : null}
@@ -822,7 +829,7 @@ export function LeechRemediation() {
                       onClick={() => setEditor({ id: card.id, mode: "rewrite" })}
                     >
                       <Icon name="edit" size={14} />
-                      Rewrite
+                      {t("collection.m4b7ce7840ba1")}
                     </button>
                     <button
                       type="button"
@@ -832,7 +839,7 @@ export function LeechRemediation() {
                       onClick={() => setEditor({ id: card.id, mode: "split" })}
                     >
                       <Icon name="split" size={14} />
-                      Split
+                      {t("collection.md5ee5f600d23")}
                     </button>
                     <button
                       type="button"
@@ -842,7 +849,7 @@ export function LeechRemediation() {
                       onClick={() => setEditor({ id: card.id, mode: "context" })}
                     >
                       <Icon name="info" size={14} />
-                      Add context
+                      {t("collection.m91e830f0b0a5")}
                     </button>
                     {card.sourceLocationId ? (
                       <button
@@ -853,7 +860,7 @@ export function LeechRemediation() {
                         onClick={() => void openSource(card)}
                       >
                         <Icon name="external" size={14} />
-                        Open source
+                        {t("collection.m9595f5c8ccfb")}
                       </button>
                     ) : null}
                     <button
@@ -863,13 +870,13 @@ export function LeechRemediation() {
                       disabled={busyId === card.id || !extractAvailable}
                       title={
                         extractAvailable
-                          ? "Send the originating extract back into the attention queue"
-                          : "No live parent extract"
+                          ? t("collection.m2a1e1bfc33a0")
+                          : t("collection.m4b6184c49eb6")
                       }
                       onClick={() => void act(card.id, "backToExtract")}
                     >
                       <Icon name="arrowUp" size={14} />
-                      Back to extract
+                      {t("collection.m7dee27a8e6d4")}
                     </button>
                     <PriorityRow
                       card={card}
@@ -884,7 +891,7 @@ export function LeechRemediation() {
                       onClick={() => void act(card.id, "suspend")}
                     >
                       <Icon name="pause" size={14} />
-                      Suspend
+                      {t("collection.m64cf0482cf8b")}
                     </button>
                     <button
                       type="button"
@@ -894,7 +901,7 @@ export function LeechRemediation() {
                       onClick={() => void act(card.id, "unleech")}
                     >
                       <Icon name="check" size={14} />
-                      Not a leech
+                      {t("collection.m066772f8b383")}
                     </button>
                     <button
                       type="button"
@@ -904,7 +911,7 @@ export function LeechRemediation() {
                       onClick={() => void act(card.id, "delete")}
                     >
                       <Icon name="trash" size={14} />
-                      Delete
+                      {t("collection.m85941fb9c992")}
                     </button>
                   </div>
                 )}

@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../../i18n";
 /**
  * OverloadBanner (T077) — the daily queue's overload valve, wiring the kit's
  * `Banner variant="info"` slot (`design/kit/app/screen-queue.jsx`, left unwired in M5).
@@ -59,6 +60,7 @@ export function OverloadBanner({
   filters,
   onPostponed,
 }: OverloadBannerProps) {
+  useLocale();
   const over = used - target;
   const approx = confidence === "default" ? "~" : "";
   const overLabel = Math.max(0, Math.round(over));
@@ -110,7 +112,8 @@ export function OverloadBanner({
       <div className="q-overload-banner__main">
         <div className="q-overload-banner__title" data-testid="queue-overload-count">
           {approx}
-          {overLabel} min over today's budget
+          {overLabel}
+          {t("learning.mf4052d717ab3")}
         </div>
         <div className="q-overload-banner__body">
           High-priority fragile cards are protected. Auto-postpone the lowest-priority topics &amp;
@@ -125,15 +128,20 @@ export function OverloadBanner({
         {preview ? (
           <div className="q-postpone-preview" data-testid="queue-postpone-preview">
             {preview.willPostpone.length === 0 ? (
-              <div className="q-overload-banner__body">
-                Nothing can be safely postponed — only protected high-value items are over budget.
-              </div>
+              <div className="q-overload-banner__body">{t("learning.m7da9aa231c12")}</div>
             ) : (
               <>
                 <div className="q-overload-banner__body">
-                  {preview.willPostpone.length} item
-                  {preview.willPostpone.length === 1 ? "" : "s"} will move (~
-                  {Math.round(preview.remainingMinutesAfter)} min left after):
+                  {preview.willPostpone.length}
+                  {t("learning.meb769caa2522")}
+                  {i18n.language.startsWith("zh")
+                    ? ""
+                    : preview.willPostpone.length === 1
+                      ? ""
+                      : "s"}
+                  {t("learning.mccb2a54afd1d")}
+                  {Math.round(preview.remainingMinutesAfter)}
+                  {t("learning.mccf215d0db1b")}
                 </div>
                 <div className="q-postpone-preview__list">
                   {preview.willPostpone.map((row) => (
@@ -160,7 +168,8 @@ export function OverloadBanner({
                 onClick={() => void confirm()}
               >
                 <Icon name="postpone" size={14} />
-                Postpone {preview.willPostpone.length}
+                {t("learning.m6087edb47090")}
+                {preview.willPostpone.length}
               </button>
               <button
                 type="button"
@@ -169,7 +178,7 @@ export function OverloadBanner({
                 disabled={busy}
                 onClick={() => setPreview(null)}
               >
-                Cancel
+                {t("learning.m0ef70263b054")}
               </button>
             </div>
           </div>
@@ -186,7 +195,7 @@ export function OverloadBanner({
             onClick={() => void openPreview()}
           >
             <Icon name="postpone" size={14} />
-            Auto-postpone
+            {t("learning.m7c00b0cd2e9d")}
           </button>
         </div>
       )}

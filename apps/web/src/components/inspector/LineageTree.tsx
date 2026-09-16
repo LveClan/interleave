@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * LineageTree (T023) — the navigable element hierarchy, rebuilt from the design
  * kit's `LineageTree` (`design/kit/app/components.jsx`) for React 19.
@@ -56,6 +57,7 @@ export function LineageTree({
    */
   onNodeContextMenu?: (node: LineageNode, position: { x: number; y: number }) => void;
 }) {
+  useLocale();
   return (
     <div className="tree" data-testid="lineage-tree">
       {nodes.map((n) => {
@@ -91,7 +93,7 @@ export function LineageTree({
               <span className="tree-node__title">{n.title}</span>
               {n.deleted ? (
                 <span className="tree-node__tomb" data-testid="lineage-tombstone-tag">
-                  deleted
+                  {t("details.mc03e7df08f72")}
                 </span>
               ) : n.meta ? (
                 <span className="tree-node__meta">{n.meta}</span>
@@ -104,11 +106,11 @@ export function LineageTree({
                 data-testid="lineage-tombstone-restore"
                 data-element-id={n.id}
                 disabled={restoring}
-                aria-label={`Restore ${n.title}`}
+                aria-label={t("details.ma7d32b140dd8", { value1: String(n.title) })}
                 onClick={() => onRestore(n)}
               >
                 <Icon name="restore" size={12} />
-                {restoring ? "Restoring…" : "Restore"}
+                {restoring ? t("details.m5a4918e0201c") : t("details.ma76e13b98392")}
               </button>
             ) : null}
           </div>

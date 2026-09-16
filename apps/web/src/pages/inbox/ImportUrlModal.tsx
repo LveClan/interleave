@@ -1,3 +1,4 @@
+import { t, useLocale } from "../../i18n";
 /**
  * Import-from-URL modal (T060) — the automatic web-import dialog.
  *
@@ -70,6 +71,7 @@ export function ImportUrlModal({
   defaultPriority = "C",
   onOpenExisting,
 }: ImportUrlModalProps) {
+  useLocale();
   const [url, setUrl] = useState("");
   const [reason, setReason] = useState("");
   const [priority, setPriority] = useState<PriorityLabelInput>(defaultPriority);
@@ -200,7 +202,7 @@ export function ImportUrlModal({
       <button
         type="button"
         className="absolute inset-0 bg-black/30"
-        aria-label="Close Import from URL"
+        aria-label={t("collection.m5901d8cc3fc9")}
         tabIndex={-1}
         onClick={onClose}
       />
@@ -208,7 +210,7 @@ export function ImportUrlModal({
         className="relative flex max-h-[80vh] w-full max-w-xl flex-col rounded-xl border border-border bg-surface shadow-lg"
         role="dialog"
         aria-modal="true"
-        aria-label="Import from URL"
+        aria-label={t("collection.me5e2b7c33242")}
       >
         <form
           className="flex min-h-0 flex-col"
@@ -218,11 +220,11 @@ export function ImportUrlModal({
           }}
         >
           <div className="flex items-center justify-between border-border border-b px-4 py-3">
-            <h2 className="font-semibold text-base text-text">Import from URL</h2>
+            <h2 className="font-semibold text-base text-text">{t("collection.me5e2b7c33242")}</h2>
             <button
               type="button"
               data-testid="import-url-close"
-              aria-label="Close"
+              aria-label={t("collection.m7d9eb7acb13e")}
               onClick={onClose}
               className="rounded p-1 text-text-3 hover:text-text"
             >
@@ -232,7 +234,9 @@ export function ImportUrlModal({
 
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
             <label className="block">
-              <span className="mb-1 block font-medium text-sm text-text-2">URL</span>
+              <span className="mb-1 block font-medium text-sm text-text-2">
+                {t("collection.me7a241debad5")}
+              </span>
               <input
                 ref={inputRef}
                 data-testid="import-url-input"
@@ -252,28 +256,30 @@ export function ImportUrlModal({
 
             {canonicalPreview && canonicalPreview !== url.trim() ? (
               <p className="text-text-3 text-xs" data-testid="import-url-canonical">
-                Canonical: <span className="break-all font-mono">{canonicalPreview}</span>
+                {t("collection.m78d46b4ac263")}
+                <span className="break-all font-mono">{canonicalPreview}</span>
               </p>
             ) : null}
 
-            <p className="text-text-3 text-xs">
-              The app fetches the page, extracts the readable article, and saves a snapshot — all
-              locally.
-            </p>
+            <p className="text-text-3 text-xs">{t("collection.mbfa4a63f8c07")}</p>
 
             <label className="block">
-              <span className="mb-1 block font-medium text-sm text-text-2">Reason (optional)</span>
+              <span className="mb-1 block font-medium text-sm text-text-2">
+                {t("collection.m0f7d4664a9bc")}
+              </span>
               <input
                 data-testid="import-url-reason"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Why is this worth keeping?"
+                placeholder={t("collection.m02860165d8ef")}
                 className={fieldClass}
               />
             </label>
 
             <div>
-              <span className="mb-1.5 block font-medium text-sm text-text-2">Priority</span>
+              <span className="mb-1.5 block font-medium text-sm text-text-2">
+                {t("collection.md60dbba07922")}
+              </span>
               <div className="flex gap-1.5" data-testid="import-url-priority">
                 {PRIORITY_LABELS.map((p) => {
                   const active = priority === p;
@@ -334,7 +340,7 @@ export function ImportUrlModal({
                 className="space-y-2 rounded-md border border-warn bg-warn-soft px-3 py-3"
                 data-testid="import-url-duplicate"
               >
-                <p className="font-medium text-sm text-text">This page is already imported.</p>
+                <p className="font-medium text-sm text-text">{t("collection.m8121631f533e")}</p>
                 <ul className="space-y-1.5">
                   {duplicates.map((dup) => (
                     <li
@@ -343,7 +349,7 @@ export function ImportUrlModal({
                     >
                       <span className="min-w-0 truncate text-text-2">
                         “{dup.title}” · {formatAccessed(dup.accessedAt)}
-                        {dup.matchedBy === "contentHash" ? " · same content" : ""}
+                        {dup.matchedBy === "contentHash" ? t("collection.mdf667ab899ed") : ""}
                       </span>
                       <button
                         type="button"
@@ -351,7 +357,7 @@ export function ImportUrlModal({
                         onClick={() => openExisting(dup)}
                         className="shrink-0 rounded-md border border-border bg-surface px-2.5 py-1 font-medium text-text-2 text-xs hover:text-text"
                       >
-                        Open existing
+                        {t("collection.m834b380be9bb")}
                       </button>
                     </li>
                   ))}
@@ -368,7 +374,7 @@ export function ImportUrlModal({
                 onClick={onClose}
                 className="rounded-md border border-border bg-surface px-3 py-1.5 font-medium text-sm text-text-2 hover:text-text"
               >
-                Cancel
+                {t("collection.m0ef70263b054")}
               </button>
               <button
                 type="button"
@@ -380,10 +386,10 @@ export function ImportUrlModal({
                 {submitting ? (
                   <>
                     <Icon name="clock" size={14} className="animate-spin" />
-                    Importing…
+                    {t("collection.m1651f479cdc4")}
                   </>
                 ) : (
-                  "Import new version"
+                  t("collection.m73a2be9095dd")
                 )}
               </button>
             </div>
@@ -394,7 +400,7 @@ export function ImportUrlModal({
                 onClick={onClose}
                 className="rounded-md border border-border bg-surface px-3 py-1.5 font-medium text-sm text-text-2 hover:text-text"
               >
-                Cancel
+                {t("collection.m0ef70263b054")}
               </button>
               <button
                 type="submit"
@@ -405,11 +411,11 @@ export function ImportUrlModal({
                 {submitting ? (
                   <>
                     <Icon name="clock" size={14} className="animate-spin" />
-                    Fetching…
+                    {t("collection.m72cdd95381ba")}
                   </>
                 ) : (
                   <>
-                    Import
+                    {t("collection.m06fe0ef789f0")}
                     <Kbd keys={["⌘", "↵"]} />
                   </>
                 )}

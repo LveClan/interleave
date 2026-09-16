@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { Icon } from "../components/Icon";
+import { i18n, t, useLocale } from "../i18n";
 import type { AnalyticsReviewActivityDay, AnalyticsReviewActivityResult } from "../lib/appApi";
 
 export type ReviewActivityResult = AnalyticsReviewActivityResult;
@@ -30,11 +31,26 @@ const MONTHS_LONG = [
 ];
 const WEEKDAYS = [
   { key: "sun", label: "" },
-  { key: "mon", label: "Mon" },
+  {
+    key: "mon",
+    get label() {
+      return t("options.mf40d7f51f69e");
+    },
+  },
   { key: "tue", label: "" },
-  { key: "wed", label: "Wed" },
+  {
+    key: "wed",
+    get label() {
+      return t("options.m58339f45df96");
+    },
+  },
   { key: "thu", label: "" },
-  { key: "fri", label: "Fri" },
+  {
+    key: "fri",
+    get label() {
+      return t("options.m66dab40cea1d");
+    },
+  },
   { key: "sat", label: "" },
 ];
 
@@ -104,7 +120,7 @@ function formatCellLabel(day: AnalyticsReviewActivityDay): string {
   const monthName = MONTHS_LONG[parts.month] ?? "";
   const dateLabel = `${monthName} ${parts.day}, ${parts.year}`;
   if (day.count === 0) return `${dateLabel}: no reviews`;
-  return `${dateLabel}: ${formatCount(day.count)} review${day.count === 1 ? "" : "s"}`;
+  return `${dateLabel}: ${formatCount(day.count)} review${i18n.language.startsWith("zh") ? "" : day.count === 1 ? "" : "s"}`;
 }
 
 function intensityClass(count: number): string {
@@ -135,6 +151,7 @@ export function ReviewActivityHeatmap({
   error,
   onYearSelect,
 }: ReviewActivityHeatmapProps) {
+  useLocale();
   const weeks = activity ? buildWeeks(activity.days) : [];
   const monthLabels = buildMonthLabels(weeks);
   const renderedCells = buildRenderedCells(weeks);
@@ -149,29 +166,33 @@ export function ReviewActivityHeatmap({
   return (
     <div className="an-panel an-heatmap" data-testid="review-activity-panel">
       <div className="an-panel__head an-heatmap__head">
-        <span className="an-panel__title">Review activity</span>
+        <span className="an-panel__title">{t("collection.mb9eba7e63524")}</span>
         <div className="an-heatmap__head-actions">
           <span className="an-panel__meta" data-testid="review-activity-meta">
             {hasActivity
-              ? `${activity.year} · ${formatCount(total)} review${total === 1 ? "" : "s"}`
+              ? t("collection.m163a14b5032f", {
+                  value1: String(activity.year),
+                  value2: String(formatCount(total)),
+                  value3: String(i18n.language.startsWith("zh") ? "" : total === 1 ? "" : "s"),
+                })
               : loading
-                ? "Loading"
-                : "No activity"}
+                ? t("collection.mdc380888c4e2")
+                : t("collection.m0cf9505f9f97")}
           </span>
-          <nav className="an-heatmap__nav" aria-label="Review activity year navigation">
+          <nav className="an-heatmap__nav" aria-label={t("collection.mbe50b30ff62e")}>
             <button
               type="button"
               className="an-heatmap__nav-button"
               disabled={previousYear === null}
               aria-label={
                 previousYear === null
-                  ? "No earlier review activity"
-                  : `Show ${previousYear} review activity`
+                  ? t("collection.m6f7a20d28348")
+                  : t("collection.m00b083fbef21", { value1: String(previousYear) })
               }
               title={
                 previousYear === null
-                  ? "No earlier review activity"
-                  : `Show ${previousYear} review activity`
+                  ? t("collection.m6f7a20d28348")
+                  : t("collection.m00b083fbef21", { value1: String(previousYear) })
               }
               onClick={() => {
                 if (previousYear !== null) onYearSelect(previousYear);
@@ -184,10 +205,14 @@ export function ReviewActivityHeatmap({
               className="an-heatmap__nav-button"
               disabled={nextYear === null}
               aria-label={
-                nextYear === null ? "No later review activity" : `Show ${nextYear} review activity`
+                nextYear === null
+                  ? t("collection.m02dbf0febae8")
+                  : t("collection.m00b083fbef21", { value1: String(nextYear) })
               }
               title={
-                nextYear === null ? "No later review activity" : `Show ${nextYear} review activity`
+                nextYear === null
+                  ? t("collection.m02dbf0febae8")
+                  : t("collection.m00b083fbef21", { value1: String(nextYear) })
               }
               onClick={() => {
                 if (nextYear !== null) onYearSelect(nextYear);
@@ -207,7 +232,7 @@ export function ReviewActivityHeatmap({
 
       {loading && !activity ? (
         <p className="an-heatmap__status" data-testid="review-activity-loading">
-          Loading review activity...
+          {t("collection.m5bbbfa88d5b9")}
         </p>
       ) : null}
 
@@ -232,7 +257,7 @@ export function ReviewActivityHeatmap({
               <ol
                 className="an-heatmap__grid"
                 style={gridStyle}
-                aria-label={`Review activity for ${activity.year}`}
+                aria-label={t("collection.mb21c0d9ed8bd", { value1: String(activity.year) })}
                 data-testid="review-activity-grid"
               >
                 {renderedCells.map(({ key, day }) =>
@@ -260,21 +285,22 @@ export function ReviewActivityHeatmap({
 
           {total === 0 ? (
             <p className="an-heatmap__status" data-testid="review-activity-empty">
-              No reviews recorded in {activity.year}.
+              {t("collection.m7d01c514fafe")}
+              {activity.year}.
             </p>
           ) : null}
           <div className="an-heatmap__footer" aria-hidden="true">
-            <span>Less</span>
+            <span>{t("collection.mae5239ec63f2")}</span>
             <span className="an-heatmap__cell an-heatmap__cell--i0" />
             <span className="an-heatmap__cell an-heatmap__cell--i1" />
             <span className="an-heatmap__cell an-heatmap__cell--i2" />
             <span className="an-heatmap__cell an-heatmap__cell--i3" />
             <span className="an-heatmap__cell an-heatmap__cell--i4" />
-            <span>More</span>
+            <span>{t("collection.md47d7cb0e4f8")}</span>
           </div>
           {loading ? (
             <p className="an-heatmap__status" data-testid="review-activity-updating">
-              Updating review activity...
+              {t("collection.m8d6704bde332")}
             </p>
           ) : null}
         </>

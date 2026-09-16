@@ -1,3 +1,4 @@
+import { i18n, t, useLocale } from "../../i18n";
 /**
  * "Process queue" learning loop (T031) — the keyboard-first daily grind.
  *
@@ -135,9 +136,27 @@ import { useProcessShortcuts } from "./useProcessShortcuts";
  */
 type SessionMode = "full" | "review" | "read";
 const MODES: readonly { id: SessionMode; label: string; icon: IconName }[] = [
-  { id: "full", label: "Full", icon: "layers" },
-  { id: "review", label: "Review-only", icon: "review" },
-  { id: "read", label: "Reading-only", icon: "bookmark" },
+  {
+    id: "full",
+    get label() {
+      return t("options.m008dacb6d1e8");
+    },
+    icon: "layers",
+  },
+  {
+    id: "review",
+    get label() {
+      return t("options.mac0985bbc593");
+    },
+    icon: "review",
+  },
+  {
+    id: "read",
+    get label() {
+      return t("options.me0d6653fd5e6");
+    },
+    icon: "bookmark",
+  },
 ];
 
 function processableQueueItems(items: readonly QueueItemSummary[]): QueueItemSummary[] {
@@ -146,10 +165,34 @@ function processableQueueItems(items: readonly QueueItemSummary[]): QueueItemSum
 
 /** The four FSRS ratings in display + keyboard order (1–4), matching the review session. */
 const GRADES: readonly { rating: ReviewRating; label: string; key: string }[] = [
-  { rating: "again", label: "Again", key: "1" },
-  { rating: "hard", label: "Hard", key: "2" },
-  { rating: "good", label: "Good", key: "3" },
-  { rating: "easy", label: "Easy", key: "4" },
+  {
+    rating: "again",
+    get label() {
+      return t("options.mf72894d8fbb3");
+    },
+    key: "1",
+  },
+  {
+    rating: "hard",
+    get label() {
+      return t("options.m9e73f8fa9cb7");
+    },
+    key: "2",
+  },
+  {
+    rating: "good",
+    get label() {
+      return t("options.mc939327ca16d");
+    },
+    key: "3",
+  },
+  {
+    rating: "easy",
+    get label() {
+      return t("options.md6915875decb");
+    },
+    key: "4",
+  },
 ];
 
 /** The inline non-open actions a loop item exposes (the T030 set + skip). */
@@ -171,10 +214,45 @@ const EXTRACT_STAGES: readonly ExtractStage[] = [
 ];
 
 const PROCESS_SOURCE_SELECTION_ACTIONS: readonly SelectionToolbarItem[] = [
-  { action: "extract", label: "Extract", icon: "extract", keys: "E", accent: true },
-  { action: "highlight", label: "Highlight", icon: "highlight", keys: "H" },
-  { action: "copy", label: "Copy", icon: "copy", title: "Copy selection", dividerBefore: true },
-  { action: "cancel", label: "", icon: "x", title: "Cancel (Esc)", ariaLabel: "Cancel" },
+  {
+    action: "extract",
+    get label() {
+      return t("options.mc15301c0e647");
+    },
+    icon: "extract",
+    keys: "E",
+    accent: true,
+  },
+  {
+    action: "highlight",
+    get label() {
+      return t("options.m07ccd15df32a");
+    },
+    icon: "highlight",
+    keys: "H",
+  },
+  {
+    action: "copy",
+    get label() {
+      return t("options.me21f935f11d7");
+    },
+    icon: "copy",
+    get title() {
+      return t("supplement.m63a5c4dc2952");
+    },
+    dividerBefore: true,
+  },
+  {
+    action: "cancel",
+    label: "",
+    icon: "x",
+    get title() {
+      return t("supplement.m862c2324686b");
+    },
+    get ariaLabel() {
+      return t("supplement.m19766ed6ccb2");
+    },
+  },
 ];
 
 /** The per-type title prefix (mirrors the queue list). */
@@ -234,6 +312,7 @@ function cardChipSignals(card: ReviewCardView): SchedulerSignals {
 }
 
 export function ProcessQueue() {
+  useLocale();
   const desktop = isDesktop();
   const navigate = useNavigate();
   const { select } = useSelection();
@@ -1609,11 +1688,8 @@ export function ProcessQueue() {
             <div className="q-empty__icon">
               <Icon name="play" size={26} />
             </div>
-            <h1 className="q-empty__title">Process queue</h1>
-            <p className="q-empty__body">
-              The session loop reads due items through the desktop bridge — open the Electron app to
-              process your day one item at a time.
-            </p>
+            <h1 className="q-empty__title">{t("learning.m3d864b4eec4a")}</h1>
+            <p className="q-empty__body">{t("learning.mb6a26f128cac")}</p>
           </div>
         </div>
       </div>
@@ -1671,8 +1747,8 @@ export function ProcessQueue() {
               <div className="q-empty__icon q-empty__icon--filter">
                 <Icon name="queue" size={24} />
               </div>
-              <h2 className="q-empty__title">Loading due queue</h2>
-              <p className="q-empty__body">Checking scheduled work for today.</p>
+              <h2 className="q-empty__title">{t("learning.m6871b8831b39")}</h2>
+              <p className="q-empty__body">{t("learning.mca2185757980")}</p>
             </div>
           </div>
         ) : done ? (
@@ -1682,27 +1758,48 @@ export function ProcessQueue() {
               <div className="q-empty__icon">
                 <Icon name="checkCircle" size={26} />
               </div>
-              <h2 className="q-empty__title">{zeroLoad ? "No due items today" : "Queue clear"}</h2>
+              <h2 className="q-empty__title">
+                {zeroLoad ? t("learning.m9721220c8c2e") : t("learning.m93f2bf34cf3c")}
+              </h2>
               {zeroLoad ? (
                 <p className="q-empty__body">
-                  There are no scheduled queue items due right now.
+                  {t("learning.m109d72bb8988")}
                   {dailyWork?.recommendedAction === "triage_inbox"
-                    ? ` ${dailyWork.inboxSources} inbox source${dailyWork.inboxSources === 1 ? "" : "s"} still need triage.`
+                    ? t("learning.m88b37b57e87e", {
+                        value1: String(dailyWork.inboxSources),
+                        value2: String(
+                          i18n.language.startsWith("zh")
+                            ? ""
+                            : dailyWork.inboxSources === 1
+                              ? ""
+                              : "s",
+                        ),
+                      })
                     : dailyWork?.recommendedAction === "resume_unscheduled_source" &&
                         dailyWork.resumeSource
-                      ? ` ${dailyWork.resumeSource.title} is active without a return date.`
+                      ? t("learning.m2b850a5cf145", {
+                          value1: String(dailyWork.resumeSource.title),
+                        })
                       : ""}
                 </p>
               ) : newWorkAvailable > 0 ? (
                 <p className="q-empty__body" data-testid="process-newwork">
-                  You cleared the queue — {processed} item{processed === 1 ? "" : "s"} processed.{" "}
-                  {newWorkAvailable} new item{newWorkAvailable === 1 ? "" : "s"} arrived while you
-                  worked.
+                  {t("learning.m15de47085b2f")}
+                  {processed}
+                  {t("learning.ma5f3c2e9f903")}
+                  {i18n.language.startsWith("zh") ? "" : processed === 1 ? "" : "s"}
+                  {t("learning.m1b839b9cf13d")} {newWorkAvailable}
+                  {t("learning.me77b81be3e0a")}
+                  {i18n.language.startsWith("zh") ? "" : newWorkAvailable === 1 ? "" : "s"}
+                  {t("learning.ma2f3a2ff336e")}
                 </p>
               ) : (
                 <p className="q-empty__body">
-                  You processed {processed} item{processed === 1 ? "" : "s"}, one at a time. Your
-                  high-priority items are protected; the rest return when they're due.
+                  {t("learning.m0971752220a7")}
+                  {processed}
+                  {t("learning.ma5f3c2e9f903")}
+                  {i18n.language.startsWith("zh") ? "" : processed === 1 ? "" : "s"}
+                  {t("learning.m1afe15e5e5c9")}
                 </p>
               )}
               <div className="pq-done__actions">
@@ -1721,8 +1818,8 @@ export function ProcessQueue() {
                       size={14}
                     />
                     {dailyWork.recommendedAction === "triage_inbox"
-                      ? "Triage inbox"
-                      : "Resume source"}
+                      ? t("learning.m52e6a8216b10")
+                      : t("learning.mf95f68b04d16")}
                   </button>
                 ) : null}
                 {newWorkAvailable > 0 ? (
@@ -1733,7 +1830,7 @@ export function ProcessQueue() {
                     onClick={() => void rebuildDeck()}
                   >
                     <Icon name="play" size={14} />
-                    Keep going
+                    {t("learning.mc4b6cbd81b11")}
                   </button>
                 ) : (
                   <button
@@ -1743,7 +1840,7 @@ export function ProcessQueue() {
                     onClick={() => void rebuildDeck()}
                   >
                     <Icon name="review" size={14} />
-                    Reload queue
+                    {t("learning.mf9d518617f4c")}
                   </button>
                 )}
                 <button
@@ -1753,7 +1850,7 @@ export function ProcessQueue() {
                   onClick={() => navigate({ to: "/queue", search: asOf ? { asOf } : {} })}
                 >
                   <Icon name="return" size={14} />
-                  Back to queue
+                  {t("learning.md1ecf20848f4")}
                 </button>
               </div>
             </div>
@@ -1810,10 +1907,13 @@ export function ProcessQueue() {
       {wrapUpVisible && !done ? (
         <div className="pq-wrapup" role="alert" data-testid="process-wrapup">
           <span className="pq-wrapup__text">
-            You've spent about{" "}
-            {Math.max(0, Math.floor((Date.now() - sessionStartedAtRef.current) / 60000))} min
-            {wrapUpReference != null ? ` of your ~${wrapUpReference} min target` : ""}. Wrap up or
-            keep going?
+            {t("learning.m2e320db4da22")}{" "}
+            {Math.max(0, Math.floor((Date.now() - sessionStartedAtRef.current) / 60000))}
+            {t("learning.mb7048c09cd9a")}
+            {wrapUpReference != null
+              ? t("learning.m45f42c84810e", { value1: String(wrapUpReference) })
+              : ""}
+            {t("learning.m6724af083ee8")}
           </span>
           <div className="pq-wrapup__actions">
             <button
@@ -1823,7 +1923,7 @@ export function ProcessQueue() {
               onClick={dismissWrapUp}
             >
               <Icon name="play" size={13} />
-              Keep going
+              {t("learning.mc4b6cbd81b11")}
             </button>
             <button
               type="button"
@@ -1832,7 +1932,7 @@ export function ProcessQueue() {
               onClick={() => navigate({ to: "/queue", search: asOf ? { asOf } : {} })}
             >
               <Icon name="return" size={13} />
-              Wrap up
+              {t("learning.m4a4894fbe78c")}
             </button>
           </div>
         </div>
@@ -1906,6 +2006,7 @@ function ProcessSessionControls({
   onModeChange,
   onEnd,
 }: ProcessSessionControlsProps) {
+  useLocale();
   const position = Math.min(cursor + (done ? 0 : 1), total);
   const fillPct = total === 0 ? 0 : (Math.min(cursor, total) / total) * 100;
   // Spoken progress: a single clean label so screen readers don't read "1 slash 3
@@ -1926,7 +2027,9 @@ function ProcessSessionControls({
             ·
           </span>
           <span className="pq-progress__est" aria-hidden>
-            {done ? "all done" : `${remaining} left`}
+            {done
+              ? t("learning.me814d21a9ac1")
+              : t("learning.m7ff5a556fe7f", { value1: String(remaining) })}
           </span>
         </div>
         {gauge ? (
@@ -1944,7 +2047,7 @@ function ProcessSessionControls({
           </h1>
         ) : null}
         <div className="pq-modes" data-testid="process-modes">
-          <span className="pq-modes__label">Mode</span>
+          <span className="pq-modes__label">{t("learning.m5e23ec6a300d")}</span>
           {MODES.map((m) => (
             <button
               type="button"
@@ -1961,7 +2064,7 @@ function ProcessSessionControls({
         </div>
         <button type="button" className="pq-end" data-testid="process-end" onClick={onEnd}>
           <Icon name="x" size={14} />
-          End session
+          {t("learning.med84572aa84c")}
         </button>
       </div>
       <div className="pq-progress__bar" aria-hidden>
@@ -2042,6 +2145,7 @@ function newProcessBlockId(): string {
 
 /** A small interpunct dot separator for source metadata rows. */
 function SourceMetaDot() {
+  useLocale();
   return <span className="pq-source__dot" aria-hidden />;
 }
 
@@ -2062,6 +2166,7 @@ function ProcessSourceWorkbench({
   onBriefingJump: () => void;
   onSelectionAction: (action: SelectionToolbarAction) => void;
 }) {
+  useLocale();
   const [editor, setEditor] = useState<Editor | null>(null);
   const [pendingOpenSignal, setPendingOpenSignal] = useState(0);
   const jumpToPendingBlock = useCallback(
@@ -2102,10 +2207,7 @@ function ProcessSourceWorkbench({
   if (doc.sourceFormat === "pdf" || doc.sourceFormat === "video") {
     return (
       <div className="pq-source" data-testid="process-source-workbench">
-        <p className="pq-body__text pq-body__text--empty">
-          This source uses a specialized reader. Open it in full to extract from pages, regions, or
-          media timestamps.
-        </p>
+        <p className="pq-body__text pq-body__text--empty">{t("learning.ma947585baa26")}</p>
       </div>
     );
   }
@@ -2144,16 +2246,17 @@ function ProcessSourceWorkbench({
           </span>
           <SourceMetaDot />
           <span className="pq-source__meta--mono" data-testid="process-source-words">
-            {wordCount(doc.plainText)} words
+            {wordCount(doc.plainText)}
+            {t("learning.m54c012f3435d")}
           </span>
         </div>
 
         <div className="pq-source__editor" data-testid="process-source-editor">
           {doc.status === "loading" ? (
-            <p className="pq-body__text pq-body__text--empty">Loading source…</p>
+            <p className="pq-body__text pq-body__text--empty">{t("learning.m26f14e07f596")}</p>
           ) : doc.status === "error" ? (
             <p className="pq-error" data-testid="process-source-error">
-              {doc.error ?? "Failed to load this source."}
+              {doc.error ?? t("learning.m1f2cea08da43")}
             </p>
           ) : (
             <SourceEditor
@@ -2216,6 +2319,7 @@ function ProcessExtractWorkbench({
   onCardCreated: () => void;
   onToast: (message: string) => void;
 }) {
+  useLocale();
   const stage = asExtractStage(inspector?.element.stage ?? item.stage);
   const stageIdx = Math.max(0, EXTRACT_STAGES.indexOf(stage));
   const plainText = draft?.plainText ?? doc.plainText;
@@ -2235,7 +2339,8 @@ function ProcessExtractWorkbench({
             </span>
           ) : (
             <span className="pq-body__src pq-body__src--muted">
-              <Icon name="source" size={13} /> No source title
+              <Icon name="source" size={13} />
+              {t("learning.m8a4530489c69")}
             </span>
           )}
         </div>
@@ -2247,7 +2352,7 @@ function ProcessExtractWorkbench({
           onClick={() => onSetStage()}
         >
           <Icon name="sparkle" size={14} />
-          Advance stage
+          {t("learning.m79a6861a911e")}
         </button>
       </div>
 
@@ -2289,10 +2394,10 @@ function ProcessExtractWorkbench({
 
       <div className="pq-extract__editor" data-testid="process-extract-editor">
         {doc.status === "loading" ? (
-          <p className="pq-body__text pq-body__text--empty">Loading extract…</p>
+          <p className="pq-body__text pq-body__text--empty">{t("learning.m506f3d469a30")}</p>
         ) : doc.status === "error" ? (
           <p className="pq-error" data-testid="process-extract-error">
-            {doc.error ?? "Failed to load this extract."}
+            {doc.error ?? t("learning.m4026fba770a3")}
           </p>
         ) : (
           <SourceEditor
@@ -2306,7 +2411,10 @@ function ProcessExtractWorkbench({
           />
         )}
         <div className="pq-extract__meta">
-          <span>{wordCount(plainText)} words</span>
+          <span>
+            {wordCount(plainText)}
+            {t("learning.m87727425f81e")}
+          </span>
         </div>
       </div>
 
@@ -2319,7 +2427,7 @@ function ProcessExtractWorkbench({
           onClick={onTrim}
         >
           <Icon name="trim" size={14} />
-          Trim
+          {t("learning.meac09363d621")}
         </button>
         <button
           type="button"
@@ -2329,7 +2437,7 @@ function ProcessExtractWorkbench({
           onClick={() => onSetFate("reference")}
         >
           <Icon name="bookmark" size={14} />
-          Reference
+          {t("learning.mab0cedb8fbaa")}
         </button>
         <button
           type="button"
@@ -2339,7 +2447,7 @@ function ProcessExtractWorkbench({
           onClick={() => onSetFate("done_without_card")}
         >
           <Icon name="checkCircle" size={14} />
-          Done without card
+          {t("learning.me7ad0bcacb83")}
         </button>
         <span className="pq-extract__toolspacer" />
         <button
@@ -2347,7 +2455,7 @@ function ProcessExtractWorkbench({
           className="pq-btn pq-btn--primary"
           data-testid="process-extract-make-qa"
           disabled={busy || !canCreateCard}
-          title={canCreateCard ? undefined : "Reactivate this extract before creating a card"}
+          title={canCreateCard ? undefined : t("learning.mbde82b5421e7")}
           onClick={() => onOpenBuilder("qa")}
         >
           <Icon name="card" size={14} />
@@ -2358,11 +2466,11 @@ function ProcessExtractWorkbench({
           className="pq-btn"
           data-testid="process-extract-make-cloze"
           disabled={busy || !canCreateCard}
-          title={canCreateCard ? undefined : "Reactivate this extract before creating a card"}
+          title={canCreateCard ? undefined : t("learning.mbde82b5421e7")}
           onClick={() => onOpenBuilder("cloze")}
         >
           <Icon name="sparkle" size={14} />
-          Make cloze
+          {t("learning.m1a63a2da2884")}
         </button>
       </div>
 
@@ -2492,6 +2600,7 @@ function ProcessCard({
   onGrade: (rating: ReviewRating) => void;
   sessionControls: ProcessSessionControlsProps;
 }) {
+  useLocale();
   const isCard = item.type === "card";
   const isExtract = item.type === "extract";
   const isSource = item.type === "source";
@@ -2508,23 +2617,44 @@ function ProcessCard({
     () =>
       isCard ? (
         <>
-          <kbd>␣</kbd> reveal · <kbd>1</kbd>–<kbd>4</kbd> grade · <kbd>d</kbd> done · <kbd>x</kbd>{" "}
-          dismiss · <kbd>o</kbd> open · <kbd>n</kbd> next
+          <kbd>␣</kbd>
+          {t("learning.m03e642820f2e")}
+          <kbd>1</kbd>–<kbd>4</kbd>
+          {t("learning.m2bec46e83f59")}
+          <kbd>d</kbd>
+          {t("learning.m7ccc915c6edc")}
+          <kbd>x</kbd> {t("learning.mf6ffa002c09b")}
+          <kbd>o</kbd>
+          {t("learning.m65397a0224c7")}
+          <kbd>n</kbd>
+          {t("learning.mdce2fdccdc35")}
           {canUndo ? (
             <>
               {" "}
-              · <kbd>⌘Z</kbd> undo
+              · <kbd>⌘Z</kbd>
+              {t("learning.mfa914165c2f5")}
             </>
           ) : null}
         </>
       ) : (
         <>
-          <kbd>d</kbd> done · <kbd>p</kbd> postpone · <kbd>x</kbd> dismiss · <kbd>+</kbd>/
-          <kbd>-</kbd> priority · <kbd>o</kbd> open · <kbd>n</kbd> next
+          <kbd>d</kbd>
+          {t("learning.m7ccc915c6edc")}
+          <kbd>p</kbd>
+          {t("learning.m7f8ef5208cf1")}
+          <kbd>x</kbd>
+          {t("learning.m784e6b50bb6f")}
+          <kbd>+</kbd>/<kbd>-</kbd>
+          {t("learning.m296b61dbaa73")}
+          <kbd>o</kbd>
+          {t("learning.m65397a0224c7")}
+          <kbd>n</kbd>
+          {t("learning.mdce2fdccdc35")}
           {canUndo ? (
             <>
               {" "}
-              · <kbd>⌘Z</kbd> undo
+              · <kbd>⌘Z</kbd>
+              {t("learning.mfa914165c2f5")}
             </>
           ) : null}
         </>
@@ -2576,7 +2706,7 @@ function ProcessCard({
                 <div className="pq-rc__idtext">
                   <div className="pq-rc__kindline">
                     <span className="pq-rc__kind">
-                      {item.cardType === "cloze" ? "Cloze" : "Q&A"}
+                      {item.cardType === "cloze" ? t("learning.mde503889179e") : "Q&A"}
                     </span>
                     <span className="pq-rc__name">· {maskCloze(item.title)}</span>
                   </div>
@@ -2584,13 +2714,15 @@ function ProcessCard({
                     <Prio priority={item.priority} />
                     {cardView?.leech ? (
                       <span className="badge badge--leech" data-testid="process-card-leech">
-                        Leech · {cardView.lapses} lapses
+                        {t("learning.m8137cf29cb6a")}
+                        {cardView.lapses}
+                        {t("learning.m01a318187644")}
                       </span>
                     ) : null}
                     {cardView?.sourceLocationLabel ? (
                       <span className="pq-rc__crumb">
-                        <Icon name="extract" size={12} /> from extract ·{" "}
-                        {cardView.sourceLocationLabel}
+                        <Icon name="extract" size={12} />
+                        {t("learning.m0326587df206")} {cardView.sourceLocationLabel}
                       </span>
                     ) : null}
                   </div>
@@ -2606,7 +2738,7 @@ function ProcessCard({
             {/* ---- scrolling body (the ONLY scroll region) ---- */}
             <div className="pq-rc__body">
               <section>
-                <span className="pq-rc__eyebrow">Prompt</span>
+                <span className="pq-rc__eyebrow">{t("learning.m5c39123805ff")}</span>
                 <p className="pq-rc__prompt" data-testid="process-card-prompt">
                   {cardView ? (
                     <CardFront card={cardView} revealed={false} />
@@ -2620,7 +2752,7 @@ function ProcessCard({
                 <div className="pq-rc__answerwrap" data-testid="process-card-answer">
                   <div className="pq-rc__rule" />
                   <section>
-                    <span className="pq-rc__eyebrow">Answer</span>
+                    <span className="pq-rc__eyebrow">{t("learning.mb2a3aa602762")}</span>
                     <div className="pq-rc__answer">
                       {cardView.kind === "cloze" ? (
                         <CardFront card={cardView} revealed={true} />
@@ -2637,7 +2769,7 @@ function ProcessCard({
                       Reuses the shared RefBlock + formatSourceRef. */}
                   {cardView.sourceRef ? (
                     <section>
-                      <span className="pq-rc__eyebrow">Source</span>
+                      <span className="pq-rc__eyebrow">{t("learning.m0e570ca6fabe")}</span>
                       <div className="pq-rc__source">
                         <RefBlock
                           ref={cardView.sourceRef}
@@ -2657,7 +2789,8 @@ function ProcessCard({
                     onClick={onReveal}
                   >
                     <Icon name="eye" size={14} />
-                    Reveal answer <Kbd keys="␣" />
+                    {t("learning.mbcbb138eda79")}
+                    <Kbd keys="␣" />
                   </button>
                 </div>
               )}
@@ -2695,7 +2828,7 @@ function ProcessCard({
                       {formatStability(cardSig.stability ?? 0)}
                       <span className="pq-rc__unit">d</span>
                     </b>{" "}
-                    stability
+                    {t("learning.m40deee03cf19")}
                   </span>
                   <span className="pq-rc__sep" />
                   <span>
@@ -2703,7 +2836,7 @@ function ProcessCard({
                       {formatDifficulty(cardSig.difficulty ?? 0)}
                       <span className="pq-rc__unit">/10</span>
                     </b>{" "}
-                    difficulty
+                    {t("learning.mf9f876aae9a9")}
                   </span>
                   <span className="pq-rc__sep" />
                   <span>
@@ -2712,7 +2845,7 @@ function ProcessCard({
                         ? "—"
                         : `${Math.round(cardSig.retrievability * 100)}%`}
                     </b>{" "}
-                    retrievability
+                    {t("learning.m3d565a94c623")}
                   </span>
                 </div>
               </footer>
@@ -2759,7 +2892,7 @@ function ProcessCard({
           {doc.plainText ? (
             <p className="pq-body__text">{doc.plainText.slice(0, 900)}</p>
           ) : (
-            <p className="pq-body__text pq-body__text--empty">No body to preview for this item.</p>
+            <p className="pq-body__text pq-body__text--empty">{t("learning.ma574774050d8")}</p>
           )}
         </div>
       )}
@@ -2784,7 +2917,7 @@ function ProcessCard({
             onClick={onSetSourceReadPoint}
           >
             <Icon name="bookmark" size={14} />
-            Set read-point
+            {t("learning.mb0f63d1a2531")}
           </button>
         ) : null}
         <button
@@ -2795,7 +2928,7 @@ function ProcessCard({
           onClick={onOpen}
         >
           <Icon name="external" size={14} />
-          Open in full
+          {t("learning.m1bb5a682c8a5")}
         </button>
         <span className="pq-actions__spacer" />
         {/* Raise / Lower / Delete are used infrequently, so they collapse behind a
@@ -2829,7 +2962,7 @@ function ProcessCard({
             onClick={() => onAction("postpone")}
           >
             <Icon name="postpone" size={14} />
-            Postpone
+            {t("learning.m6087edb47090")}
           </button>
         ) : (
           <ScheduleMenu
@@ -2852,7 +2985,7 @@ function ProcessCard({
           onClick={() => onAction("dismiss")}
         >
           <Icon name="x" size={14} />
-          Dismiss
+          {t("learning.medc0fe2d169a")}
         </button>
         <button
           type="button"
@@ -2862,7 +2995,7 @@ function ProcessCard({
           onClick={onSkip}
         >
           <Icon name="return" size={14} />
-          Skip
+          {t("learning.m790e6ac0a844")}
         </button>
         {isSource || item.sectionSourceTitle ? (
           // A SOURCE routes Done through the non-modal intent surface (0-unresolved fast
@@ -2887,7 +3020,7 @@ function ProcessCard({
             onClick={() => onAction("markDone")}
           >
             <Icon name="check" size={14} />
-            Done
+            {t("learning.m5be7899a3a1f")}
           </button>
         )}
       </div>

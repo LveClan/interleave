@@ -51,7 +51,7 @@ import { useLineageDelete } from "../../components/lineage/useLineageDelete";
 import { type DoneIntent, DoneIntentMenu } from "../../components/queue/DoneIntentMenu";
 import { ScheduleMenu } from "../../components/queue/ScheduleMenu";
 import { Snackbar } from "../../components/Snackbar";
-import { t } from "../../i18n";
+import { t, useLocale } from "../../i18n";
 import {
   appApi,
   type ExtractionCreateResult,
@@ -99,23 +99,26 @@ function fmtDate(iso: string | null): string {
 
 /** A small interpunct dot separator (matches the kit's `<Dot/>`). */
 function Dot() {
+  useLocale();
   return <span className="reader-dot" aria-hidden />;
 }
 
 /** The source-metadata header row (title + provenance + chips). */
 function SourceHeader({ actions, data }: { data: InspectorData | null; actions?: ReactNode }) {
+  useLocale();
   const navigate = useNavigate();
   const title = data?.element.title ?? "Source";
   const provenance = data?.provenance ?? null;
   return (
     <header className="reader-header" data-testid="reader-header">
-      <nav className="reader-crumbs" aria-label="Breadcrumb">
+      <nav className="reader-crumbs" aria-label={t("learning.m2bd873d6c734")}>
         <button
           type="button"
           className="reader-crumb"
           onClick={() => void navigate({ to: "/library" })}
         >
-          <Icon name="library" size={14} /> Library
+          <Icon name="library" size={14} />
+          {t("learning.md8b82e25ef52")}
         </button>
         <span className="reader-crumb-sep">
           <Icon name="chevronRight" size={13} />
@@ -158,8 +161,11 @@ function SourceHeader({ actions, data }: { data: InspectorData | null; actions?:
             <SchedulerChip scheduler={data.scheduler} />
             <Dot />
             <span className="reader-meta reader-meta--mono">
-              last processed {fmtDate(data.scheduler.lastProcessedAt)}
-              {data.element.dueAt ? ` · next ${fmtDate(data.element.dueAt)}` : ""}
+              {t("learning.m535a65a24312")}
+              {fmtDate(data.scheduler.lastProcessedAt)}
+              {data.element.dueAt
+                ? t("learning.mcea7da176fa2", { value1: String(fmtDate(data.element.dueAt)) })
+                : ""}
             </span>
           </>
         ) : null}
@@ -178,6 +184,7 @@ function SourceHeader({ actions, data }: { data: InspectorData | null; actions?:
  * `sourceId` keeps a slow A→B navigation from flashing A's count on B.
  */
 function SourceClusterIndicator({ sourceId }: { sourceId: string | null }) {
+  useLocale();
   const navigate = useNavigate();
   const [count, setCount] = useState<number | null>(null);
   useEffect(() => {
@@ -208,16 +215,20 @@ function SourceClusterIndicator({ sourceId }: { sourceId: string | null }) {
       onClick={() => void navigate({ to: "/maintenance" })}
     >
       <Icon name="layers" size={13} />
-      {count === 1 ? "1 struggling card group" : `${count} struggling card groups`}
+      {count === 1
+        ? t("learning.mca280f56b0ea")
+        : t("learning.m29868fcaf820", { value1: String(count) })}
     </button>
   );
 }
 
 export function SourceReader() {
+  useLocale();
   const { id } = useParams({ from: "/source/$id" });
   return <ReaderKind key={id} id={id} />;
 }
 function ReaderKind({ id }: { id: string }) {
+  useLocale();
   const [section, setSection] = useState<import("@interleave/core").SectionReaderData | null>(null);
   const [loaded, setLoaded] = useState(!isDesktop());
   useEffect(() => {
@@ -241,6 +252,7 @@ function ReaderKind({ id }: { id: string }) {
 }
 
 function SourceReaderVisit() {
+  useLocale();
   const { id } = useParams({ from: "/source/$id" });
   // Jump-to-source target (T022): `?block=<stableId>&offset=<n>&n=<nonce>` set by
   // `useNavigateToLocation` when the user clicks "Jump to source" on an extract.
@@ -955,11 +967,10 @@ function SourceReaderVisit() {
         <span className="reader-state__icon">
           <Icon name="source" size={26} />
         </span>
-        <h1 className="font-semibold text-text text-xl tracking-tight">Source reader</h1>
-        <p className="max-w-sm">
-          The reader loads documents through the desktop bridge — open the Electron app to read a
-          source.
-        </p>
+        <h1 className="font-semibold text-text text-xl tracking-tight">
+          {t("learning.m9ad911f2fc87")}
+        </h1>
+        <p className="max-w-sm">{t("learning.m4cf5ef101b9e")}</p>
       </div>
     );
   }
@@ -1001,13 +1012,14 @@ function SourceReaderVisit() {
             data-testid="reader-retirement-review"
             onClick={() => setRetirementReviewSignal((value) => value + 1)}
           >
-            <Icon name="warning" size={13} /> Done?
+            <Icon name="warning" size={13} />
+            {t("learning.me2ba5eb54039")}
           </button>
           <button
             type="button"
             className="reader-retirement__dismiss"
             disabled={exitActionBusy}
-            aria-label="Dismiss done suggestion"
+            aria-label={t("learning.mfd3bbb5f1e5d")}
             data-testid="reader-retirement-dismiss"
             onClick={() => void onDismissRetirementSuggestion()}
           >
@@ -1043,11 +1055,12 @@ function SourceReaderVisit() {
         type="button"
         className="reader-btn"
         disabled={exitActionBusy}
-        title="Lower priority one band"
+        title={t("learning.mb201d9e6107a")}
         data-testid="reader-lower-priority"
         onClick={() => void onLowerPriority()}
       >
-        <Icon name="arrowDown" size={14} /> Lower priority
+        <Icon name="arrowDown" size={14} />
+        {t("learning.mc673d4c8252c")}
       </button>
     </>
   );
@@ -1084,17 +1097,19 @@ function SourceReaderVisit() {
       rel="noreferrer"
       data-testid="reader-open-original"
     >
-      <Icon name="external" size={14} /> Open original
+      <Icon name="external" size={14} />
+      {t("learning.md47a17e17307")}
     </a>
   ) : (
     <button
       type="button"
       className="reader-btn"
       disabled
-      title="No original URL on this source"
+      title={t("learning.m6b5b01f9e7a7")}
       data-testid="reader-open-original"
     >
-      <Icon name="external" size={14} /> Open original
+      <Icon name="external" size={14} />
+      {t("learning.md47a17e17307")}
     </button>
   );
 
@@ -1167,7 +1182,12 @@ function SourceReaderVisit() {
           actions={
             <>
               <span className="reader-meta reader-meta--mono" data-testid="reader-pdf-progress">
-                {pdfPage.total > 0 ? `page ${pdfPage.page} of ${pdfPage.total}` : "PDF"}
+                {pdfPage.total > 0
+                  ? t("learning.m20acf5b1604a", {
+                      value1: String(pdfPage.page),
+                      value2: String(pdfPage.total),
+                    })
+                  : t("learning.m1d393b0081b6")}
               </span>
               {openOriginalUrl ? sourceOpenOriginalAction : null}
               {sourceWorkflowActions}
@@ -1241,7 +1261,9 @@ function SourceReaderVisit() {
               data-testid="reader-set-readpoint"
               onClick={() => void onSetReadPoint()}
             >
-              <Icon name="bookmark" size={14} /> Set read-point <Kbd keys="␣" />
+              <Icon name="bookmark" size={14} />
+              {t("learning.m3e86639d2e5c")}
+              <Kbd keys="␣" />
             </button>
             {sourceWorkflowActions}
             {sourceOpenOriginalAction}
@@ -1285,10 +1307,11 @@ function SourceReaderVisit() {
                 <span data-testid="reader-progress">{blockProgressText}</span>
                 <span>
                   {blockSummary
-                    ? `${blockSummary.extractedBlockCount} extracted · ${Math.round(
-                        blockSummary.ignoredRatio * 100,
-                      )}% ignored`
-                    : "read · set a read-point with ␣"}
+                    ? t("learning.m4c4925031d35", {
+                        value1: String(blockSummary.extractedBlockCount),
+                        value2: String(Math.round(blockSummary.ignoredRatio * 100)),
+                      })
+                    : t("learning.m0c8f8f9937a6")}
                 </span>
               </div>
               <div className="pbar" style={{ marginBottom: 28 }}>
@@ -1299,7 +1322,9 @@ function SourceReaderVisit() {
                 />
               </div>
               <fieldset className="reader-block-filters">
-                <legend className="reader-block-filters__legend">Block processing filter</legend>
+                <legend className="reader-block-filters__legend">
+                  {t("learning.m42b0f01b0165")}
+                </legend>
                 {(
                   [
                     ["all", "All"],
@@ -1326,17 +1351,18 @@ function SourceReaderVisit() {
                   data-testid="reader-filter-hide-ignored"
                   onClick={() => setHideIgnored((value) => !value)}
                 >
-                  <Icon name="eye" size={13} /> {hideIgnored ? "Ignored hidden" : "Ignored visible"}
+                  <Icon name="eye" size={13} />{" "}
+                  {hideIgnored ? t("learning.mfdacd2cbde1e") : t("learning.m78b84a89174c")}
                 </button>
               </fieldset>
 
               {doc.status === "loading" ? (
                 <p className="dimmed" data-testid="reader-loading">
-                  Loading source…
+                  {t("learning.m0238a022b28b")}
                 </p>
               ) : doc.status === "error" ? (
                 <p className="text-danger text-sm" data-testid="reader-error">
-                  {doc.error ?? "Failed to load this source."}
+                  {doc.error ?? t("learning.m1f2cea08da43")}
                 </p>
               ) : (
                 <>
